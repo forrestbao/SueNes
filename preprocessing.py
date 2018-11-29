@@ -49,7 +49,9 @@ def add_words(summary, ratio, vocab):
         res.append(words[i])
     return ' '.join(res)
 
-
+# TODO multi thread generation
+# TODO use fake sentence instead of mutating sentence, simulating word2vec loss
+# TODO use summary only to see if the article is useful at all
 def mutate_summary(summary, vocab):
     """I need to generate random mutation to the summary. Save it to a
     file so that I use the same generated data. For each summary, I

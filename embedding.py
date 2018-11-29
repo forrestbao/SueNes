@@ -1,39 +1,8 @@
 #!/usr/bin/env python3
 
+import tensorflow as tf
+import tensorflow_hub as hub
 
-def embedder_test(embedder, articles):
-    """Testing the performance of embedder.
-    """
-    # 7,742,028
-    all_sents = []
-    for article in articles:
-        sents = sentence_split(article)
-        all_sents.extend(sents)
-        
-    t = time.time()
-    # 9.186472415924072
-    s1000 = all_sents[:1000]
-    embedder.embed(s1000)
-    print(time.time() - t)
-    
-    t = time.time()
-    # 11.613808870315552
-    s5000 = all_sents[:5000]
-    embedder.embed(s5000)
-    print(time.time() - t)
-
-    t = time.time()
-    # 15.440065145492554
-    s10000 = all_sents[:10000]
-    embedder.embed(s10000)
-    print(time.time() - t)
-
-    t = time.time()
-    # 49.14992094039917
-    s50000 = all_sents[:50000]
-    embedder.embed(s50000)
-    print(time.time() - t)
-    return
 
 def sentence_embedding():
     module_url = "https://tfhub.dev/google/universal-sentence-encoder/2"
@@ -65,16 +34,32 @@ def sentence_embedding():
 
 
 class SentenceEmbedder():
+    """This module is outputing:
+
+    INFO:tensorflow:Saver not created because there are no variables
+    in the graph to restore
+
+    Quite annoying, so:
+
+    >>> tf.logging.set_verbosity(logging.WARN)
+    """
     def __init__(self):
+        # 
         self.module = hub.Module("https://tfhub.dev/google/universal-sentence-encoder/2")
         self.embed_session = tf.Session()
         self.embed_session.run(tf.global_variables_initializer())
         self.embed_session.run(tf.tables_initializer())
-    def embed(self, sentence):
+        # self.module = hub.Module("https://tfhub.dev/google/universal-sentence-encoder-large/3")
+    def embed(self, sentences):
         with tf.device('/cpu:0'):
-            embedded = self.module(sentence)
-        res = self.embed_session.run(embedded)
-        return res
+            embedded = self.module(sentences)
+            res = self.embed_session.run(embedded)
+            return res
+    def embed_list(self, sentences_list):
+        with tf.device('/cpu:0'):
+            embedded = [self.module(sentences) for sentences in sentences_list]
+            res = self.embed_session.run(embedded)
+            return res
 
 def myembed(sentence):
     embedder = SentenceEmbedder()

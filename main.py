@@ -16,10 +16,10 @@ import scipy
 import os, sys
 
 from model import load_embedding
-from model import build_uae_model, build_glove_model
+from model import build_uae_model, build_glove_model, build_glove_summary_only_model
 from data import load_text_data, save_data, load_data
 from data import prepare_tokenizer, save_tokenizer, load_tokenizer
-from data import prepare_data_using_use,
+from data import prepare_data_using_use
 from data import prepare_data_using_tokenizer, prepare_summary_data_using_tokenizer
 
 from config import *
@@ -109,8 +109,8 @@ def glove_summary_main():
     #
     # this is also slow
     
-    data = prepare_summary_data_using_tokenizer(articles, summaries,
-                                                scores, tokenizer)
+    data = prepare_summary_data_using_tokenizer(summaries, scores,
+                                                tokenizer)
     # save and load the data
     # save_data(data, 'glove-data-10000.pickle')
     # data = load_data('glove-data-10000.pickle')
@@ -123,7 +123,7 @@ def glove_summary_main():
     # model v2
     embedding_layer = load_embedding(tokenizer)
     # FIXME the architecture needs adjustment
-    model = build_glove_model(embedding_layer)
+    model = build_glove_summary_only_model(embedding_layer)
     train_model(model, data)
     return
     
@@ -182,9 +182,11 @@ def main():
     article? Then, fully connected layer directly to the final result.
 
     """
+    print('Deprecated. Exiting ..')
+    return 0
     (x_train, y_train), (x_val, y_val) = prepare_data()
     model = build_model()
     train_model(model, (x_train, y_train), (x_val, y_val))
 
-if __name__ == '__main__':
-    use_vector_main()
+# if __name__ == '__main__':
+#     use_vector_main()

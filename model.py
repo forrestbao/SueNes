@@ -106,6 +106,22 @@ def build_glove_model(embedding_layer):
     model = Model(sequence_input, preds)
     return model
 
+def build_glove_summary_only_model(embedding_layer):
+    # train a 1D convnet with global maxpooling
+    sequence_input = Input(shape=(MAX_SUMMARY_LENGTH,), dtype='int32')
+    embedded_sequences = embedding_layer(sequence_input)
+    x = Conv1D(128, 3, activation='relu')(embedded_sequences)
+    x = MaxPooling1D(5)(x)
+    x = Conv1D(128, 3, activation='relu')(x)
+    x = MaxPooling1D(5)(x)
+    x = Conv1D(128, 3, activation='relu')(x)
+    x = GlobalMaxPooling1D()(x)
+    x = Dense(128, activation='relu')(x)
+    preds = Dense(1)(x)
+
+    model = Model(sequence_input, preds)
+    return model
+
 def build_uae_model():
     sequence_input = Input(shape=(ARTICLE_MAX_SENT + SUMMARY_MAX_SENT, 512),
                            dtype='float32')

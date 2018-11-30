@@ -1,14 +1,32 @@
 #+TITLE: Anti Rouge
 
-* Experiment
-** TODO use all CNN data
-** TODO use DM data
-** TODO [#B] use the model learned from CNN data to test on DM data (transfer)
-** TODO [#A] use fake summary and difference as loss function, instead of mutation and score
-** TODO [#A] use only mutated summary, without article
-** TODO when generating mutation, do not change sentence separator
+* TODO List
+** Experiment
+*** TODO use all CNN data
+*** TODO use DM data
+*** TODO [#B] use the model learned from CNN data to test on DM data (transfer)
+*** TODO [#A] use fake summary and difference as loss function, instead of mutation and score
+*** TODO [#A] use only mutated summary, without article
+*** TODO when generating mutation, do not change sentence separator
 
-* Paper writing
-** TODO write method
-** TODO figures
-** TODO plot results
+** Paper writing
+*** TODO write method
+*** TODO figures
+*** TODO plot results
+
+* Code structure and usage instruction
+
+- =model.py=: models
+- =embedding.py=: load glove embedding and USE sentence embedding
+- =data.py=: prepare data
+- =preprocessing.py=
+- =config.py=: hyper parameters
+
+=main.py= glue the data and model together: load data, build model,
+train and validate results. Various of experiments are defined in the
+following functions.
+- =glove_main=
+- =use_vector_main=
+- =glove_summary_main=
+
+See [[file:log.org][log.org]] for the experiment log.

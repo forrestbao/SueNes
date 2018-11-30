@@ -1,0 +1,554 @@
+#+TITLE: Experiment log
+
+* <2018-11-26 Mon> glove
+
+In [132]: model.fit(x_train, y_train,
+     ...:           epochs=40, batch_size=128,
+     ...:           validation_data=(x_val, y_val), verbose=1)
+Train on 189000 samples, validate on 21000 samples
+Epoch 1/40
+2018-11-26 17:36:28.507505: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2018-11-26 17:36:28.603822: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:964] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-11-26 17:36:28.604295: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1432] Found device 0 with properties: 
+name: GeForce GTX 1060 3GB major: 6 minor: 1 memoryClockRate(GHz): 1.7085
+pciBusID: 0000:0b:00.0
+totalMemory: 2.95GiB freeMemory: 2.58GiB
+2018-11-26 17:36:28.604312: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1511] Adding visible gpu devices: 0
+2018-11-26 17:36:28.763021: I tensorflow/core/common_runtime/gpu/gpu_device.cc:982] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-11-26 17:36:28.763055: I tensorflow/core/common_runtime/gpu/gpu_device.cc:988]      0 
+2018-11-26 17:36:28.763060: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1001] 0:   N 
+2018-11-26 17:36:28.763187: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 2276 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1060 3GB, pci bus id: 0000:0b:00.0, compute capability: 6.1)
+188672/189000 [============================>.] - ETA: 0s - loss: 0.0567 - mean_absolute_error: 0.18242018-11-26 17:37:02.137188: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 3.17GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+2018-11-26 17:37:02.153934: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.29GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+189000/189000 [==============================] - 35s 186us/step - loss: 0.0566 - mean_absolute_error: 0.1824 - val_loss: 0.0379 - val_mean_absolute_error: 0.1496
+Epoch 2/40
+189000/189000 [==============================] - 34s 182us/step - loss: 0.0355 - mean_absolute_error: 0.1427 - val_loss: 0.0473 - val_mean_absolute_error: 0.1656
+Epoch 3/40
+189000/189000 [==============================] - 35s 188us/step - loss: 0.0307 - mean_absolute_error: 0.1320 - val_loss: 0.0323 - val_mean_absolute_error: 0.1346
+Epoch 4/40
+189000/189000 [==============================] - 36s 192us/step - loss: 0.0278 - mean_absolute_error: 0.1252 - val_loss: 0.0340 - val_mean_absolute_error: 0.1359
+Epoch 5/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0257 - mean_absolute_error: 0.1200 - val_loss: 0.0324 - val_mean_absolute_error: 0.1320
+Epoch 6/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0238 - mean_absolute_error: 0.1155 - val_loss: 0.0303 - val_mean_absolute_error: 0.1272
+Epoch 7/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0222 - mean_absolute_error: 0.1111 - val_loss: 0.0303 - val_mean_absolute_error: 0.1266
+Epoch 8/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0209 - mean_absolute_error: 0.1077 - val_loss: 0.0311 - val_mean_absolute_error: 0.1280
+Epoch 9/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0197 - mean_absolute_error: 0.1042 - val_loss: 0.0315 - val_mean_absolute_error: 0.1290
+Epoch 10/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0186 - mean_absolute_error: 0.1014 - val_loss: 0.0312 - val_mean_absolute_error: 0.1310
+Epoch 11/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0175 - mean_absolute_error: 0.0984 - val_loss: 0.0315 - val_mean_absolute_error: 0.1267
+Epoch 12/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0166 - mean_absolute_error: 0.0956 - val_loss: 0.0303 - val_mean_absolute_error: 0.1249
+Epoch 13/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0158 - mean_absolute_error: 0.0932 - val_loss: 0.0306 - val_mean_absolute_error: 0.1235
+Epoch 14/40
+189000/189000 [==============================] - 37s 196us/step - loss: 0.0149 - mean_absolute_error: 0.0907 - val_loss: 0.0311 - val_mean_absolute_error: 0.1256
+Epoch 15/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0143 - mean_absolute_error: 0.0887 - val_loss: 0.0319 - val_mean_absolute_error: 0.1253
+Epoch 16/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0137 - mean_absolute_error: 0.0867 - val_loss: 0.0308 - val_mean_absolute_error: 0.1255
+Epoch 17/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0130 - mean_absolute_error: 0.0848 - val_loss: 0.0310 - val_mean_absolute_error: 0.1248
+Epoch 18/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0124 - mean_absolute_error: 0.0829 - val_loss: 0.0327 - val_mean_absolute_error: 0.1266
+Epoch 19/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0120 - mean_absolute_error: 0.0812 - val_loss: 0.0332 - val_mean_absolute_error: 0.1252
+Epoch 20/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0114 - mean_absolute_error: 0.0793 - val_loss: 0.0331 - val_mean_absolute_error: 0.1254
+Epoch 21/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0110 - mean_absolute_error: 0.0778 - val_loss: 0.0317 - val_mean_absolute_error: 0.1247
+Epoch 22/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0106 - mean_absolute_error: 0.0764 - val_loss: 0.0316 - val_mean_absolute_error: 0.1239
+Epoch 23/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0102 - mean_absolute_error: 0.0750 - val_loss: 0.0321 - val_mean_absolute_error: 0.1248
+Epoch 24/40
+189000/189000 [==============================] - 37s 193us/step - loss: 0.0098 - mean_absolute_error: 0.0737 - val_loss: 0.0338 - val_mean_absolute_error: 0.1262
+Epoch 25/40
+189000/189000 [==============================] - 37s 193us/step - loss: 0.0095 - mean_absolute_error: 0.0725 - val_loss: 0.0325 - val_mean_absolute_error: 0.1255
+Epoch 26/40
+189000/189000 [==============================] - 37s 193us/step - loss: 0.0092 - mean_absolute_error: 0.0714 - val_loss: 0.0328 - val_mean_absolute_error: 0.1258
+Epoch 27/40
+189000/189000 [==============================] - 37s 193us/step - loss: 0.0089 - mean_absolute_error: 0.0704 - val_loss: 0.0322 - val_mean_absolute_error: 0.1258
+Epoch 28/40
+189000/189000 [==============================] - 37s 193us/step - loss: 0.0086 - mean_absolute_error: 0.0691 - val_loss: 0.0328 - val_mean_absolute_error: 0.1241
+Epoch 29/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0084 - mean_absolute_error: 0.0683 - val_loss: 0.0340 - val_mean_absolute_error: 0.1301
+Epoch 30/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0081 - mean_absolute_error: 0.0673 - val_loss: 0.0349 - val_mean_absolute_error: 0.1277
+Epoch 31/40
+189000/189000 [==============================] - 37s 193us/step - loss: 0.0079 - mean_absolute_error: 0.0663 - val_loss: 0.0331 - val_mean_absolute_error: 0.1249
+Epoch 32/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0078 - mean_absolute_error: 0.0658 - val_loss: 0.0335 - val_mean_absolute_error: 0.1265
+Epoch 33/40
+189000/189000 [==============================] - 37s 193us/step - loss: 0.0075 - mean_absolute_error: 0.0647 - val_loss: 0.0342 - val_mean_absolute_error: 0.1280
+Epoch 34/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0073 - mean_absolute_error: 0.0639 - val_loss: 0.0346 - val_mean_absolute_error: 0.1256
+Epoch 35/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0072 - mean_absolute_error: 0.0632 - val_loss: 0.0322 - val_mean_absolute_error: 0.1244
+Epoch 36/40
+189000/189000 [==============================] - 37s 193us/step - loss: 0.0070 - mean_absolute_error: 0.0625 - val_loss: 0.0326 - val_mean_absolute_error: 0.1241
+Epoch 37/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0068 - mean_absolute_error: 0.0619 - val_loss: 0.0326 - val_mean_absolute_error: 0.1246
+Epoch 38/40
+189000/189000 [==============================] - 36s 193us/step - loss: 0.0067 - mean_absolute_error: 0.0613 - val_loss: 0.0352 - val_mean_absolute_error: 0.1254
+Epoch 39/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0065 - mean_absolute_error: 0.0606 - val_loss: 0.0327 - val_mean_absolute_error: 0.1244
+Epoch 40/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0064 - mean_absolute_error: 0.0600 - val_loss: 0.0350 - val_mean_absolute_error: 0.1279
+Out[132]: <keras.callbacks.History at 0x7f1f9029ce48>
+
+In [133]: 
+
+
+
+* <2018-11-27 Tue> glove
+
+In [28]: model.fit(x_train, y_train,
+    ...:           epochs=40, batch_size=128,
+    ...:           validation_data=(x_val, y_val), verbose=1)
+Train on 189000 samples, validate on 21000 samples
+Epoch 1/40
+189000/189000 [==============================] - 35s 188us/step - loss: 0.0323 - mean_absolute_error: 0.1331 - val_loss: 0.0175 - val_mean_absolute_error: 0.1020
+Epoch 2/40
+189000/189000 [==============================] - 36s 193us/step - loss: 0.0144 - mean_absolute_error: 0.0923 - val_loss: 0.0130 - val_mean_absolute_error: 0.0871
+Epoch 3/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0118 - mean_absolute_error: 0.0832 - val_loss: 0.0121 - val_mean_absolute_error: 0.0834
+Epoch 4/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0101 - mean_absolute_error: 0.0767 - val_loss: 0.0113 - val_mean_absolute_error: 0.0805
+Epoch 5/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0088 - mean_absolute_error: 0.0713 - val_loss: 0.0104 - val_mean_absolute_error: 0.0767
+Epoch 6/40
+189000/189000 [==============================] - 38s 200us/step - loss: 0.0078 - mean_absolute_error: 0.0669 - val_loss: 0.0096 - val_mean_absolute_error: 0.0735
+Epoch 7/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0070 - mean_absolute_error: 0.0636 - val_loss: 0.0135 - val_mean_absolute_error: 0.0896
+Epoch 8/40
+189000/189000 [==============================] - 37s 196us/step - loss: 0.0063 - mean_absolute_error: 0.0606 - val_loss: 0.0090 - val_mean_absolute_error: 0.0704
+Epoch 9/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0058 - mean_absolute_error: 0.0580 - val_loss: 0.0093 - val_mean_absolute_error: 0.0718
+Epoch 10/40
+189000/189000 [==============================] - 37s 196us/step - loss: 0.0054 - mean_absolute_error: 0.0558 - val_loss: 0.0089 - val_mean_absolute_error: 0.0698
+Epoch 11/40
+189000/189000 [==============================] - 37s 196us/step - loss: 0.0050 - mean_absolute_error: 0.0538 - val_loss: 0.0093 - val_mean_absolute_error: 0.0720
+Epoch 12/40
+189000/189000 [==============================] - 37s 197us/step - loss: 0.0046 - mean_absolute_error: 0.0519 - val_loss: 0.0085 - val_mean_absolute_error: 0.0665
+Epoch 13/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0044 - mean_absolute_error: 0.0504 - val_loss: 0.0085 - val_mean_absolute_error: 0.0683
+Epoch 14/40
+189000/189000 [==============================] - 37s 198us/step - loss: 0.0041 - mean_absolute_error: 0.0490 - val_loss: 0.0089 - val_mean_absolute_error: 0.0680
+Epoch 15/40
+189000/189000 [==============================] - 37s 197us/step - loss: 0.0039 - mean_absolute_error: 0.0476 - val_loss: 0.0088 - val_mean_absolute_error: 0.0676
+Epoch 16/40
+189000/189000 [==============================] - 38s 201us/step - loss: 0.0037 - mean_absolute_error: 0.0466 - val_loss: 0.0084 - val_mean_absolute_error: 0.0651
+Epoch 17/40
+189000/189000 [==============================] - 38s 201us/step - loss: 0.0035 - mean_absolute_error: 0.0454 - val_loss: 0.0083 - val_mean_absolute_error: 0.0661
+Epoch 18/40
+189000/189000 [==============================] - 37s 196us/step - loss: 0.0033 - mean_absolute_error: 0.0445 - val_loss: 0.0080 - val_mean_absolute_error: 0.0643
+Epoch 19/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0032 - mean_absolute_error: 0.0434 - val_loss: 0.0093 - val_mean_absolute_error: 0.0710
+Epoch 20/40
+189000/189000 [==============================] - 38s 199us/step - loss: 0.0031 - mean_absolute_error: 0.0425 - val_loss: 0.0083 - val_mean_absolute_error: 0.0655
+Epoch 21/40
+189000/189000 [==============================] - 37s 196us/step - loss: 0.0029 - mean_absolute_error: 0.0417 - val_loss: 0.0079 - val_mean_absolute_error: 0.0638
+Epoch 22/40
+189000/189000 [==============================] - 37s 196us/step - loss: 0.0028 - mean_absolute_error: 0.0409 - val_loss: 0.0078 - val_mean_absolute_error: 0.0629
+Epoch 23/40
+189000/189000 [==============================] - 38s 199us/step - loss: 0.0027 - mean_absolute_error: 0.0403 - val_loss: 0.0080 - val_mean_absolute_error: 0.0630
+Epoch 24/40
+189000/189000 [==============================] - 38s 202us/step - loss: 0.0026 - mean_absolute_error: 0.0395 - val_loss: 0.0081 - val_mean_absolute_error: 0.0646
+Epoch 25/40
+189000/189000 [==============================] - 38s 201us/step - loss: 0.0025 - mean_absolute_error: 0.0388 - val_loss: 0.0084 - val_mean_absolute_error: 0.0655
+Epoch 26/40
+164608/189000 [=========================>....] - ETA: 4s - loss: 0.0024 - mean_absolute_error: 0.0380---------------------------------------------------------------------------
+
+* <2018-11-30 Fri> sentence encoding
+
+In [11]: train_model(model, data)
+Train on 125515 samples, validate on 13946 samples
+Epoch 1/40
+2018-11-30 13:46:19.878392: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2018-11-30 13:46:19.980973: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:964] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-11-30 13:46:19.981417: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1432] Found device 0 with properties: 
+name: GeForce GTX 1060 3GB major: 6 minor: 1 memoryClockRate(GHz): 1.7085
+pciBusID: 0000:0b:00.0
+totalMemory: 2.95GiB freeMemory: 2.66GiB
+2018-11-30 13:46:19.981436: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1511] Adding visible gpu devices: 0
+2018-11-30 13:46:20.138845: I tensorflow/core/common_runtime/gpu/gpu_device.cc:982] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-11-30 13:46:20.138886: I tensorflow/core/common_runtime/gpu/gpu_device.cc:988]      0 
+2018-11-30 13:46:20.138891: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1001] 0:   N 
+2018-11-30 13:46:20.139265: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 2358 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1060 3GB, pci bus id: 0000:0b:00.0, compute capability: 6.1)
+125515/125515 [==============================] - 5s 42us/step - loss: 0.0587 - mean_absolute_error: 0.1884 - val_loss: 0.0325 - val_mean_absolute_error: 0.1409
+Epoch 2/40
+125515/125515 [==============================] - 4s 34us/step - loss: 0.0302 - mean_absolute_error: 0.1350 - val_loss: 0.0287 - val_mean_absolute_error: 0.1304
+Epoch 3/40
+125515/125515 [==============================] - 4s 34us/step - loss: 0.0262 - mean_absolute_error: 0.1248 - val_loss: 0.0277 - val_mean_absolute_error: 0.1273
+Epoch 4/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0238 - mean_absolute_error: 0.1183 - val_loss: 0.0266 - val_mean_absolute_error: 0.1235
+Epoch 5/40
+125515/125515 [==============================] - 4s 36us/step - loss: 0.0219 - mean_absolute_error: 0.1130 - val_loss: 0.0258 - val_mean_absolute_error: 0.1209
+Epoch 6/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0205 - mean_absolute_error: 0.1090 - val_loss: 0.0243 - val_mean_absolute_error: 0.1165
+Epoch 7/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0192 - mean_absolute_error: 0.1052 - val_loss: 0.0230 - val_mean_absolute_error: 0.1150
+Epoch 8/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0181 - mean_absolute_error: 0.1019 - val_loss: 0.0249 - val_mean_absolute_error: 0.1176
+Epoch 9/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0172 - mean_absolute_error: 0.0990 - val_loss: 0.0219 - val_mean_absolute_error: 0.1119
+Epoch 10/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0165 - mean_absolute_error: 0.0967 - val_loss: 0.0221 - val_mean_absolute_error: 0.1102
+Epoch 11/40
+125515/125515 [==============================] - 4s 36us/step - loss: 0.0157 - mean_absolute_error: 0.0944 - val_loss: 0.0221 - val_mean_absolute_error: 0.1093
+Epoch 12/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0151 - mean_absolute_error: 0.0924 - val_loss: 0.0213 - val_mean_absolute_error: 0.1079
+Epoch 13/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0145 - mean_absolute_error: 0.0903 - val_loss: 0.0214 - val_mean_absolute_error: 0.1079
+Epoch 14/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0140 - mean_absolute_error: 0.0887 - val_loss: 0.0211 - val_mean_absolute_error: 0.1084
+Epoch 15/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0135 - mean_absolute_error: 0.0870 - val_loss: 0.0218 - val_mean_absolute_error: 0.1075
+Epoch 16/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0131 - mean_absolute_error: 0.0857 - val_loss: 0.0226 - val_mean_absolute_error: 0.1091
+Epoch 17/40
+125515/125515 [==============================] - 5s 36us/step - loss: 0.0127 - mean_absolute_error: 0.0843 - val_loss: 0.0213 - val_mean_absolute_error: 0.1082
+Epoch 18/40
+125515/125515 [==============================] - 4s 34us/step - loss: 0.0123 - mean_absolute_error: 0.0830 - val_loss: 0.0217 - val_mean_absolute_error: 0.1094
+Epoch 19/40
+125515/125515 [==============================] - 4s 34us/step - loss: 0.0120 - mean_absolute_error: 0.0818 - val_loss: 0.0213 - val_mean_absolute_error: 0.1071
+Epoch 20/40
+125515/125515 [==============================] - 4s 34us/step - loss: 0.0117 - mean_absolute_error: 0.0808 - val_loss: 0.0221 - val_mean_absolute_error: 0.1115
+Epoch 21/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0113 - mean_absolute_error: 0.0795 - val_loss: 0.0213 - val_mean_absolute_error: 0.1064
+Epoch 22/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0110 - mean_absolute_error: 0.0783 - val_loss: 0.0215 - val_mean_absolute_error: 0.1078
+Epoch 23/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0108 - mean_absolute_error: 0.0775 - val_loss: 0.0215 - val_mean_absolute_error: 0.1058
+Epoch 24/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0105 - mean_absolute_error: 0.0765 - val_loss: 0.0231 - val_mean_absolute_error: 0.1107
+Epoch 25/40
+125515/125515 [==============================] - 4s 36us/step - loss: 0.0103 - mean_absolute_error: 0.0757 - val_loss: 0.0215 - val_mean_absolute_error: 0.1076
+Epoch 26/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0100 - mean_absolute_error: 0.0746 - val_loss: 0.0229 - val_mean_absolute_error: 0.1083
+Epoch 27/40
+125515/125515 [==============================] - 4s 36us/step - loss: 0.0098 - mean_absolute_error: 0.0737 - val_loss: 0.0213 - val_mean_absolute_error: 0.1054
+Epoch 28/40
+125515/125515 [==============================] - 4s 36us/step - loss: 0.0096 - mean_absolute_error: 0.0729 - val_loss: 0.0216 - val_mean_absolute_error: 0.1082
+Epoch 29/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0094 - mean_absolute_error: 0.0722 - val_loss: 0.0212 - val_mean_absolute_error: 0.1068
+Epoch 30/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0092 - mean_absolute_error: 0.0712 - val_loss: 0.0215 - val_mean_absolute_error: 0.1060
+Epoch 31/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0090 - mean_absolute_error: 0.0705 - val_loss: 0.0216 - val_mean_absolute_error: 0.1067
+Epoch 32/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0088 - mean_absolute_error: 0.0697 - val_loss: 0.0221 - val_mean_absolute_error: 0.1102
+Epoch 33/40
+125515/125515 [==============================] - 5s 36us/step - loss: 0.0086 - mean_absolute_error: 0.0689 - val_loss: 0.0219 - val_mean_absolute_error: 0.1065
+Epoch 34/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0085 - mean_absolute_error: 0.0683 - val_loss: 0.0228 - val_mean_absolute_error: 0.1097
+Epoch 35/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0083 - mean_absolute_error: 0.0678 - val_loss: 0.0220 - val_mean_absolute_error: 0.1062
+Epoch 36/40
+125515/125515 [==============================] - 4s 36us/step - loss: 0.0082 - mean_absolute_error: 0.0672 - val_loss: 0.0214 - val_mean_absolute_error: 0.1057
+Epoch 37/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0080 - mean_absolute_error: 0.0665 - val_loss: 0.0218 - val_mean_absolute_error: 0.1064
+Epoch 38/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0078 - mean_absolute_error: 0.0658 - val_loss: 0.0217 - val_mean_absolute_error: 0.1066
+Epoch 39/40
+125515/125515 [==============================] - 4s 35us/step - loss: 0.0077 - mean_absolute_error: 0.0652 - val_loss: 0.0223 - val_mean_absolute_error: 0.1068
+Epoch 40/40
+125515/125515 [==============================] - 4s 36us/step - loss: 0.0076 - mean_absolute_error: 0.0645 - val_loss: 0.0232 - val_mean_absolute_error: 0.1081
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_1 (InputLayer)         (None, 13, 512)           0         
+_________________________________________________________________
+conv1d_1 (Conv1D)            (None, 11, 128)           196736    
+_________________________________________________________________
+max_pooling1d_1 (MaxPooling1 (None, 5, 128)            0         
+_________________________________________________________________
+conv1d_2 (Conv1D)            (None, 3, 128)            49280     
+_________________________________________________________________
+global_max_pooling1d_1 (Glob (None, 128)               0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 128)               16512     
+_________________________________________________________________
+dense_2 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 262,657
+Trainable params: 262,657
+Non-trainable params: 0
+_________________________________________________________________
+
+
+* <2018-11-30 Fri> Glove model, 1000 sample
+In [23]: train_model(model, data)
+Train on 18900 samples, validate on 2100 samples
+Epoch 1/40
+2018-11-30 14:14:00.026530: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2018-11-30 14:14:00.203571: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:964] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-11-30 14:14:00.204047: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1432] Found device 0 with properties: 
+name: GeForce GTX 1060 3GB major: 6 minor: 1 memoryClockRate(GHz): 1.7085
+pciBusID: 0000:0b:00.0
+totalMemory: 2.95GiB freeMemory: 2.60GiB
+2018-11-30 14:14:00.204064: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1511] Adding visible gpu devices: 0
+2018-11-30 14:14:01.013035: I tensorflow/core/common_runtime/gpu/gpu_device.cc:982] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-11-30 14:14:01.013068: I tensorflow/core/common_runtime/gpu/gpu_device.cc:988]      0 
+2018-11-30 14:14:01.013075: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1001] 0:   N 
+2018-11-30 14:14:01.013233: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 2301 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1060 3GB, pci bus id: 0000:0b:00.0, compute capability: 6.1)
+18688/18900 [============================>.] - ETA: 0s - loss: 0.1276 - mean_absolute_error: 0.2883 - pearson_correlation_f2: 0.37032018-11-30 14:14:05.928711: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 3.36GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+2018-11-30 14:14:05.949685: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.67GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+2018-11-30 14:14:06.169337: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.86GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+18900/18900 [==============================] - 6s 325us/step - loss: 0.1268 - mean_absolute_error: 0.2872 - pearson_correlation_f2: 0.3742 - val_loss: 0.0490 - val_mean_absolute_error: 0.1774 - val_pearson_correlation_f2: 0.7510
+Epoch 2/40
+18900/18900 [==============================] - 3s 182us/step - loss: 0.0449 - mean_absolute_error: 0.1676 - pearson_correlation_f2: 0.8332 - val_loss: 0.0383 - val_mean_absolute_error: 0.1577 - val_pearson_correlation_f2: 0.8828
+Epoch 3/40
+18900/18900 [==============================] - 3s 180us/step - loss: 0.0254 - mean_absolute_error: 0.1251 - pearson_correlation_f2: 0.9034 - val_loss: 0.0210 - val_mean_absolute_error: 0.1124 - val_pearson_correlation_f2: 0.9070
+Epoch 4/40
+18900/18900 [==============================] - 3s 179us/step - loss: 0.0179 - mean_absolute_error: 0.1036 - pearson_correlation_f2: 0.9295 - val_loss: 0.0199 - val_mean_absolute_error: 0.1122 - val_pearson_correlation_f2: 0.9210
+Epoch 5/40
+18900/18900 [==============================] - 3s 180us/step - loss: 0.0134 - mean_absolute_error: 0.0895 - pearson_correlation_f2: 0.9483 - val_loss: 0.0130 - val_mean_absolute_error: 0.0867 - val_pearson_correlation_f2: 0.9275
+Epoch 6/40
+18900/18900 [==============================] - 3s 183us/step - loss: 0.0104 - mean_absolute_error: 0.0790 - pearson_correlation_f2: 0.9605 - val_loss: 0.0165 - val_mean_absolute_error: 0.0998 - val_pearson_correlation_f2: 0.9294
+Epoch 7/40
+18900/18900 [==============================] - 3s 185us/step - loss: 0.0084 - mean_absolute_error: 0.0709 - pearson_correlation_f2: 0.9679 - val_loss: 0.0142 - val_mean_absolute_error: 0.0871 - val_pearson_correlation_f2: 0.9321
+Epoch 8/40
+18900/18900 [==============================] - 4s 189us/step - loss: 0.0069 - mean_absolute_error: 0.0643 - pearson_correlation_f2: 0.9732 - val_loss: 0.0119 - val_mean_absolute_error: 0.0808 - val_pearson_correlation_f2: 0.9348
+Epoch 9/40
+18900/18900 [==============================] - 3s 184us/step - loss: 0.0060 - mean_absolute_error: 0.0604 - pearson_correlation_f2: 0.9765 - val_loss: 0.0123 - val_mean_absolute_error: 0.0839 - val_pearson_correlation_f2: 0.9328
+Epoch 10/40
+18900/18900 [==============================] - 3s 185us/step - loss: 0.0054 - mean_absolute_error: 0.0568 - pearson_correlation_f2: 0.9792 - val_loss: 0.0134 - val_mean_absolute_error: 0.0821 - val_pearson_correlation_f2: 0.9328
+Epoch 11/40
+18900/18900 [==============================] - 3s 182us/step - loss: 0.0047 - mean_absolute_error: 0.0529 - pearson_correlation_f2: 0.9816 - val_loss: 0.0122 - val_mean_absolute_error: 0.0798 - val_pearson_correlation_f2: 0.9362
+Epoch 12/40
+18900/18900 [==============================] - 3s 182us/step - loss: 0.0042 - mean_absolute_error: 0.0502 - pearson_correlation_f2: 0.9832 - val_loss: 0.0130 - val_mean_absolute_error: 0.0843 - val_pearson_correlation_f2: 0.9381
+Epoch 13/40
+18900/18900 [==============================] - 4s 189us/step - loss: 0.0041 - mean_absolute_error: 0.0492 - pearson_correlation_f2: 0.9845 - val_loss: 0.0117 - val_mean_absolute_error: 0.0797 - val_pearson_correlation_f2: 0.9384
+Epoch 14/40
+18900/18900 [==============================] - 3s 183us/step - loss: 0.0037 - mean_absolute_error: 0.0472 - pearson_correlation_f2: 0.9854 - val_loss: 0.0127 - val_mean_absolute_error: 0.0814 - val_pearson_correlation_f2: 0.9380
+Epoch 15/40
+18900/18900 [==============================] - 3s 182us/step - loss: 0.0033 - mean_absolute_error: 0.0449 - pearson_correlation_f2: 0.9866 - val_loss: 0.0098 - val_mean_absolute_error: 0.0733 - val_pearson_correlation_f2: 0.9419
+Epoch 16/40
+18900/18900 [==============================] - 3s 182us/step - loss: 0.0033 - mean_absolute_error: 0.0442 - pearson_correlation_f2: 0.9870 - val_loss: 0.0099 - val_mean_absolute_error: 0.0715 - val_pearson_correlation_f2: 0.9421
+Epoch 17/40
+18900/18900 [==============================] - 3s 183us/step - loss: 0.0030 - mean_absolute_error: 0.0427 - pearson_correlation_f2: 0.9883 - val_loss: 0.0097 - val_mean_absolute_error: 0.0712 - val_pearson_correlation_f2: 0.9424
+Epoch 18/40
+18900/18900 [==============================] - 3s 183us/step - loss: 0.0029 - mean_absolute_error: 0.0414 - pearson_correlation_f2: 0.9884 - val_loss: 0.0105 - val_mean_absolute_error: 0.0739 - val_pearson_correlation_f2: 0.9415
+Epoch 19/40
+18900/18900 [==============================] - 3s 183us/step - loss: 0.0027 - mean_absolute_error: 0.0402 - pearson_correlation_f2: 0.9892 - val_loss: 0.0101 - val_mean_absolute_error: 0.0741 - val_pearson_correlation_f2: 0.9430
+Epoch 20/40
+18900/18900 [==============================] - 3s 182us/step - loss: 0.0025 - mean_absolute_error: 0.0383 - pearson_correlation_f2: 0.9900 - val_loss: 0.0101 - val_mean_absolute_error: 0.0710 - val_pearson_correlation_f2: 0.9418
+Epoch 21/40
+18900/18900 [==============================] - 3s 184us/step - loss: 0.0025 - mean_absolute_error: 0.0380 - pearson_correlation_f2: 0.9904 - val_loss: 0.0097 - val_mean_absolute_error: 0.0696 - val_pearson_correlation_f2: 0.9425
+Epoch 22/40
+18900/18900 [==============================] - 3s 184us/step - loss: 0.0023 - mean_absolute_error: 0.0372 - pearson_correlation_f2: 0.9908 - val_loss: 0.0097 - val_mean_absolute_error: 0.0694 - val_pearson_correlation_f2: 0.9437
+Epoch 23/40
+18900/18900 [==============================] - 3s 185us/step - loss: 0.0023 - mean_absolute_error: 0.0368 - pearson_correlation_f2: 0.9910 - val_loss: 0.0110 - val_mean_absolute_error: 0.0757 - val_pearson_correlation_f2: 0.9385
+Epoch 24/40
+18900/18900 [==============================] - 4s 188us/step - loss: 0.0021 - mean_absolute_error: 0.0352 - pearson_correlation_f2: 0.9914 - val_loss: 0.0097 - val_mean_absolute_error: 0.0715 - val_pearson_correlation_f2: 0.9426
+Epoch 25/40
+18900/18900 [==============================] - 4s 188us/step - loss: 0.0021 - mean_absolute_error: 0.0353 - pearson_correlation_f2: 0.9917 - val_loss: 0.0113 - val_mean_absolute_error: 0.0760 - val_pearson_correlation_f2: 0.9404
+Epoch 26/40
+18900/18900 [==============================] - 4s 190us/step - loss: 0.0020 - mean_absolute_error: 0.0343 - pearson_correlation_f2: 0.9919 - val_loss: 0.0105 - val_mean_absolute_error: 0.0720 - val_pearson_correlation_f2: 0.9424
+Epoch 27/40
+18900/18900 [==============================] - 4s 192us/step - loss: 0.0019 - mean_absolute_error: 0.0335 - pearson_correlation_f2: 0.9924 - val_loss: 0.0104 - val_mean_absolute_error: 0.0736 - val_pearson_correlation_f2: 0.9422
+Epoch 28/40
+18900/18900 [==============================] - 4s 192us/step - loss: 0.0018 - mean_absolute_error: 0.0332 - pearson_correlation_f2: 0.9925 - val_loss: 0.0108 - val_mean_absolute_error: 0.0725 - val_pearson_correlation_f2: 0.9402
+Epoch 29/40
+18900/18900 [==============================] - 4s 194us/step - loss: 0.0018 - mean_absolute_error: 0.0327 - pearson_correlation_f2: 0.9927 - val_loss: 0.0096 - val_mean_absolute_error: 0.0709 - val_pearson_correlation_f2: 0.9438
+Epoch 30/40
+18900/18900 [==============================] - 4s 195us/step - loss: 0.0018 - mean_absolute_error: 0.0322 - pearson_correlation_f2: 0.9931 - val_loss: 0.0100 - val_mean_absolute_error: 0.0724 - val_pearson_correlation_f2: 0.9431
+Epoch 31/40
+18900/18900 [==============================] - 4s 199us/step - loss: 0.0017 - mean_absolute_error: 0.0314 - pearson_correlation_f2: 0.9933 - val_loss: 0.0105 - val_mean_absolute_error: 0.0765 - val_pearson_correlation_f2: 0.9396
+Epoch 32/40
+18900/18900 [==============================] - 4s 197us/step - loss: 0.0017 - mean_absolute_error: 0.0313 - pearson_correlation_f2: 0.9935 - val_loss: 0.0107 - val_mean_absolute_error: 0.0721 - val_pearson_correlation_f2: 0.9412
+Epoch 33/40
+18900/18900 [==============================] - 4s 194us/step - loss: 0.0016 - mean_absolute_error: 0.0308 - pearson_correlation_f2: 0.9936 - val_loss: 0.0101 - val_mean_absolute_error: 0.0723 - val_pearson_correlation_f2: 0.9433
+Epoch 34/40
+18900/18900 [==============================] - 4s 191us/step - loss: 0.0016 - mean_absolute_error: 0.0303 - pearson_correlation_f2: 0.9939 - val_loss: 0.0095 - val_mean_absolute_error: 0.0712 - val_pearson_correlation_f2: 0.9448
+Epoch 35/40
+18900/18900 [==============================] - 4s 192us/step - loss: 0.0015 - mean_absolute_error: 0.0297 - pearson_correlation_f2: 0.9939 - val_loss: 0.0097 - val_mean_absolute_error: 0.0691 - val_pearson_correlation_f2: 0.9430
+Epoch 36/40
+18900/18900 [==============================] - 4s 193us/step - loss: 0.0015 - mean_absolute_error: 0.0296 - pearson_correlation_f2: 0.9941 - val_loss: 0.0101 - val_mean_absolute_error: 0.0726 - val_pearson_correlation_f2: 0.9433
+Epoch 37/40
+18900/18900 [==============================] - 4s 192us/step - loss: 0.0014 - mean_absolute_error: 0.0285 - pearson_correlation_f2: 0.9943 - val_loss: 0.0095 - val_mean_absolute_error: 0.0688 - val_pearson_correlation_f2: 0.9442
+Epoch 38/40
+18900/18900 [==============================] - 4s 192us/step - loss: 0.0013 - mean_absolute_error: 0.0283 - pearson_correlation_f2: 0.9946 - val_loss: 0.0094 - val_mean_absolute_error: 0.0705 - val_pearson_correlation_f2: 0.9442
+Epoch 39/40
+18900/18900 [==============================] - 4s 197us/step - loss: 0.0014 - mean_absolute_error: 0.0282 - pearson_correlation_f2: 0.9945 - val_loss: 0.0109 - val_mean_absolute_error: 0.0770 - val_pearson_correlation_f2: 0.9457
+Epoch 40/40
+18900/18900 [==============================] - 4s 192us/step - loss: 0.0013 - mean_absolute_error: 0.0281 - pearson_correlation_f2: 0.9948 - val_loss: 0.0095 - val_mean_absolute_error: 0.0684 - val_pearson_correlation_f2: 0.9448
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_1 (InputLayer)         (None, 640)               0         
+_________________________________________________________________
+embedding_1 (Embedding)      (None, 640, 100)          10782500  
+_________________________________________________________________
+conv1d_1 (Conv1D)            (None, 636, 128)          64128     
+_________________________________________________________________
+max_pooling1d_1 (MaxPooling1 (None, 127, 128)          0         
+_________________________________________________________________
+conv1d_2 (Conv1D)            (None, 123, 128)          82048     
+_________________________________________________________________
+max_pooling1d_2 (MaxPooling1 (None, 24, 128)           0         
+_________________________________________________________________
+conv1d_3 (Conv1D)            (None, 20, 128)           82048     
+_________________________________________________________________
+global_max_pooling1d_1 (Glob (None, 128)               0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 128)               16512     
+_________________________________________________________________
+dense_2 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 11,027,365
+Trainable params: 244,865
+Non-trainable params: 10,782,500
+_________________________________________________________________
+
+* <2018-11-30 Fri> GLove, 10000 sample
+
+In [11]: (x_train, y_train), (x_val, y_val) = data
+
+In [12]: x_train.shape
+Out[12]: (189000, 640)
+
+In [13]: y_train.shape
+Out[13]: (189000,)
+
+In [14]: x_val.shape
+Out[14]: (21000, 640)
+
+In [15]: y_val.shape
+Out[15]: (21000,)
+
+In [16]: embedding_layer = load_embedding(tokenizer)
+Indexing word vectors.
+Found 400000 word vectors.
+
+In [17]: model = build_glove_model(embedding_layer)
+
+In [18]: train_model(model, data)
+Train on 189000 samples, validate on 21000 samples
+Epoch 1/40
+2018-11-30 14:21:40.561028: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2018-11-30 14:21:40.651910: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:964] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-11-30 14:21:40.652347: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1432] Found device 0 with properties: 
+name: GeForce GTX 1060 3GB major: 6 minor: 1 memoryClockRate(GHz): 1.7085
+pciBusID: 0000:0b:00.0
+totalMemory: 2.95GiB freeMemory: 2.58GiB
+2018-11-30 14:21:40.652362: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1511] Adding visible gpu devices: 0
+2018-11-30 14:21:40.807973: I tensorflow/core/common_runtime/gpu/gpu_device.cc:982] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-11-30 14:21:40.808005: I tensorflow/core/common_runtime/gpu/gpu_device.cc:988]      0 
+2018-11-30 14:21:40.808011: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1001] 0:   N 
+2018-11-30 14:21:40.808154: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 2278 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1060 3GB, pci bus id: 0000:0b:00.0, compute capability: 6.1)
+188800/189000 [============================>.] - ETA: 0s - loss: 0.0336 - mean_absolute_error: 0.1342 - pearson_correlation_f: 0.83012018-11-30 14:22:14.725850: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 3.17GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+2018-11-30 14:22:14.742010: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.29GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+2018-11-30 14:22:16.324400: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.16GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+189000/189000 [==============================] - 36s 189us/step - loss: 0.0336 - mean_absolute_error: 0.1342 - pearson_correlation_f: 0.8302 - val_loss: 0.0161 - val_mean_absolute_error: 0.0994 - val_pearson_correlation_f: 0.9158
+Epoch 2/40
+189000/189000 [==============================] - 35s 185us/step - loss: 0.0149 - mean_absolute_error: 0.0936 - pearson_correlation_f: 0.9215 - val_loss: 0.0132 - val_mean_absolute_error: 0.0892 - val_pearson_correlation_f: 0.9246
+Epoch 3/40
+189000/189000 [==============================] - 36s 192us/step - loss: 0.0123 - mean_absolute_error: 0.0846 - pearson_correlation_f: 0.9352 - val_loss: 0.0126 - val_mean_absolute_error: 0.0861 - val_pearson_correlation_f: 0.9292
+Epoch 4/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0103 - mean_absolute_error: 0.0774 - pearson_correlation_f: 0.9453 - val_loss: 0.0116 - val_mean_absolute_error: 0.0821 - val_pearson_correlation_f: 0.9346
+Epoch 5/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0090 - mean_absolute_error: 0.0721 - pearson_correlation_f: 0.9525 - val_loss: 0.0107 - val_mean_absolute_error: 0.0772 - val_pearson_correlation_f: 0.9404
+Epoch 6/40
+189000/189000 [==============================] - 37s 196us/step - loss: 0.0079 - mean_absolute_error: 0.0673 - pearson_correlation_f: 0.9586 - val_loss: 0.0109 - val_mean_absolute_error: 0.0778 - val_pearson_correlation_f: 0.9396
+Epoch 7/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0071 - mean_absolute_error: 0.0637 - pearson_correlation_f: 0.9631 - val_loss: 0.0109 - val_mean_absolute_error: 0.0792 - val_pearson_correlation_f: 0.9402
+Epoch 8/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0064 - mean_absolute_error: 0.0607 - pearson_correlation_f: 0.9665 - val_loss: 0.0097 - val_mean_absolute_error: 0.0731 - val_pearson_correlation_f: 0.9452
+Epoch 9/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0058 - mean_absolute_error: 0.0580 - pearson_correlation_f: 0.9697 - val_loss: 0.0096 - val_mean_absolute_error: 0.0719 - val_pearson_correlation_f: 0.9472
+Epoch 10/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0054 - mean_absolute_error: 0.0557 - pearson_correlation_f: 0.9720 - val_loss: 0.0099 - val_mean_absolute_error: 0.0733 - val_pearson_correlation_f: 0.9465
+Epoch 11/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0050 - mean_absolute_error: 0.0537 - pearson_correlation_f: 0.9741 - val_loss: 0.0136 - val_mean_absolute_error: 0.0823 - val_pearson_correlation_f: 0.9402
+Epoch 12/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0047 - mean_absolute_error: 0.0520 - pearson_correlation_f: 0.9758 - val_loss: 0.0093 - val_mean_absolute_error: 0.0690 - val_pearson_correlation_f: 0.9484
+Epoch 13/40
+189000/189000 [==============================] - 37s 196us/step - loss: 0.0043 - mean_absolute_error: 0.0502 - pearson_correlation_f: 0.9775 - val_loss: 0.0092 - val_mean_absolute_error: 0.0691 - val_pearson_correlation_f: 0.9501
+Epoch 14/40
+189000/189000 [==============================] - 37s 196us/step - loss: 0.0041 - mean_absolute_error: 0.0489 - pearson_correlation_f: 0.9788 - val_loss: 0.0090 - val_mean_absolute_error: 0.0672 - val_pearson_correlation_f: 0.9509
+Epoch 15/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0039 - mean_absolute_error: 0.0476 - pearson_correlation_f: 0.9800 - val_loss: 0.0095 - val_mean_absolute_error: 0.0695 - val_pearson_correlation_f: 0.9467
+Epoch 16/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0037 - mean_absolute_error: 0.0465 - pearson_correlation_f: 0.9810 - val_loss: 0.0088 - val_mean_absolute_error: 0.0677 - val_pearson_correlation_f: 0.9509
+Epoch 17/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0035 - mean_absolute_error: 0.0453 - pearson_correlation_f: 0.9821 - val_loss: 0.0095 - val_mean_absolute_error: 0.0689 - val_pearson_correlation_f: 0.9514
+Epoch 18/40
+189000/189000 [==============================] - 37s 196us/step - loss: 0.0033 - mean_absolute_error: 0.0443 - pearson_correlation_f: 0.9829 - val_loss: 0.0091 - val_mean_absolute_error: 0.0679 - val_pearson_correlation_f: 0.9518
+Epoch 19/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0032 - mean_absolute_error: 0.0433 - pearson_correlation_f: 0.9839 - val_loss: 0.0087 - val_mean_absolute_error: 0.0658 - val_pearson_correlation_f: 0.9514
+Epoch 20/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0031 - mean_absolute_error: 0.0426 - pearson_correlation_f: 0.9844 - val_loss: 0.0095 - val_mean_absolute_error: 0.0691 - val_pearson_correlation_f: 0.9494
+Epoch 21/40
+189000/189000 [==============================] - 37s 196us/step - loss: 0.0030 - mean_absolute_error: 0.0418 - pearson_correlation_f: 0.9851 - val_loss: 0.0085 - val_mean_absolute_error: 0.0661 - val_pearson_correlation_f: 0.9526
+Epoch 22/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0028 - mean_absolute_error: 0.0410 - pearson_correlation_f: 0.9857 - val_loss: 0.0090 - val_mean_absolute_error: 0.0661 - val_pearson_correlation_f: 0.9513
+Epoch 23/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0027 - mean_absolute_error: 0.0404 - pearson_correlation_f: 0.9862 - val_loss: 0.0090 - val_mean_absolute_error: 0.0679 - val_pearson_correlation_f: 0.9520
+Epoch 24/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0027 - mean_absolute_error: 0.0398 - pearson_correlation_f: 0.9867 - val_loss: 0.0088 - val_mean_absolute_error: 0.0660 - val_pearson_correlation_f: 0.9516
+Epoch 25/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0026 - mean_absolute_error: 0.0392 - pearson_correlation_f: 0.9871 - val_loss: 0.0088 - val_mean_absolute_error: 0.0671 - val_pearson_correlation_f: 0.9512
+Epoch 26/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0025 - mean_absolute_error: 0.0386 - pearson_correlation_f: 0.9875 - val_loss: 0.0086 - val_mean_absolute_error: 0.0642 - val_pearson_correlation_f: 0.9518
+Epoch 27/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0024 - mean_absolute_error: 0.0381 - pearson_correlation_f: 0.9879 - val_loss: 0.0088 - val_mean_absolute_error: 0.0649 - val_pearson_correlation_f: 0.9511
+Epoch 28/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0024 - mean_absolute_error: 0.0376 - pearson_correlation_f: 0.9883 - val_loss: 0.0084 - val_mean_absolute_error: 0.0647 - val_pearson_correlation_f: 0.9529
+Epoch 29/40
+189000/189000 [==============================] - 37s 194us/step - loss: 0.0023 - mean_absolute_error: 0.0372 - pearson_correlation_f: 0.9887 - val_loss: 0.0094 - val_mean_absolute_error: 0.0685 - val_pearson_correlation_f: 0.9532
+Epoch 30/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0022 - mean_absolute_error: 0.0366 - pearson_correlation_f: 0.9890 - val_loss: 0.0087 - val_mean_absolute_error: 0.0656 - val_pearson_correlation_f: 0.9515
+Epoch 31/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0022 - mean_absolute_error: 0.0363 - pearson_correlation_f: 0.9892 - val_loss: 0.0089 - val_mean_absolute_error: 0.0679 - val_pearson_correlation_f: 0.9527
+Epoch 32/40
+189000/189000 [==============================] - 37s 195us/step - loss: 0.0021 - mean_absolute_error: 0.0359 - pearson_correlation_f: 0.9894 - val_loss: 0.0088 - val_mean_absolute_error: 0.0646 - val_pearson_correlation_f: 0.9518
+Epoch 33/40
+189000/189000 [==============================] - 37s 196us/step - loss: 0.0021 - mean_absolute_error: 0.0356 - pearson_correlation_f: 0.9897 - val_loss: 0.0088 - val_mean_absolute_error: 0.0652 - val_pearson_correlation_f: 0.9509
+Epoch 34/40
+189000/189000 [==============================] - 37s 197us/step - loss: 0.0020 - mean_absolute_error: 0.0350 - pearson_correlation_f: 0.9900 - val_loss: 0.0094 - val_mean_absolute_error: 0.0690 - val_pearson_correlation_f: 0.9511
+Epoch 35/40
+189000/189000 [==============================] - 37s 198us/step - loss: 0.0020 - mean_absolute_error: 0.0347 - pearson_correlation_f: 0.9902 - val_loss: 0.0088 - val_mean_absolute_error: 0.0645 - val_pearson_correlation_f: 0.9520
+Epoch 36/40
+189000/189000 [==============================] - 37s 198us/step - loss: 0.0020 - mean_absolute_error: 0.0344 - pearson_correlation_f: 0.9905 - val_loss: 0.0084 - val_mean_absolute_error: 0.0634 - val_pearson_correlation_f: 0.9530
+Epoch 37/40
+189000/189000 [==============================] - 37s 198us/step - loss: 0.0019 - mean_absolute_error: 0.0341 - pearson_correlation_f: 0.9907 - val_loss: 0.0093 - val_mean_absolute_error: 0.0674 - val_pearson_correlation_f: 0.9518
+Epoch 38/40
+189000/189000 [==============================] - 38s 202us/step - loss: 0.0019 - mean_absolute_error: 0.0338 - pearson_correlation_f: 0.9908 - val_loss: 0.0086 - val_mean_absolute_error: 0.0641 - val_pearson_correlation_f: 0.9536
+Epoch 39/40
+189000/189000 [==============================] - 37s 197us/step - loss: 0.0019 - mean_absolute_error: 0.0334 - pearson_correlation_f: 0.9910 - val_loss: 0.0088 - val_mean_absolute_error: 0.0654 - val_pearson_correlation_f: 0.9540
+Epoch 40/40
+189000/189000 [==============================] - 37s 198us/step - loss: 0.0018 - mean_absolute_error: 0.0332 - pearson_correlation_f: 0.9912 - val_loss: 0.0087 - val_mean_absolute_error: 0.0650 - val_pearson_correlation_f: 0.9530
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_1 (InputLayer)         (None, 640)               0         
+_________________________________________________________________
+embedding_1 (Embedding)      (None, 640, 100)          17878200  
+_________________________________________________________________
+conv1d_1 (Conv1D)            (None, 636, 128)          64128     
+_________________________________________________________________
+max_pooling1d_1 (MaxPooling1 (None, 127, 128)          0         
+_________________________________________________________________
+conv1d_2 (Conv1D)            (None, 123, 128)          82048     
+_________________________________________________________________
+max_pooling1d_2 (MaxPooling1 (None, 24, 128)           0         
+_________________________________________________________________
+conv1d_3 (Conv1D)            (None, 20, 128)           82048     
+_________________________________________________________________
+global_max_pooling1d_1 (Glob (None, 128)               0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 128)               16512     
+_________________________________________________________________
+dense_2 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 18,123,065
+Trainable params: 244,865
+Non-trainable params: 17,878,200
+_________________________________________________________________

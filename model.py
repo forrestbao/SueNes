@@ -1,5 +1,20 @@
 #!/usr/bin/env python3
 
+import os
+
+import numpy as np
+
+from keras.layers import Dense, Input, GlobalMaxPooling1D
+from keras.layers import Conv1D, MaxPooling1D, Embedding
+from keras.models import Model
+from keras.initializers import Constant
+
+from keras import backend as K
+
+from config import *
+
+GLOVE_DIR = '/home/hebi/github/reading/keras/examples/data/glove.6B'
+
 def load_embedding(tokenizer):
     """1. read glove.6B.100d embedding matrix
     
@@ -44,7 +59,8 @@ def load_embedding(tokenizer):
     embedding_layer = Embedding(num_words,
                                 EMBEDDING_DIM,
                                 embeddings_initializer=Constant(embedding_matrix),
-                                input_length=MAX_SEQUENCE_LENGTH,
+                                # MAX_SEQUENCE_LENGTH = 1000
+                                # input_length=MAX_SEQUENCE_LENGTH,
                                 trainable=False)
     return embedding_layer
 
@@ -89,6 +105,22 @@ def build_glove_model(embedding_layer):
 
     model = Model(sequence_input, preds)
     return model
+
+def build_uae_model():
+    sequence_input = Input(shape=(ARTICLE_MAX_SENT + SUMMARY_MAX_SENT, 512),
+                           dtype='float32')
+    x = Conv1D(128, 3, activation='relu')(sequence_input)
+    x = MaxPooling1D(2)(x)
+    # x = Conv1D(128, 5, activation='relu')(x)
+    # x = MaxPooling1D(5)(x)
+    x = Conv1D(128, 3, activation='relu')(x)
+    x = GlobalMaxPooling1D()(x)
+    x = Dense(128, activation='relu')(x)
+    preds = Dense(1)(x)
+
+    model = Model(sequence_input, preds)
+    return model
+    
 
 def build_model_test():
     # apply a layer multiple times

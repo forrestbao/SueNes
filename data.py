@@ -7,10 +7,17 @@ import re
 import math
 
 from keras.preprocessing.sequence import pad_sequences
+from keras.preprocessing.text import Tokenizer, one_hot
+from keras.preprocessing.sequence import pad_sequences
+
+# why keras.preprocessing is not exporting tokenizer_from_json ??
+from keras_preprocessing.text import tokenizer_from_json
 
 
 from preprocessing import read_text_file
 from embedding import SentenceEmbedder
+
+from config import *
 
 cnndm_dir = '/home/hebi/github/reading/cnn-dailymail/'
 cnn_dir = os.path.join(cnndm_dir, 'data/cnn/stroies')
@@ -18,12 +25,14 @@ dm_dir = os.path.join(cnndm_dir, 'data/dailymail/stories')
 cnn_tokenized_dir = os.path.join(cnndm_dir, 'cnn_stories_tokenized')
 dm_tokenized_dir = os.path.join(cnndm_dir, 'dm_stories_tokenized')
 
+ARTICLE_MAX_SENT = 10
+SUMMARY_MAX_SENT = 3
 
 def uae_pregen():
     """Pre-generate the uae for data folder.
     """
     hebi_dir = os.path.join(cnndm_dir, 'hebi')
-    data_dir = os.path.join(cnndm_dir, 'hebi-sample-100')
+    data_dir = os.path.join(cnndm_dir, 'hebi-sample-10000')
     hebi_uae_dir = os.path.join(cnndm_dir, 'hebi-uae')
     # For each folder (with hash) in hebi_dir, check if hebi_uae_dir
     # contains this folder or not. If not, parse the article and
@@ -35,6 +44,7 @@ def uae_pregen():
     print('total stories:', len(stories))
     print('finished:', len(finished_stories))
 
+    print('creating UAE instance ..')
     use_embedder = SentenceEmbedder()
 
     ct = 0
@@ -43,15 +53,15 @@ def uae_pregen():
         data = {}
         to_encode = []
         scores = []
-        print('processing', s, '..')
         story_dir = os.path.join(data_dir, s)
         story_uae_file = os.path.join(hebi_uae_dir, s)
         if not os.path.exists(story_uae_file):
-            
+            print('processing', s, '..')
             ct += 1
             if ct % 50 == 0:
                 # This function returns after processing 50 stories,
                 # due to memory reason.
+                print('reaches 50 stories, existing ..')
                 return
             
             # create the embedding
@@ -94,6 +104,42 @@ def uae_pregen():
             data['score'] = scores
             with open(story_uae_file, 'wb') as f:
                 pickle.dump(data, f)
+
+def prepare_data_using_use():
+    """Return vector of float32. The dimension of X is (?,13,512), Y is
+    (?) where ? is the number of articles.
+    """
+    # data_dir = os.path.join(cnndm_dir, 'hebi-sample-10000')
+    hebi_uae_dir = os.path.join(cnndm_dir, 'hebi-uae')
+    # I'm going to use just uae dir
+    stories = os.listdir(hebi_uae_dir)
+    len(stories)
+    article_data = []
+    summary_data = []
+    scores = []
+    print('loading USE preprocessed stories ..')
+    for s in stories:
+        uae_file = os.path.join(hebi_uae_dir, s)
+        with open(uae_file, 'rb') as f:
+            data = pickle.load(f)
+            length = len(data['summary'])
+            # the embedding of the article
+            article_data.extend([data['article']] * length)
+            # a list of embedding of summaries
+            summary_data.extend(data['summary'])
+            scores.extend(data['score'])
+    # pad sequence
+    print('padding sequence ..')
+    article_data_padded = pad_sequences(article_data,
+                                        value=np.zeros(512), padding='post',
+                                        maxlen=ARTICLE_MAX_SENT, dtype='float32')
+    summary_data_padded = pad_sequences(summary_data,
+                                        value=np.zeros(512), padding='post',
+                                        maxlen=SUMMARY_MAX_SENT, dtype='float32')
+    print('concatenating ..')
+    data = np.concatenate((article_data_padded, summary_data_padded), axis=1)
+
+    return shuffle_and_split(data, np.array(scores))
 
 def save_data(data, filename):
     (x_train, y_train), (x_val, y_val) = data
@@ -183,7 +229,29 @@ def test_keras_preprocessing():
     one_hot('hello world you are you awesome', 200)
     return
 
+def shuffle_and_split(features, labels):
+    # shuffle the order
+    print('shuffling ..')
+    indices = np.arange(features.shape[0])
+    # this modify in place
+    np.random.shuffle(indices)
+    features = features[indices]
+    labels = labels[indices]
+
+    # split the data into a training set and a validation set
+    print('splitting ..')
+    num_validation_samples = int(0.1 * features.shape[0])
+    x_train = features[:-num_validation_samples]
+    y_train = labels[:-num_validation_samples]
+    x_val = features[-num_validation_samples:]
+    y_val = labels[-num_validation_samples:]
+    return (x_train, y_train), (x_val, y_val)
+    
+
 def prepare_data_using_tokenizer(articles, summaries, scores, tokenizer):
+    """
+    (?, 640). Each word is projected to its INDEX (int) in the tokenizer.
+    """
     print('article texts to sequences ..')
     # TODO this is pretty slow. I parsed each article 21 times. I can
     # surely reduce this
@@ -202,23 +270,19 @@ def prepare_data_using_tokenizer(articles, summaries, scores, tokenizer):
     data = np.concatenate((article_sequences_padded,
                            summary_sequences_padded), axis=1)
 
+    return shuffle_and_split(data, np.array(scores))
 
-    # shuffle the order
-    print('shuffling ..')
-    indices = np.arange(data.shape[0])
-    np.random.shuffle(indices)
-    data = data[indices]
-    scores_data = np.array(scores)
-    scores_data = scores_data[indices]
-
-    # split the data into a training set and a validation set
-    print('splitting ..')
-    num_validation_samples = int(0.1 * data.shape[0])
-    x_train = data[:-num_validation_samples]
-    y_train = scores_data[:-num_validation_samples]
-    x_val = data[-num_validation_samples:]
-    y_val = scores_data[-num_validation_samples:]
-    return (x_train, y_train), (x_val, y_val)
+def prepare_summary_data_using_tokenizer(summaries, scores, tokenizer):
+    """
+    (?, 128)
+    """
+    print('summary texts to sequences ..')
+    summary_sequences = tokenizer.texts_to_sequences(summaries)
+    print('padding ..')
+    summary_sequences_padded = pad_sequences(summary_sequences,
+                                             value=0, padding='post',
+                                             maxlen=MAX_SUMMARY_LENGTH)
+    return shuffle_and_split(summary_sequences_padded, np.array(scores))
 
 def embedder_test():
     """Testing the performance of embedder.
@@ -328,12 +392,14 @@ def sent_embed_articles(articles, maxlen, use_embedder, batch_size=10000):
     return embedding_reshaped
 
 
-def prepare_data_using_use(articles, summaries, scores):
+def prepare_data_using_use_old(articles, summaries, scores):
     """Return vector of float32. The dimension of X is (?,13,512), Y is
     (?) where ? is the number of articles.
+
+    This is deprecated, as the sentence embedding is slow, and should
+    be computed as preprocessing.
+
     """
-    ARTICLE_MAX_SENT = 10
-    SUMMARY_MAX_SENT = 3
     # (#num, 10, 512)
     print('creating sentence embedder instance ..')
     use_embedder = SentenceEmbedder()
@@ -348,29 +414,8 @@ def prepare_data_using_use(articles, summaries, scores):
     # concatenate
     print('concatenating ..')
     data = np.concatenate((article_data, summary_data), axis=1)
-    
-    # shuffle the order
-    print('shuffling ..')
-    indices = np.arange(data.shape[0])
-    np.random.shuffle(indices)
-    data = data[indices]
-    scores_data = np.array(scores)
-    scores_data = scores_data[indices]
 
-    # split the data into a training set and a validation set
-    print('splitting ..')
-    num_validation_samples = int(0.1 * data.shape[0])
-    x_train = data[:-num_validation_samples]
-    y_train = scores_data[:-num_validation_samples]
-    x_val = data[-num_validation_samples:]
-    y_val = scores_data[-num_validation_samples:]
-    x_train.shape
-    y_train.shape
-    x_val.shape
-    y_val.shape
-    return (x_train, y_train), (x_val, y_val)
-
-
+    return shuffle_and_split(data, np.array(scores))
 
 def split_sent_and_pad(articles, maxlen):
     res = []
@@ -401,20 +446,5 @@ def prepare_data_string(articles, summaries, scores):
     data = np.concatenate((article_data, summary_data), axis=1)
     # (#article, 13)
     data.shape
-    
-    # shuffle the order
-    print('shuffling ..')
-    indices = np.arange(data.shape[0])
-    np.random.shuffle(indices)
-    data = data[indices]
-    scores_data = np.array(scores)
-    scores_data = scores_data[indices]
 
-    # split the data into a training set and a validation set
-    print('splitting ..')
-    num_validation_samples = int(0.1 * data.shape[0])
-    x_train = data[:-num_validation_samples]
-    y_train = scores_data[:-num_validation_samples]
-    x_val = data[-num_validation_samples:]
-    y_val = scores_data[-num_validation_samples:]
-    return (x_train, y_train), (x_val, y_val)
+    return shuffle_and_split(data, np.array(scores))

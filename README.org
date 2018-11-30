@@ -1,1 +1,14 @@
 #+TITLE: Anti Rouge
+
+* Experiment
+** TODO use all CNN data
+** TODO use DM data
+** TODO [#B] use the model learned from CNN data to test on DM data (transfer)
+** TODO [#A] use fake summary and difference as loss function, instead of mutation and score
+** TODO [#A] use only mutated summary, without article
+** TODO when generating mutation, do not change sentence separator
+
+* Paper writing
+** TODO write method
+** TODO figures
+** TODO plot results

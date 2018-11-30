@@ -1,13 +1,16 @@
 #+TITLE: Anti Rouge
 
-* TODO List
+* TodoList
 ** Experiment
 *** TODO use all CNN data
 *** TODO use DM data
 *** TODO [#B] use the model learned from CNN data to test on DM data (transfer)
 *** TODO [#A] use fake summary and difference as loss function, instead of mutation and score
-*** TODO [#A] use only mutated summary, without article
+*** DONE [#A] use only mutated summary, without article
+    CLOSED: [2018-11-30 Fri 15:07]
 *** TODO when generating mutation, do not change sentence separator
+*** TODO adjust hyper parameters and network architecture
+*** TODO try LSTM and attention, MLP instead of current CNN
 
 ** Paper writing
 *** TODO write method

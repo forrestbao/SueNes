@@ -12,6 +12,22 @@
 *** TODO adjust hyper parameters and network architecture
 *** TODO try LSTM and attention, MLP instead of current CNN
 
+** New Experiment
+
+All with 4 settings:
+- UAE
+- UAE-Large
+- Glove
+- Glove-SO
+
+*** TODO mutation with deletion only
+good
+*** TODO negative sampling with CNN/DM
+N/A
+
+*** TODO negative sampling with NYT
+*** TODO sentence level mutation with NYT
+
 ** Paper writing
 *** TODO write method
 *** TODO figures
@@ -33,3 +49,26 @@ following functions.
 - =glove_summary_main=
 
 See [[file:log.org][log.org]] for the experiment log.
+
+* Mutation operator
+
+    MODE can be add, delete, mutate (TODO). Generate 10 for each mode.
+    
+    I need to generate random mutation to the summary. Save it to a
+    file so that I use the same generated data. For each summary, I
+    generate several data:
+        
+    1. generate 10 random float numbers [0,1] as ratios
+    2. for each ratio, do:
+    2.1 deletion: select ratio percent of words to remove
+    2.2 addition: add ratio percent of new words (from vocab.txt) to
+    random places
+
+    Issues:
+    
+    - should I add better, regularized noise, e.g. gaussian noise? How
+      to do that?
+    - should I check if the sentence is really modified?
+    - should we use the text from original article?
+    - should we treat sentences? should we maintain the sentence
+      separator period?

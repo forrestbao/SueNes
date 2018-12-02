@@ -17,10 +17,16 @@ import os, sys
 
 from model import load_embedding
 from model import build_uae_model, build_glove_model, build_glove_summary_only_model
-from data import load_text_data, save_data, load_data
-from data import prepare_tokenizer, save_tokenizer, load_tokenizer
+from model import build_binary_glove_model, build_separate_model
+from model import build_glove_LSTM_model, build_glove_2dCONV_model
+from utils import save_data, load_data
+from utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
+
 from data import prepare_data_using_use
 from data import prepare_data_using_tokenizer, prepare_summary_data_using_tokenizer
+from data import load_negative_sampling_data, load_article_and_summary_data
+from data import load_word_mutated_data
+from data import load_story_keys, create_tokenizer_by_key
 
 from config import *
 
@@ -65,23 +71,100 @@ def use_vector_main():
     # data2 = load_data('use-vector.pickle')
     model = build_uae_model()
     train_model(model, data)
+    return
+
+
+def glove_neg_main():
+    keys = load_story_keys(10000)
+    # tokenizer = load_tokenizer()
+    tokenizer = create_tokenizer_by_key(keys)
+    fake_summaries = load_negative_sampling_data(keys)
+    # DEBUG using one fake summary, to get unbiased data
+    # fake_summaries = fake_summaries[:,:1]
+    fake_summaries.shape
+    articles, reference_summaries = load_article_and_summary_data(keys)
+    reference_labels = np.ones_like(reference_summaries, dtype=int)
+    fake_labels = np.zeros_like(fake_summaries, dtype=int)
+    
+    articles.shape
+    reference_summaries.shape
+    fake_summaries.shape
+    fake_labels.shape
+
+    res = concatenate_data(articles, reference_summaries,
+                           reference_labels,
+                           fake_summaries,
+                           fake_labels)
+    articles, summaries, labels = res
+    articles.shape
+    summaries.shape
+    labels.shape
+
+    group = fake_summaries.shape[1] + 1
+    data = prepare_data_using_tokenizer(articles, summaries,
+                                        labels, tokenizer, group=group)
+    (x_train, y_train), (x_val, y_val) = data
+    x_train.shape
+    y_train.shape
+    x_val.shape
+    y_val.shape
+    embedding_layer = load_embedding(tokenizer)
+    model = build_binary_glove_model(embedding_layer)
+    model = build_separate_model(embedding_layer)
+    train_binary_model(model, data)
+    return
+
+def concatenate_data(articles, reference_summaries, reference_labels,
+                     fake_summaries, fake_labels):
+    """
+    (A) => (A,1)
+    (A,B)
+    """
+    assert(articles.shape == reference_summaries.shape)
+    assert(articles.shape == reference_labels.shape)
+    assert(fake_summaries.shape == fake_labels.shape)
+    assert(articles.shape[0] == fake_summaries.shape[0])
+    A = articles.shape[0]
+    B = fake_summaries.shape[1]
+    
+    articles = np.repeat(articles, B+1)
+    reference_summaries = np.reshape(reference_summaries, (A,1))
+    summaries = np.concatenate((reference_summaries, fake_summaries), axis=1)
+    reference_labels = np.reshape(reference_labels, (A, 1))
+    labels = np.concatenate((reference_labels, fake_labels), axis=1)
+    summaries = np.ndarray.flatten(summaries)
+    labels = np.ndarray.flatten(labels)
+    return articles, summaries, labels
 
 def glove_main():
     # data v2
-    articles, summaries, scores = load_text_data(size='medium')
-    # this is pretty time consuming, so save it
-    tokenizer = prepare_tokenizer(articles + summaries)
-    # alternatively, save and load. Note that you must ensure to fit
-    # on the same text.
-    # save_tokenizer(tokenizer)
-    # tokenizer = load_tokenizer()
-    #
-    # this is also slow
-    data = prepare_data_using_tokenizer(articles, summaries, scores,
-                                        tokenizer)
+    keys = load_story_keys(1000)
+    tokenizer = create_tokenizer_by_key(keys)
+    articles, reference_summaries = load_article_and_summary_data(keys)
+    fake_summaries, fake_labels = load_word_mutated_data(keys, mode='del')
+    reference_labels = np.ones_like(reference_summaries, dtype=float)
+    
+    articles.shape
+    reference_summaries.shape
+    fake_summaries.shape
+    fake_labels.shape
+
+    res = concatenate_data(articles, reference_summaries,
+                           reference_labels,
+                           fake_summaries,
+                           fake_labels)
+    articles, summaries, labels = res
+    articles.shape
+    summaries.shape
+    labels.shape
+    
+    group = fake_summaries.shape[1] + 1
+    data = prepare_data_using_tokenizer(articles, summaries,
+                                        labels, tokenizer, group=group)
+    # summary only data
+    data = prepare_summary_data_using_tokenizer(summaries, labels,
+                                                tokenizer, group=group)
     # save and load the data
-    # save_data(data, 'glove-data-10000.pickle')
-    # data = load_data('glove-data-10000.pickle')
     (x_train, y_train), (x_val, y_val) = data
     
     x_train.shape
@@ -90,8 +173,16 @@ def glove_main():
     y_val.shape
     # model v2
     embedding_layer = load_embedding(tokenizer)
+
     model = build_glove_model(embedding_layer)
+    model = build_separate_model(embedding_layer)
+    model = build_glove_LSTM_model(embedding_layer)
+    model = build_glove_summary_only_model(embedding_layer)
+    model = build_glove_2dCONV_model(embedding_layer)
+    model.summary()
+    
     train_model(model, data)
+    train_model_with_test(model, data)
     return
 
 def glove_summary_main():
@@ -99,35 +190,7 @@ def glove_summary_main():
     be bad.
 
     """
-    _, summaries, scores = load_text_data(size='medium')
-    # this is pretty time consuming, so save it
-    tokenizer = prepare_tokenizer(summaries)
-    # alternatively, save and load. Note that you must ensure to fit
-    # on the same text.
-    # save_tokenizer(tokenizer)
-    # tokenizer = load_tokenizer()
-    #
-    # this is also slow
-    
-    data = prepare_summary_data_using_tokenizer(summaries, scores,
-                                                tokenizer)
-    # save and load the data
-    # save_data(data, 'glove-data-10000.pickle')
-    # data = load_data('glove-data-10000.pickle')
-    (x_train, y_train), (x_val, y_val) = data
-    
-    x_train.shape
-    y_train.shape
-    x_val.shape
-    y_val.shape
-    # model v2
-    embedding_layer = load_embedding(tokenizer)
-    # FIXME the architecture needs adjustment
-    model = build_glove_summary_only_model(embedding_layer)
-    train_model(model, data)
     return
-    
-    
     
 def pearson_correlation_old(y_true, y_pred):
     pearson_correlation = scipy.stats.pearsonr(y_true, y_pred)
@@ -145,6 +208,42 @@ def pearson_correlation_f(y_true, y_pred):
     devT = K.std(y_true)
     return K.mean(fsp*fst)/(devP*devT)
 
+def train_binary_model(model, data):
+    (x_train, y_train), (x_val, y_val) = data
+    optimizer = tf.train.RMSPropOptimizer(0.001)
+    model.compile(optimizer=optimizer,
+                  loss='binary_crossentropy',
+                  metrics=['accuracy', pearson_correlation_f])
+    model.fit(x_train, y_train,
+              epochs=20, batch_size=128,
+              validation_data=(x_val, y_val), verbose=1)
+    model.summary()
+    
+def train_model_with_test(model, data):
+    """(x_val, y_val) is used as test data. When fitting the model,
+    validation_split is set to 0.2
+
+    Seems that this is not very necessary.
+
+    """
+    (x_train, y_train), (x_val, y_val) = data
+    # training op
+    optimizer = tf.train.RMSPropOptimizer(0.001)
+    # optimizer=tf.train.AdamOptimizer(0.01)
+    model.compile(optimizer=optimizer,
+                  # loss='binary_crossentropy',
+                  loss='mse',
+                  # metrics=['accuracy']
+                  metrics=['mae',
+                           # tf.contrib.metrics.streaming_pearson_correlation,
+                           pearson_correlation_f]
+    )
+    model.fit(x_train, y_train, epochs=20, batch_size=128,
+              validation_split = 0.2, verbose=1)
+    model.summary()
+    eval_loss, eval_mae, eval_pearson = model.evaluate(x_val, y_val)
+    print('loss:', eval_loss, 'mae:', eval_mae, 'pearson:', eval_pearson)
+
 def train_model(model, data):
     (x_train, y_train), (x_val, y_val) = data
     # training op
@@ -159,7 +258,7 @@ def train_model(model, data):
                            pearson_correlation_f]
     )
     model.fit(x_train, y_train,
-              epochs=40, batch_size=128,
+              epochs=20, batch_size=128,
               validation_data=(x_val, y_val), verbose=1)
     model.summary()
     # results = model.evaluate(x_test, y_test)

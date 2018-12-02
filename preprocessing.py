@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 
-def read_text_file(text_file):
-    lines = []
-    with open(text_file, "r") as f:
-        for line in f:
-            lines.append(line.strip())
-    return lines
+import os
+import pickle
+
+from utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
+from utils import read_text_file
+
+import random
+
+from config import *
+
 
 def get_art_abs(story_file):
     lines = read_text_file(story_file)
@@ -28,6 +32,25 @@ def get_art_abs(story_file):
     abstract = ' '.join(highlights)
     return article, abstract
 
+class RandomItemGenerator():
+    def __init__(self, l):
+        self.l = l
+        self.length = len(self.l)
+        self.reset_cache()
+    def reset_cache(self):
+        self.randomed_list = random.sample(self.l, self.length)
+        self.random_index = 0
+    def random_item(self, exclude=[]):
+        self.random_index += 1
+        if self.random_index >= self.length:
+            self.reset_cache()
+        res = self.randomed_list[self.random_index]
+        if res in exclude:
+            # FIXME stack overflow
+            return self.random_item(exclude=exclude)
+        else:
+            return res
+        
 def delete_words(summary, ratio):
     words = summary.split(' ')
     length = len(words)
@@ -37,7 +60,7 @@ def delete_words(summary, ratio):
                      if i not in indices])
 
 
-def add_words(summary, ratio, vocab):
+def add_words(summary, ratio, random_word_generator):
     words = summary.split(' ')
     length = len(words)
     indices = set([random.randint(0, length)
@@ -45,84 +68,108 @@ def add_words(summary, ratio, vocab):
     res = []
     for i in range(length):
         if i in indices:
-            res.append(vocab.random_word())
+            res.append(random_word_generator.random_item())
         res.append(words[i])
     return ' '.join(res)
 
-# TODO multi thread generation
-# TODO use fake sentence instead of mutating sentence, simulating word2vec loss
-# TODO use summary only to see if the article is useful at all
-def mutate_summary(summary, vocab):
-    """I need to generate random mutation to the summary. Save it to a
-    file so that I use the same generated data. For each summary, I
-    generate several data:
-        
-    1. generate 10 random float numbers [0,1] as ratios
-    2. for each ratio, do:
-    2.1 deletion: select ratio percent of words to remove
-    2.2 addition: add ratio percent of new words (from vocab.txt) to
-    random places
-
-    Issues:
-    
-    - should I add better, regularized noise, e.g. gaussian noise? How
-      to do that?
-    - should I check if the sentence is really modified?
-    - should we use the text from original article?
-    - should we treat sentences? should we maintain the sentence
-      separator period?
-
-    """
+def mutate_summary_add(summary, random_word_generator):
     ratios = [random.random() for _ in range(10)]
     res = []
-    # add the original summary
-    res.append([summary, 1.0, 'orig'])
-    # the format: ((summary, score, mutation_method))
+    for r in ratios:
+        s = add_words(summary, r, random_word_generator)
+        res.append((s, r))
+    return res
+def mutate_summary_delete(summary):
+    ratios = [random.random() for _ in range(10)]
+    res = []
     for r in ratios:
         s = delete_words(summary, r)
         res.append((s, r, 'del'))
-        s = add_words(summary, r, vocab)
-        res.append((s, r, 'add'))
     return res
 
-def preprocess_data():
-    """
-    1. load stories
-    2. tokenize
-    3. separate article and summary
-    4. chunk and save
+def preprocess_story_pickle():
+    """Read text, parse article and summary text file into pickle
+    {'article': 'xxxxx', 'summary': 'xxxxxxx'}
 
-    This runs pretty slow
     """
-    print('Doing nothing.')
-    return 0
-    vocab = Vocab(vocab_file, 200000)
-
     # 92,579 stories
-    stories = os.listdir(cnn_tokenized_dir)
-    hebi_dir = os.path.join(cnndm_dir, 'hebi')
-    if not os.path.exists(hebi_dir):
-        os.makedirs(hebi_dir)
-    # hebi/xxxxxx/article.txt
-    # hebi/xxxxxx/summary.json
+    stories = os.listdir(CNN_TOKENIZED_DIR)
     ct = 0
-    for s in stories:
+    data = {}
+    for key in stories:
         ct += 1
-        # if ct > 10:
-        #     return
-        # print('--', ct)
         if ct % 100 == 0:
             print ('--', ct*100)
-        f = os.path.join(cnn_tokenized_dir, s)
-        article, summary = get_art_abs(f)
-        pairs = mutate_summary(summary, vocab)
-        # write down to file
-        d = os.path.join(hebi_dir, s)
-        if not os.path.exists(d):
-            os.makedirs(d)
-        article_f = os.path.join(d, 'article.txt')
-        summary_f = os.path.join(d, 'summary.json')
-        with open(article_f, 'w') as fout:
-            fout.write(article)
-        with open(summary_f, 'w') as fout:
-            json.dump(pairs, fout, indent=4)
+        story_file = os.path.join(CNN_TOKENIZED_DIR, key)
+        item = {}
+        article, summary = get_art_abs(story_file)
+        item['article'] = article
+        item['summary'] = summary
+        data[key] = item
+    with open(STORY_PICKLE_FILE, 'wb') as f:
+        pickle.dump(data, f)
+
+def preprocess_word_mutated():
+    """
+    From story_pickle to word mutated.
+    """
+    print('loading article ..')
+    with open(STORY_PICKLE_FILE, 'rb') as f:
+        stories = pickle.load(f)
+    articles = [s['article'] for s in stories.values()]
+    summaries = [s['summary'] for s in stories.values()]
+    print('creating tokenizer ..')
+    tokenizer = create_tokenizer_from_texts(articles + summaries)
+    random_word_generator = RandomItemGenerator(list(tokenizer.word_index.keys()))
+    random_word_generator.random_item()
+    outdata = {}
+    ct = 0
+    print('generating mutated summary for', len(stories), 'stories ..')
+    for key in stories:
+        ct += 1
+        if ct % 100 == 0:
+            print ('--', ct)
+        story = stories[key]
+        summary = story['summary']
+        item = {}
+        # this generates 20 mutations
+        add_pairs = mutate_summary_add(summary, random_word_generator)
+        delete_pairs = mutate_summary_delete(summary)
+        item['add-pairs'] = add_pairs
+        item['delete-pairs'] = delete_pairs
+        outdata[key] = item
+    with open(WORD_MUTATED_FILE, 'wb') as f:
+        pickle.dump(outdata, f)
+
+def preprocess_sent_mutated():
+    """
+    NOT IMPLEMENTED.
+    """
+    return
+
+
+def preprocess_negtive_sampling():
+    """Read all articles and summaries. For each (article + summary) with
+    label 1 pair, construct 5 (article + fake summary) pair with label
+    0, as a block.
+    """
+    print('loading article ..')
+    with open(STORY_PICKLE_FILE, 'rb') as f:
+        stories = pickle.load(f)
+    articles = [s['article'] for s in stories.values()]
+    summaries = [s['summary'] for s in stories.values()]
+    generator = RandomItemGenerator(summaries)
+    outdata = {}
+    ct = 0
+    print('generating negative sampling for', len(stories), 'stories ..')
+    for key in stories:
+        ct += 1
+        if ct % 100 == 0:
+            print ('--', ct)
+        story = stories[key]
+        summary = story['summary']
+        article = story['article']
+        outdata[key] = [generator.random_item(exclude=[summary])
+                        for _ in range(5)]
+    with open(NEGATIVE_SAMPLING_FILE, 'wb') as f:
+        pickle.dump(outdata, f)

@@ -5,9 +5,13 @@ import os
 import numpy as np
 
 from keras.layers import Dense, Input, GlobalMaxPooling1D
-from keras.layers import Conv1D, MaxPooling1D, Embedding
+from keras.layers import Conv1D, MaxPooling1D, Embedding, Conv2D, MaxPooling2D
+from keras.layers import Lambda, Reshape
+from keras import regularizers
 from keras.models import Model
 from keras.initializers import Constant
+
+import keras
 
 from keras import backend as K
 
@@ -94,6 +98,7 @@ def build_glove_model(embedding_layer):
     sequence_input = Input(shape=(MAX_ARTICLE_LENGTH + MAX_SUMMARY_LENGTH,),
                            dtype='int32')
     embedded_sequences = embedding_layer(sequence_input)
+    # FIXME The literature to apply CNN to NLP is to use the filter size
     x = Conv1D(128, 5, activation='relu')(embedded_sequences)
     x = MaxPooling1D(5)(x)
     x = Conv1D(128, 5, activation='relu')(x)
@@ -105,6 +110,126 @@ def build_glove_model(embedding_layer):
 
     model = Model(sequence_input, preds)
     return model
+
+def build_glove_2dCONV_model(embedding_layer):
+    sequence_length = MAX_ARTICLE_LENGTH + MAX_SUMMARY_LENGTH
+    sequence_input = Input(shape=(sequence_length,), dtype='int32')
+    embedded_sequences = embedding_layer(sequence_input)
+    reshape = Reshape((sequence_length, EMBEDDING_DIM, 1))(embedded_sequences)
+    # conv_0 = Conv2D(100, (3, EMBEDDING_DIM), activation='relu',
+    #                 kernel_regularizer=regularizers.l2(0.01))(reshape)
+    # conv_1 = Conv2D(100, (4, EMBEDDING_DIM), activation='relu',
+    #                 kernel_regularizer=regularizers.l2(0.01))(reshape)
+    conv_0 = Conv2D(100, (3, 3), activation='relu',
+                    kernel_regularizer=regularizers.l2(0.01))(reshape)
+    maxpool_0 = MaxPooling2D((sequence_length - 3 + 1, 1), strides=(1,1))(conv_0)
+    # maxpool_1 = MaxPooling2D((sequence_length - 4 + 1, 1), strides=(1,1))(conv_1)
+    maxpool_0
+    maxpool_1
+    # merged_tensor = keras.layers.Concatenate()([maxpool_0, maxpool_1])
+    # merged_tensor
+    flatten = keras.layers.Flatten()(maxpool_0)
+    flatten
+    x = Dense(64, activation='relu')(flatten)
+    preds = Dense(1)(x)
+    model = Model(sequence_input, preds)
+    return model
+    
+    
+
+def build_glove_LSTM_model(embedding_layer):
+    """Bad performance.
+    """
+    # train a 1D convnet with global maxpooling
+    sequence_input = Input(shape=(MAX_ARTICLE_LENGTH + MAX_SUMMARY_LENGTH,),
+                           dtype='int32')
+    embedded_sequences = embedding_layer(sequence_input)
+    embedded_sequences
+    # x= keras.layers.LSTM(EMBEDDING_DIM, return_sequences=True)(embedded_sequences)
+    x= keras.layers.LSTM(EMBEDDING_DIM)(embedded_sequences)
+    x = keras.layers.Dropout(0.5)(x)
+    
+    # x = Conv1D(128, 5, activation='relu')(x)
+    # x = MaxPooling1D(5)(x)
+    # x = Conv1D(128, 5, activation='relu')(x)
+    # x = MaxPooling1D(5)(x)
+    # x = Conv1D(128, 5, activation='relu')(x)
+    # x = GlobalMaxPooling1D()(x)
+    x = Dense(128, activation='relu')(x)
+    # x = keras.layers.TimeDistributed(Dense(128, activation='relu'))(x)
+    preds = Dense(1)(x)
+
+    model = Model(sequence_input, preds)
+    return model
+
+def build_binary_glove_model(embedding_layer):
+    # train a 1D convnet with global maxpooling
+    sequence_input = Input(shape=(MAX_ARTICLE_LENGTH + MAX_SUMMARY_LENGTH,),
+                           dtype='int32')
+    embedded_sequences = embedding_layer(sequence_input)
+    x = Conv1D(128, 5, activation='relu')(embedded_sequences)
+    x = MaxPooling1D(5)(x)
+    x = Conv1D(128, 5, activation='relu')(x)
+    x = MaxPooling1D(5)(x)
+    x = Conv1D(128, 5, activation='relu')(x)
+    x = GlobalMaxPooling1D()(x)
+    x = Dense(128, activation='relu')(x)
+    preds = Dense(1, activation='sigmoid')(x)
+
+    model = Model(sequence_input, preds)
+    return model
+
+def build_separate_model(embedding_layer):
+    sequence_input = Input(shape=(MAX_ARTICLE_LENGTH + MAX_SUMMARY_LENGTH,),
+                           dtype='int32')
+    # article_input = Input(shape=(MAX_ARTICLE_LENGTH,), dtype='int32')
+    # summary_input = Input(shape=(MAX_SUMMARY_LENGTH,), dtype='int32')
+    sequence_input
+    # This is not layer
+    # article_input = sequence_input[:, :MAX_ARTICLE_LENGTH]
+    # summary_input = sequence_input[:, MAX_ARTICLE_LENGTH:]
+    article_input = Lambda(lambda x: x[:,:MAX_ARTICLE_LENGTH])(sequence_input)
+    summary_input = Lambda(lambda x: x[:,MAX_ARTICLE_LENGTH:])(sequence_input)
+    article_input
+    summary_input
+    embedded_article = embedding_layer(article_input)
+    embedded_summary = embedding_layer(summary_input)
+    embedded_article
+    embedded_summary
+
+    # TODO add CNN to speed up LSTM training
+
+    # x1 = keras.layers.LSTM(EMBEDDING_DIM, return_sequences=True)(embedded_article)
+    x1 = keras.layers.LSTM(EMBEDDING_DIM)(embedded_article)
+    # x2 = keras.layers.LSTM(EMBEDDING_DIM, return_sequences=True)(embedded_summary)
+    x2 = keras.layers.LSTM(EMBEDDING_DIM)(embedded_summary)
+
+    x1
+    x2
+
+    x = keras.layers.Concatenate()([x1, x2])
+    x
+    x = Dense(128, activation='relu')(x)
+    preds = Dense(1, activation='sigmoid')(x)
+    
+    # x = GlobalMaxPooling1D()(embedded_article)
+    # flattened_article = keras.layers.Flatten()(embedded_article)
+    # flattened_summary = keras.layers.Flatten()(embedded_summary)
+    # article_vec = Dense(512)(flattened_article)
+    # summary_vec = Dense(512)(flattened_summary)
+    # article_vec
+    # summary_vec
+    # dotproduct = keras.layers.Dot(1)([article_vec, summary_vec])
+    # dotproduct
+    # preds = Dense(1, activation='sigmoid')(dotproduct)
+    # preds
+    # sequence_input
+
+    
+    # preds = Dense(1, activation='sigmoid')(x)
+    model = Model(sequence_input, preds)
+    return model
+    
 
 def build_glove_summary_only_model(embedding_layer):
     # train a 1D convnet with global maxpooling

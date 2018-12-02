@@ -5,28 +5,16 @@ import os
 import json
 import re
 import math
+import random
 
 from keras.preprocessing.sequence import pad_sequences
-from keras.preprocessing.text import Tokenizer, one_hot
-from keras.preprocessing.sequence import pad_sequences
 
-# why keras.preprocessing is not exporting tokenizer_from_json ??
-from keras_preprocessing.text import tokenizer_from_json
-
-
-from preprocessing import read_text_file
 from embedding import SentenceEmbedder
 
+from utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
+from utils import read_text_file
+
 from config import *
-
-cnndm_dir = '/home/hebi/github/reading/cnn-dailymail/'
-cnn_dir = os.path.join(cnndm_dir, 'data/cnn/stroies')
-dm_dir = os.path.join(cnndm_dir, 'data/dailymail/stories')
-cnn_tokenized_dir = os.path.join(cnndm_dir, 'cnn_stories_tokenized')
-dm_tokenized_dir = os.path.join(cnndm_dir, 'dm_stories_tokenized')
-
-ARTICLE_MAX_SENT = 10
-SUMMARY_MAX_SENT = 3
 
 def uae_pregen():
     """Pre-generate the uae for data folder.
@@ -141,87 +129,80 @@ def prepare_data_using_use():
 
     return shuffle_and_split(data, np.array(scores))
 
-def save_data(data, filename):
-    (x_train, y_train), (x_val, y_val) = data
-    with open(filename, 'wb') as f:
-        pickle.dump(data, f)
-def load_data(filename):
-    with open(filename, 'rb') as f:
-        data = pickle.load(f)
-        return data
-
-def sentence_split(s):
-    # FIXME keep the seperator
-    res = re.split(r'\.|!|\?', s)
-    res = [r.strip() for r in res if r]
-    return res
-
-def test():
-    test_str = 'hello hello hello . world world ! eh eh eh ? yes yes ... ok ok'
-    sentence_split(test_str)
-
-def load_text_data(size='tiny'):
-    """Return (articles, summaries, scores)
-
-    SIZE: tiny, small, medium, large, all
+def load_story_keys(size=None):
+    """Return a list of keys.
     """
-    articles = []
-    summaries = []
-    scores = []
-    # 90,000 > 2,000
-    hebi_dir = os.path.join(cnndm_dir, 'hebi')
-    hebi_sample_dir = os.path.join(cnndm_dir, 'hebi-sample')
-    data_dispatcher = {
-        # TODO other sizes
-        'tiny': os.path.join(cnndm_dir, 'hebi-sample-100'),
-        'small': os.path.join(cnndm_dir, 'hebi-sample-1000'),
-        'medium': os.path.join(cnndm_dir, 'hebi-sample-10000'),
-    }
-    data_dir = data_dispatcher[size]
-    ct = 0
-    s = os.listdir(data_dir)[0]
-    for s in os.listdir(data_dir):
-        ct+=1
-        if ct % 100 == 0:
-            print ('--', ct)
-        article_f = os.path.join(data_dir, s, 'article.txt')
-        summary_f = os.path.join(data_dir, s, 'summary.json')
-        summary_f
-        article_content = ' '.join(read_text_file(article_f))
-        with open(summary_f, 'r') as f:
-            j = json.load(f)
-            for summary,score,_ in j:
-                articles.append(article_content)
-                summaries.append(summary)
-                scores.append(score)
-    return (articles, summaries, scores)
+    with open(STORY_PICKLE_FILE, 'rb') as f:
+        stories = pickle.load(f)
+        len(stories)
+        if not size:
+            return list(stories.keys())
+        elif size > len(stories):
+            print('Error: attempt to load too many')
+            exit(1)
+        else:
+            return random.sample(stories.keys(), size)
 
-def prepare_tokenizer(texts):
-    """Tokenizer needs to fit on the given text. Then, we can use it to
-    obtain:
-
-    1. tokenizer.texts_to_sequences (texts)
-    2. tokenizer.word_index
-
-    """
-    # finally, vectorize the text samples into a 2D integer tensor
-    # num_words seems to be not useful at all. I set it to 20,000, but
-    # the tokenizer.index_word is still 178,781. I set it to 200,000
-    # to be consistent
-    tokenizer = Tokenizer(num_words=MAX_NUM_WORDS)
-    tokenizer.fit_on_texts(texts)
-    return tokenizer
-def save_tokenizer(tokenizer):
-    # save tokenizer
-    j_str = tokenizer.to_json()
-    with open('tokenizer.json', 'w') as f:
-        f.write(j_str)
-def load_tokenizer():
-    # load
-    with open('tokenizer.json') as f:
-        j_str = f.read()
-        tokenizer = tokenizer_from_json(j_str)
+def create_tokenizer_by_key(keys):
+    with open(STORY_PICKLE_FILE, 'rb') as f:
+        stories = pickle.load(f)
+        articles = [stories[key]['article'] for key in keys]
+        summaries = [stories[key]['summary'] for key in keys]
+        tokenizer = create_tokenizer_from_texts(articles + summaries)
         return tokenizer
+
+def create_tokenizer():
+    """FIXME I'm going to train tokenizer just using all the text.
+    """
+    with open(STORY_PICKLE_FILE, 'rb') as f:
+        stories = pickle.load(f)
+        articles = [story['article'] for story in stories.values()]
+        summaries = [story['summary'] for story in stories.values()]
+        tokenizer = create_tokenizer_from_texts(articles + summaries)
+        save_tokenizer(tokenizer)
+    
+    
+def load_negative_sampling_data(keys):
+    """Return (fake-samples) for each key
+    """
+    with open(NEGATIVE_SAMPLING_FILE, 'rb') as f:
+        neg = pickle.load(f)
+        return np.array([neg[key] for key in keys])
+
+def load_word_mutated_data(keys, mode):
+    """
+    Return (summaries, scores)
+
+    MODE can be 'add', 'del', 'both'
+    """
+    with open(WORD_MUTATED_FILE, 'rb') as f:
+        mut = pickle.load(f)
+        summaries = []
+        scores = []
+        for key in keys:
+            pairs = []
+            if mode == 'add':
+                pairs = mut[key]['add-pairs']
+            elif mode == 'del':
+                pairs = mut[key]['delete-pairs']
+            elif mode == 'both':
+                pairs = mut[key]['delete-pairs'] + mut[key]['add-pairs']
+            else:
+                print('Error: Use only add, del, both')
+                exit(1)
+            summaries.append([p[0] for p in pairs])
+            scores.append([p[1] for p in pairs])
+        return np.array(summaries), np.array(scores)
+
+def load_article_and_summary_data(keys):
+    """Return (articles, summaries)"""
+    with open(STORY_PICKLE_FILE, 'rb') as f:
+        stories = pickle.load(f)
+        articles = [stories[key]['article'] for key in keys]
+        summaries = [stories[key]['summary'] for key in keys]
+        return np.array(articles), np.array(summaries)
+        
+    
 
 def test_keras_preprocessing():
     tokenizer.texts_to_sequences(['hello world you are awesome', 'you is good person'])
@@ -229,8 +210,21 @@ def test_keras_preprocessing():
     one_hot('hello world you are you awesome', 200)
     return
 
-def shuffle_and_split(features, labels):
+def shuffle_and_split(features, labels, group):
+    """Use interval to control how the split happens. For example
+    group=21.
+
+    1. group into groups
+    2. shuffle groups, split groups
+    3. flatten groups
+    4. (optional) shuffle again
+
+    """
+    features = np.array(np.split(features, len(features) / group))
+    labels = np.array(np.split(labels, len(labels) / group))
+    
     # shuffle the order
+    # DEBUG remove shuffling for now
     print('shuffling ..')
     indices = np.arange(features.shape[0])
     # this modify in place
@@ -245,10 +239,16 @@ def shuffle_and_split(features, labels):
     y_train = labels[:-num_validation_samples]
     x_val = features[-num_validation_samples:]
     y_val = labels[-num_validation_samples:]
-    return (x_train, y_train), (x_val, y_val)
-    
 
-def prepare_data_using_tokenizer(articles, summaries, scores, tokenizer):
+    # concate
+    x_train = np.concatenate(x_train)
+    y_train = np.concatenate(y_train)
+    x_val = np.concatenate(x_val)
+    y_val = np.concatenate(y_val)
+    return (x_train, y_train), (x_val, y_val)
+
+def prepare_data_using_tokenizer(articles, summaries, labels,
+                                 tokenizer, group):
     """
     (?, 640). Each word is projected to its INDEX (int) in the tokenizer.
     """
@@ -270,9 +270,9 @@ def prepare_data_using_tokenizer(articles, summaries, scores, tokenizer):
     data = np.concatenate((article_sequences_padded,
                            summary_sequences_padded), axis=1)
 
-    return shuffle_and_split(data, np.array(scores))
+    return shuffle_and_split(data, np.array(labels), group=group)
 
-def prepare_summary_data_using_tokenizer(summaries, scores, tokenizer):
+def prepare_summary_data_using_tokenizer(summaries, scores, tokenizer, group):
     """
     (?, 128)
     """
@@ -282,77 +282,7 @@ def prepare_summary_data_using_tokenizer(summaries, scores, tokenizer):
     summary_sequences_padded = pad_sequences(summary_sequences,
                                              value=0, padding='post',
                                              maxlen=MAX_SUMMARY_LENGTH)
-    return shuffle_and_split(summary_sequences_padded, np.array(scores))
-
-def embedder_test():
-    """Testing the performance of embedder.
-
-
-    s1000: 5.060769319534302
-    s250s*4: 10.278579235076904
-    s5000: 7.866734266281128
-    s1000s*5: 15.469667434692383
-    s10000: 12.214599609375
-    s2500s*4: 18.09593439102173
-    
-    """
-    embedder = SentenceEmbedder()
-    articles, summaries, scores = load_text_data(size='medium')
-
-    print('all articles:', len(articles))
-    # 7,742,028
-    all_sents = []
-    for article in articles:
-        sents = sentence_split(article)
-        all_sents.extend(sents)
-
-    print('all sentences:', len(all_sents))
-        
-    t = time.time()
-    # 9.186472415924072
-    s1000 = all_sents[:1000]
-    embedder.embed(s1000)
-    print('s1000:', time.time() - t)
-
-    t = time.time()
-    s250s = np.array_split(s1000, 4)
-    embedder.embed_list(s250s)
-    print('s250s*4:', time.time() - t)
-    
-    t = time.time()
-    # 11.613808870315552
-    s5000 = all_sents[:5000]
-    embedder.embed(s5000)
-    print('s5000:', time.time() - t)
-
-    t = time.time()
-    s1000s = np.array_split(s5000, 5)
-    embedder.embed_list(s1000s)
-    print('s1000s*5:', time.time() - t)
-
-    t = time.time()
-    # 15.440065145492554
-    s10000 = all_sents[:10000]
-    embedder.embed(s10000)
-    print('s10000:', time.time() - t)
-
-    t = time.time()
-    s2500s = np.array_split(s10000, 4)
-    embedder.embed_list(s2500s)
-    print('s2500s*4:', time.time() - t)
-
-    t = time.time()
-    # 49.14992094039917
-    s50000 = all_sents[:50000]
-    embedder.embed(s50000)
-    print('s50000:', time.time() - t)
-
-    t = time.time()
-    s10000s = np.array_split(s50000, 5)
-    embedder.embed_list(s10000s)
-    print('s10000s*5:', time.time() - t)
-
-    return
+    return shuffle_and_split(summary_sequences_padded, np.array(scores), group=group)
 
 def sent_embed_articles(articles, maxlen, use_embedder, batch_size=10000):
     """

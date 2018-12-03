@@ -24,8 +24,8 @@ WORD_MUTATED_FILE = os.path.join(CNNDM_DIR, 'word-mutated.pickle')
 SENT_MUTATED_FILE = os.path.join(CNNDM_DIR, 'sent-mutated.pickle')
 NEGATIVE_SAMPLING_FILE = os.path.join(CNNDM_DIR, 'negative-sampling.pickle')
 
-UAE_DAN_FILE = os.path.join(CNNDM_DIR, 'UAE-DAN.pickle')
-UAE_TRANSFORMER_FILE = os.path.join(CNNDM_DIR, 'UAE-DAN.pickle')
+UAE_DAN_DIR = os.path.join(CNNDM_DIR, 'UAE-DAN')
+UAE_TRANSFORMER_DIR = os.path.join(CNNDM_DIR, 'UAE-Transformer')
 
 ARTICLE_MAX_SENT = 10
 SUMMARY_MAX_SENT = 3

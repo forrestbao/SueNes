@@ -163,6 +163,12 @@ def build_glove_LSTM_model(embedding_layer):
     return model
 
 def build_binary_glove_model(embedding_layer):
+    # a = K.ones((640, 100))
+    # b = K.ones((640, 100, 120))
+    # Conv1D(128, 5)(a)
+    # Conv2D(128, (5,5))(a)
+    # Conv1D(128, 5)(b)
+    # Conv2D(128, (5,5))(b)
     # train a 1D convnet with global maxpooling
     sequence_input = Input(shape=(MAX_ARTICLE_LENGTH + MAX_SUMMARY_LENGTH,),
                            dtype='int32')

@@ -4,7 +4,9 @@ import os
 import pickle
 
 from utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
-from utils import read_text_file
+from utils import read_text_file, sentence_split
+
+from embedding import SentenceEmbedder
 
 import random
 
@@ -173,3 +175,288 @@ def preprocess_negtive_sampling():
                         for _ in range(5)]
     with open(NEGATIVE_SAMPLING_FILE, 'wb') as f:
         pickle.dump(outdata, f)
+
+
+
+
+# collect into one arry
+def collect(v):
+    res = []
+    for vi in v:
+        if type(vi) == list:
+            res.extend(collect(vi))
+        else:
+            res.append(vi)
+    return res
+
+def get_shape(v):
+    """
+    [[[1,2], [3,4,5]], [[6,7], [8,9,10]]]
+    [[2,3], [2,3]]
+    """
+    assert(type(v) is list)
+    res = []
+    if not v:
+        return 1
+    if type(v[0]) is not list:
+        return len(v)
+    for vi in v:
+        res.append(get_shape(vi))
+    return res
+
+def restore_shape(v, index, shape):
+    """v is flat
+    """
+    res = []
+    if type(shape) is not list:
+        return v[index:index+shape], index+shape
+    for s in shape:
+        sub, index = restore_shape(v, index, s)
+        res.append(sub)
+    return res, index
+
+def test():
+    array = [[[1,2], [3,4,5]], [[6,7], [8,9,10]]]
+    shape = get_shape(array)
+    flat = collect(array)
+    restored, index = restore_shape(flat, 0, shape)
+    assert(array == restored)
+    assert(index == len(flat))
+
+    v = [[['hello', 'world'], ['hello', 'world', 'ok']], [['yes', 'no']]]
+    encoded = UAE_encode_keep_shape(v)
+    
+def UAE_encode_keep_shape(v):
+    """This will create sentence embedder!
+    """
+    use_embedder = SentenceEmbedder()
+    flattened = collect(v)
+    shape = get_shape(v)
+    print('embedding', len(flattened), 'sentences ..')
+    embedding_flattened = use_embedder.embed(flattened)
+    embedding, _ = restore_shape(embedding_flattened, 0, shape)
+    return embedding
+
+def preprocess_UAE_story(num):
+    """
+    This function needs to be called multiple times.
+
+    Currently setting num to 1000 should work
+
+    - 1000 (40,000 sents): 30s
+    - 10000 (382,000): out-of-memory
+    - 5000: 2min about 10G memory
+    """
+    if not os.path.exists(UAE_DAN_DIR):
+        os.makedirs(UAE_DAN_DIR)
+    story_file = os.path.join(UAE_DAN_DIR, 'story.pickle')
+    with open(STORY_PICKLE_FILE, 'rb') as f:
+        stories = pickle.load(f)
+    if os.path.exists(story_file):
+        with open(story_file, 'rb') as f:
+            encoded_stories = pickle.load(f)
+    else:
+        encoded_stories = {}
+    ct = 0
+    print('Encoded stories:', len(encoded_stories))
+    keys = []
+    to_encode = []
+    for key in stories.keys():
+        if key not in encoded_stories:
+            ct += 1
+            if ct % num == 0:
+                break
+            keys.append(key)
+            story = stories[key]
+            article = story['article']
+            summary = story['summary']
+            to_encode.append(article)
+            to_encode.append(summary)
+    # encode
+    if not keys:
+        print('All encoded!')
+    to_encode_array = [sentence_split(a) for a in to_encode]
+    # this embedding should be (21, 512)
+    encoded = UAE_encode_keep_shape(to_encode_array)
+    [1,2,3,4][1::2]
+    articles = encoded[0::2]
+    summaries = encoded[1::2]
+    for key,a,s in zip(keys, articles, summaries):
+        item = {}
+        item['article'] = a
+        item['summary'] = s
+        encoded_stories[key] = item
+    # write back
+    with open(story_file, 'wb') as f:
+        pickle.dump(encoded_stories, f)
+
+
+def preprocess_UAE_negative(num):
+    """
+    This function needs to be called multiple times.
+    - 1000 (7524 sents): 20s
+    - 10000 (75236 sents): 1min
+    - can be all actually: 100,000: (613,000 sents)
+    """
+    if not os.path.exists(UAE_DAN_DIR):
+        os.makedirs(UAE_DAN_DIR)
+    outfile = os.path.join(UAE_DAN_DIR, 'negative.pickle')
+    with open(NEGATIVE_SAMPLING_FILE, 'rb') as f:
+        stories = pickle.load(f)
+    if os.path.exists(outfile):
+        with open(outfile, 'rb') as f:
+            encoded_stories = pickle.load(f)
+    else:
+        encoded_stories = {}
+    ct = 0
+    print('Encoded stories:', len(encoded_stories))
+    keys = []
+    to_encode = []
+    for key in stories.keys():
+        if key not in encoded_stories:
+            ct += 1
+            if ct % num == 0:
+                break
+            keys.append(key)
+            fake_summaries = stories[key]
+            to_encode.extend(fake_summaries)
+    # encode
+    if not keys:
+        print('All encoded!')
+    to_encode_array = [sentence_split(a) for a in to_encode]
+    # this embedding should be (21, 512)
+    encoded = UAE_encode_keep_shape(to_encode_array)
+    # encoded contains 5 per entry, so len(encoded) should be 5 * len(keys)
+    assert(len(encoded) == len(keys)*5)
+    # np.split(np.array([1,2,3,4,5,6,7,8,9,10]), 2)
+    splits = np.split(np.array(encoded), len(keys))
+    for key,e in zip(keys, splits):
+        encoded_stories[key] = e
+    # write back
+    with open(outfile, 'wb') as f:
+        pickle.dump(encoded_stories, f)
+
+
+def preprocess_UAE_mutated(num):
+    """
+    This function needs to be called multiple times.
+    - 1000 (7524 sents): 20s
+    - 10000 (75236 sents):
+    - can be all actually: 100,000: 
+    """
+    if not os.path.exists(UAE_DAN_DIR):
+        os.makedirs(UAE_DAN_DIR)
+    outfile = os.path.join(UAE_DAN_DIR, 'negative.pickle')
+    with open(NEGATIVE_SAMPLING_FILE, 'rb') as f:
+        stories = pickle.load(f)
+    if os.path.exists(outfile):
+        with open(outfile, 'rb') as f:
+            encoded_stories = pickle.load(f)
+    else:
+        encoded_stories = {}
+    ct = 0
+    print('Encoded stories:', len(encoded_stories))
+    keys = []
+    to_encode = []
+    for key in stories.keys():
+        if key not in encoded_stories:
+            ct += 1
+            if ct % num == 0:
+                break
+            keys.append(key)
+            fake_summaries = stories[key]
+            to_encode.extend(fake_summaries)
+    # encode
+    if not keys:
+        print('All encoded!')
+    to_encode_array = [sentence_split(a) for a in to_encode]
+    # this embedding should be (21, 512)
+    encoded = UAE_encode_keep_shape(to_encode_array)
+    # encoded contains 5 per entry, so len(encoded) should be 5 * len(keys)
+    assert(len(encoded) == len(keys)*5)
+    # np.split(np.array([1,2,3,4,5,6,7,8,9,10]), 2)
+    splits = np.split(np.array(encoded), len(keys))
+    for key,e in zip(keys, splits):
+        encoded_stories[key] = e
+    # write back
+    with open(outfile, 'wb') as f:
+        pickle.dump(encoded_stories, f)
+
+        
+def uae_pregen():
+    """Pre-generate the uae for data folder.
+    """
+    hebi_dir = os.path.join(cnndm_dir, 'hebi')
+    data_dir = os.path.join(cnndm_dir, 'hebi-sample-10000')
+    hebi_uae_dir = os.path.join(cnndm_dir, 'hebi-uae')
+    # For each folder (with hash) in hebi_dir, check if hebi_uae_dir
+    # contains this folder or not. If not, parse the article and
+    # summaries into data.
+    stories = os.listdir(data_dir)
+
+    # printing out current progress
+    finished_stories = os.listdir(hebi_uae_dir)
+    print('total stories:', len(stories))
+    print('finished:', len(finished_stories))
+
+    print('creating UAE instance ..')
+    use_embedder = SentenceEmbedder()
+
+    ct = 0
+
+    for s in stories:
+        data = {}
+        to_encode = []
+        scores = []
+        story_dir = os.path.join(data_dir, s)
+        story_uae_file = os.path.join(hebi_uae_dir, s)
+        if not os.path.exists(story_uae_file):
+            print('processing', s, '..')
+            ct += 1
+            if ct % 50 == 0:
+                # This function returns after processing 50 stories,
+                # due to memory reason.
+                print('reaches 50 stories, existing ..')
+                return
+            
+            # create the embedding
+            article_file = os.path.join(story_dir, 'article.txt')
+            summary_file = os.path.join(story_dir, 'summary.json')
+            with open(article_file) as f:
+                article = f.read()
+                to_encode.append(article)
+            with open(summary_file) as f:
+                j = json.load(f)
+                for summary,score,_ in j:
+                    to_encode.append(summary)
+                    scores.append(score)
+            # now, encode to_encode
+            # to_encode should have 21 paragraphs
+            # split into sentences
+            to_encode_array = [sentence_split(a) for a in to_encode]
+            def get_shape(vv):
+                return [len(v) for v in vv]
+            def flatten(vv):
+                res = []
+                for v in vv:
+                    res.extend(v)
+                return res
+            def restructure(v, shape):
+                if not shape:
+                    return []
+                l = shape[0]
+                return [v[:l]] + restructure(v[l:], shape[1:])
+            shape = get_shape(to_encode_array)
+            flattened = flatten(to_encode_array)
+            print('embedding', len(flattened), 'sentences ..')
+            embedding_flattened = use_embedder.embed(flattened)
+            embedding = restructure(embedding_flattened, shape)
+            # this embedding should be (21, 512)
+            data = {}
+            #(numsent, 512)
+            data['article'] = embedding[0]
+            data['summary'] = embedding[1:]
+            data['score'] = scores
+            with open(story_uae_file, 'wb') as f:
+                pickle.dump(data, f)
+

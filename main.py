@@ -75,7 +75,7 @@ def use_vector_main():
 
 
 def glove_neg_main():
-    keys = load_story_keys(10000)
+    keys = load_story_keys(20000)
     # tokenizer = load_tokenizer()
     tokenizer = create_tokenizer_by_key(keys)
     fake_summaries = load_negative_sampling_data(keys)

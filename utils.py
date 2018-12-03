@@ -1,3 +1,5 @@
+import re
+
 from keras.preprocessing.text import Tokenizer, one_hot
 from keras.preprocessing.sequence import pad_sequences
 # why keras.preprocessing is not exporting tokenizer_from_json ??

@@ -12,21 +12,26 @@ from keras import layers
 from keras import backend as K
 
 import scipy
+import pickle
 
 import os, sys
 
 from model import load_embedding
-from model import build_uae_model, build_glove_model, build_glove_summary_only_model
+from model import build_USE_model, build_glove_model, build_glove_summary_only_model
 from model import build_binary_glove_model, build_separate_model
+from model import build_binary_USE_model
 from model import build_glove_LSTM_model, build_glove_2dCONV_model
 from utils import save_data, load_data
 from utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
 
-from data import prepare_data_using_use
+from data import prepare_data_using_USE
+from data import prepare_data_with_USE
 from data import prepare_data_using_tokenizer, prepare_summary_data_using_tokenizer
 from data import load_negative_sampling_data, load_article_and_summary_data
 from data import load_word_mutated_data
 from data import load_story_keys, create_tokenizer_by_key
+
+from keras.preprocessing.sequence import pad_sequences
 
 from config import *
 
@@ -69,13 +74,13 @@ def use_vector_main():
     # print('saving data to use-vector.pickle ..')
     # save_data(data, 'use-vector.pickle')
     # data2 = load_data('use-vector.pickle')
-    model = build_uae_model()
+    model = build_USE_model()
     train_model(model, data)
     return
 
 
 def glove_neg_main():
-    keys = load_story_keys(20000)
+    keys = load_story_keys(1000)
     # tokenizer = load_tokenizer()
     tokenizer = create_tokenizer_by_key(keys)
     fake_summaries = load_negative_sampling_data(keys)
@@ -135,6 +140,64 @@ def concatenate_data(articles, reference_summaries, reference_labels,
     summaries = np.ndarray.flatten(summaries)
     labels = np.ndarray.flatten(labels)
     return articles, summaries, labels
+
+def USE_neg_main():
+    """
+    1. load USE_DAN_DIR/story.pickle
+    2. load USE_DAN_DIR/negative.pickle
+    3. loop keys in overlap of story.pickle and negative.pickle:
+    3.1 load article, ref_sum, nega_samples
+    3.2 run negative sampling models
+    """
+    with open(os.path.join(USE_DAN_DIR, 'story.pickle'), 'rb') as f:
+        stories = pickle.load(f)
+    with open(os.path.join(USE_DAN_DIR, 'negative.pickle'), 'rb') as f:
+        negatives = pickle.load(f)
+    story_keys = set(stories.keys())
+    negative_keys = set(negatives.keys())
+    len(story_keys)
+    len(negative_keys)
+    # story_keys
+    intersect_keys = story_keys.intersection(negative_keys)
+    len(intersect_keys)
+
+    articles = np.array([stories[key]['article'] for key in intersect_keys])
+    reference_summaries = np.array([stories[key]['summary'] for key in
+                                    intersect_keys])
+    fake_summaries = np.array([negatives[key] for key in intersect_keys])
+    fake_summaries = fake_summaries[:,:1]
+    reference_labels = np.ones_like(reference_summaries, dtype=int)
+    fake_labels = np.zeros_like(fake_summaries, dtype=int)
+
+    articles.shape
+    reference_summaries.shape
+    reference_labels.shape
+    fake_summaries.shape
+    fake_labels.shape
+    
+    res = concatenate_data(articles, reference_summaries,
+                           reference_labels,
+                           fake_summaries,
+                           fake_labels)
+    articles, summaries, labels = res
+    articles.shape
+    summaries.shape
+    labels.shape
+    group = fake_summaries.shape[1] + 1
+    data = prepare_data_with_USE(articles, summaries,
+                                 labels, group=group)
+
+    (x_train, y_train), (x_val, y_val) = data
+    x_train.shape
+    y_train.shape
+    x_val.shape
+    y_val.shape
+    
+    model = build_binary_USE_model()
+    train_binary_model(model, data)
+    return
+    
+    
 
 def glove_main():
     # data v2

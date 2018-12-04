@@ -2,6 +2,7 @@
 
 import os
 import pickle
+import shutil
 
 from utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
 from utils import read_text_file, sentence_split
@@ -224,9 +225,9 @@ def test():
     assert(index == len(flat))
 
     v = [[['hello', 'world'], ['hello', 'world', 'ok']], [['yes', 'no']]]
-    encoded = UAE_encode_keep_shape(v)
+    encoded = USE_encode_keep_shape(v)
     
-def UAE_encode_keep_shape(v):
+def USE_encode_keep_shape(v):
     """This will create sentence embedder!
     """
     use_embedder = SentenceEmbedder()
@@ -237,7 +238,7 @@ def UAE_encode_keep_shape(v):
     embedding, _ = restore_shape(embedding_flattened, 0, shape)
     return embedding
 
-def preprocess_UAE_story(num):
+def preprocess_USE_story(num):
     """
     This function needs to be called multiple times.
 
@@ -247,9 +248,9 @@ def preprocess_UAE_story(num):
     - 10000 (382,000): out-of-memory
     - 5000: 2min about 10G memory
     """
-    if not os.path.exists(UAE_DAN_DIR):
-        os.makedirs(UAE_DAN_DIR)
-    story_file = os.path.join(UAE_DAN_DIR, 'story.pickle')
+    if not os.path.exists(USE_DAN_DIR):
+        os.makedirs(USE_DAN_DIR)
+    story_file = os.path.join(USE_DAN_DIR, 'story.pickle')
     with open(STORY_PICKLE_FILE, 'rb') as f:
         stories = pickle.load(f)
     if os.path.exists(story_file):
@@ -277,7 +278,7 @@ def preprocess_UAE_story(num):
         print('All encoded!')
     to_encode_array = [sentence_split(a) for a in to_encode]
     # this embedding should be (21, 512)
-    encoded = UAE_encode_keep_shape(to_encode_array)
+    encoded = USE_encode_keep_shape(to_encode_array)
     [1,2,3,4][1::2]
     articles = encoded[0::2]
     summaries = encoded[1::2]
@@ -287,20 +288,23 @@ def preprocess_UAE_story(num):
         item['summary'] = s
         encoded_stories[key] = item
     # write back
-    with open(story_file, 'wb') as f:
+    # write to a new file
+    tmp_file = os.path.join(USE_DAN_DIR, 'story-tmp.pickle')
+    with open(tmp_file, 'wb') as f:
         pickle.dump(encoded_stories, f)
+    shutil.copyfile(tmp_file, story_file)
 
 
-def preprocess_UAE_negative(num):
+def preprocess_USE_negative(num):
     """
     This function needs to be called multiple times.
     - 1000 (7524 sents): 20s
     - 10000 (75236 sents): 1min
     - can be all actually: 100,000: (613,000 sents)
     """
-    if not os.path.exists(UAE_DAN_DIR):
-        os.makedirs(UAE_DAN_DIR)
-    outfile = os.path.join(UAE_DAN_DIR, 'negative.pickle')
+    if not os.path.exists(USE_DAN_DIR):
+        os.makedirs(USE_DAN_DIR)
+    outfile = os.path.join(USE_DAN_DIR, 'negative.pickle')
     with open(NEGATIVE_SAMPLING_FILE, 'rb') as f:
         stories = pickle.load(f)
     if os.path.exists(outfile):
@@ -325,7 +329,7 @@ def preprocess_UAE_negative(num):
         print('All encoded!')
     to_encode_array = [sentence_split(a) for a in to_encode]
     # this embedding should be (21, 512)
-    encoded = UAE_encode_keep_shape(to_encode_array)
+    encoded = USE_encode_keep_shape(to_encode_array)
     # encoded contains 5 per entry, so len(encoded) should be 5 * len(keys)
     assert(len(encoded) == len(keys)*5)
     # np.split(np.array([1,2,3,4,5,6,7,8,9,10]), 2)
@@ -337,17 +341,20 @@ def preprocess_UAE_negative(num):
         pickle.dump(encoded_stories, f)
 
 
-def preprocess_UAE_mutated(num):
+def preprocess_USE_mutated(num):
     """
     This function needs to be called multiple times.
     - 1000 (7524 sents): 20s
     - 10000 (75236 sents):
     - can be all actually: 100,000: 
     """
-    if not os.path.exists(UAE_DAN_DIR):
-        os.makedirs(UAE_DAN_DIR)
-    outfile = os.path.join(UAE_DAN_DIR, 'negative.pickle')
-    with open(NEGATIVE_SAMPLING_FILE, 'rb') as f:
+    # TODO Not implemented.
+    print('Not implemented.')
+    exit(1)
+    if not os.path.exists(USE_DAN_DIR):
+        os.makedirs(USE_DAN_DIR)
+    outfile = os.path.join(USE_DAN_DIR, 'mutated.pickle')
+    with open(WORD_MUTATED_FILE, 'rb') as f:
         stories = pickle.load(f)
     if os.path.exists(outfile):
         with open(outfile, 'rb') as f:
@@ -364,16 +371,18 @@ def preprocess_UAE_mutated(num):
             if ct % num == 0:
                 break
             keys.append(key)
-            fake_summaries = stories[key]
+            add_pairs = stories[key]['add-pairs']
+            delete_pairs = stories[key]['delete-pairs']
+            fake_summaries = [p[0] for p in (add_pairs + delete_pairs)]
             to_encode.extend(fake_summaries)
     # encode
     if not keys:
         print('All encoded!')
     to_encode_array = [sentence_split(a) for a in to_encode]
     # this embedding should be (21, 512)
-    encoded = UAE_encode_keep_shape(to_encode_array)
+    encoded = USE_encode_keep_shape(to_encode_array)
     # encoded contains 5 per entry, so len(encoded) should be 5 * len(keys)
-    assert(len(encoded) == len(keys)*5)
+    assert(len(encoded) == len(keys)*20)
     # np.split(np.array([1,2,3,4,5,6,7,8,9,10]), 2)
     splits = np.split(np.array(encoded), len(keys))
     for key,e in zip(keys, splits):
@@ -383,7 +392,7 @@ def preprocess_UAE_mutated(num):
         pickle.dump(encoded_stories, f)
 
         
-def uae_pregen():
+def use_pregen():
     """Pre-generate the uae for data folder.
     """
     hebi_dir = os.path.join(cnndm_dir, 'hebi')

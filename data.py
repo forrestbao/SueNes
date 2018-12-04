@@ -16,7 +16,7 @@ from utils import read_text_file
 
 from config import *
 
-def prepare_data_using_use():
+def prepare_data_using_USE():
     """Return vector of float32. The dimension of X is (?,13,512), Y is
     (?) where ? is the number of articles.
     """
@@ -51,6 +51,20 @@ def prepare_data_using_use():
     data = np.concatenate((article_data_padded, summary_data_padded), axis=1)
 
     return shuffle_and_split(data, np.array(scores))
+
+def prepare_data_with_USE(articles, summaries, labels, group):
+    print('padding sequence ..')
+    article_data_padded = pad_sequences(articles,
+                                        value=np.zeros(512), padding='post',
+                                        maxlen=ARTICLE_MAX_SENT, dtype='float32')
+    summary_data_padded = pad_sequences(summaries,
+                                        value=np.zeros(512), padding='post',
+                                        maxlen=SUMMARY_MAX_SENT, dtype='float32')
+    print('concatenating ..')
+    data = np.concatenate((article_data_padded, summary_data_padded), axis=1)
+
+    return shuffle_and_split(data, np.array(labels), group)
+    
 
 def load_story_keys(size=None):
     """Return a list of keys.

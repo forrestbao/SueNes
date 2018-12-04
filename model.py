@@ -253,7 +253,7 @@ def build_glove_summary_only_model(embedding_layer):
     model = Model(sequence_input, preds)
     return model
 
-def build_uae_model():
+def build_USE_model():
     sequence_input = Input(shape=(ARTICLE_MAX_SENT + SUMMARY_MAX_SENT, 512),
                            dtype='float32')
     x = Conv1D(128, 3, activation='relu')(sequence_input)
@@ -268,6 +268,20 @@ def build_uae_model():
     model = Model(sequence_input, preds)
     return model
     
+def build_binary_USE_model():
+    sequence_input = Input(shape=(ARTICLE_MAX_SENT + SUMMARY_MAX_SENT, 512),
+                           dtype='float32')
+    x = Conv1D(128, 3, activation='relu')(sequence_input)
+    x = MaxPooling1D(2)(x)
+    # x = Conv1D(128, 5, activation='relu')(x)
+    # x = MaxPooling1D(5)(x)
+    x = Conv1D(128, 3, activation='relu')(x)
+    x = GlobalMaxPooling1D()(x)
+    x = Dense(128, activation='relu')(x)
+    preds = Dense(1, activation='sigmoid')(x)
+
+    model = Model(sequence_input, preds)
+    return model
 
 def build_model_test():
     # apply a layer multiple times
@@ -283,7 +297,7 @@ def build_model_test():
     return
 
     
-def build_use_model(use_embed):
+def build_use_string_model(use_embed):
     """Since USE can only used CPU, I'd better not getting it into the
 Model layers.
     """

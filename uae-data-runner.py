@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from data import uae_pregen
+from preprocessing import preprocess_USE_story
 
 if __name__ == '__main__':
-    uae_pregen()
+    preprocess_USE_story(1000)

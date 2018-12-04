@@ -28,6 +28,13 @@ N/A
 *** TODO negative sampling with NYT
 *** TODO sentence level mutation with NYT
 
+
+*** TODO softmax instead of sigmoid
+*** TODO negative sampling difference loss function
+*** TODO validation and test dataset
+*** TODO regularizers (L1, L2, dropout)
+*** TODO USE-Large
+
 ** Paper writing
 *** TODO write method
 *** TODO figures

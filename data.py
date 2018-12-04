@@ -65,6 +65,18 @@ def prepare_data_with_USE(articles, summaries, labels, group):
 
     return shuffle_and_split(data, np.array(labels), group)
     
+def prepare_data_with_INFER(articles, summaries, labels, group):
+    print('padding sequence ..')
+    article_data_padded = pad_sequences(articles,
+                                        value=np.zeros(4096), padding='post',
+                                        maxlen=ARTICLE_MAX_SENT, dtype='float32')
+    summary_data_padded = pad_sequences(summaries,
+                                        value=np.zeros(4096), padding='post',
+                                        maxlen=SUMMARY_MAX_SENT, dtype='float32')
+    print('concatenating ..')
+    data = np.concatenate((article_data_padded, summary_data_padded), axis=1)
+
+    return shuffle_and_split(data, np.array(labels), group)
 
 def load_story_keys(size=None):
     """Return a list of keys.

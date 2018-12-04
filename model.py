@@ -283,6 +283,23 @@ def build_binary_USE_model():
     model = Model(sequence_input, preds)
     return model
 
+def build_binary_INFER_model():
+    """Only difference: 4096
+    """
+    sequence_input = Input(shape=(ARTICLE_MAX_SENT + SUMMARY_MAX_SENT, 4096),
+                           dtype='float32')
+    x = Conv1D(128, 3, activation='relu')(sequence_input)
+    x = MaxPooling1D(2)(x)
+    # x = Conv1D(128, 5, activation='relu')(x)
+    # x = MaxPooling1D(5)(x)
+    x = Conv1D(128, 3, activation='relu')(x)
+    x = GlobalMaxPooling1D()(x)
+    x = Dense(128, activation='relu')(x)
+    preds = Dense(1, activation='sigmoid')(x)
+
+    model = Model(sequence_input, preds)
+    return model
+
 def build_model_test():
     # apply a layer multiple times
     i = Input(shape=(13,100), dtype='float32')

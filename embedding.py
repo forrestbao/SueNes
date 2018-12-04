@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import sys
+
 import tensorflow as tf
 import tensorflow_hub as hub
 
@@ -60,6 +62,66 @@ class SentenceEmbedder():
             embedded = [self.module(sentences) for sentences in sentences_list]
             res = self.embed_session.run(embedded)
             return res
+
+
+sys.path.append('/home/hebi/github/reading/InferSent/')
+
+class InferSentEmbedder():
+    def __init__(self):
+        # Load our pre-trained model (in encoder/):
+        from models import InferSent
+        V = 2
+        MODEL_PATH = 'encoder/infersent%s.pkl' % V
+        params_model = {'bsize': 64, 'word_emb_dim': 300, 'enc_lstm_dim': 2048,
+                        'pool_type': 'max', 'dpout_model': 0.0, 'version': V}
+        self.infersent = InferSent(params_model)
+        import torch
+        self.infersent.load_state_dict(torch.load(MODEL_PATH))
+        # Set word vector path for the model:
+        W2V_PATH = 'dataset/fastText/crawl-300d-2M.vec'
+        self.infersent.set_w2v_path(W2V_PATH)
+        self.loadk()
+        pass
+    def build_vocab(self, sentences):
+        raise Exception('Deprecated')
+        # Build the vocabulary of word vectors (i.e keep only those needed):
+        # FIXME this should be all sentences
+        self.infersent.build_vocab(sentences, tokenize=True)
+
+    def loadk(self):
+        # Just load k ..
+        self.infersent.build_vocab_k_words(K=100000)
+        
+    def embed(self, sentences):
+        # Encode your sentences (list of n sentences):
+        embeddings = self.infersent.encode(sentences, tokenize=True)
+        # This outputs a numpy array with n vectors of dimension
+        # 4096. Speed is around 1000 sentences per second with batch
+        # size 128 on a single GPU.
+        return embeddings
+
+def test_infersent():
+    sentences = ['Everyone really likes the newest benefits ',
+                 'The Government Executive articles housed on the website are not able to be searched . ',
+                 'I like him for the most part , but would still enjoy seeing someone beat him . ',
+                 'My favorite restaurants are always at least a hundred miles away from my house . ',
+                 'I know exactly . ',
+                 'We have plenty of space in the landfill . ']
+    embedder1 = InferSentEmbedder()
+    embedder2 = InferSentEmbedder()
+    embedder1.build_vocab(sentences[:3])
+    # embedder2.build_vocab(sentences)
+    embedder2.loadk()
+    embeddings1 = embedder1.embed(sentences)
+    embeddings2 = embedder1.embed(sentences)
+    out = (embeddings1 == embeddings2)
+    out.shape
+    for o in out:
+        for i in o:
+            if i != True:
+                print('!!!')
+                break
+    
 
 def myembed(sentence):
     embedder = SentenceEmbedder()

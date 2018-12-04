@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from keras.models import Sequential
 from keras import layers
 from keras import backend as K
+from keras.utils import plot_model
 
 import scipy
 import pickle
@@ -19,13 +20,13 @@ import os, sys
 from model import load_embedding
 from model import build_USE_model, build_glove_model, build_glove_summary_only_model
 from model import build_binary_glove_model, build_separate_model
-from model import build_binary_USE_model
+from model import build_binary_USE_model, build_binary_INFER_model
 from model import build_glove_LSTM_model, build_glove_2dCONV_model
 from utils import save_data, load_data
 from utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
 
 from data import prepare_data_using_USE
-from data import prepare_data_with_USE
+from data import prepare_data_with_USE, prepare_data_with_INFER
 from data import prepare_data_using_tokenizer, prepare_summary_data_using_tokenizer
 from data import load_negative_sampling_data, load_article_and_summary_data
 from data import load_word_mutated_data
@@ -80,8 +81,11 @@ def use_vector_main():
 
 
 def glove_neg_main():
-    keys = load_story_keys(1000)
+    keys = load_story_keys(10000)
     # tokenizer = load_tokenizer()
+    len(keys)
+    # keys = set(random.sample(keys, 10000))
+    
     tokenizer = create_tokenizer_by_key(keys)
     fake_summaries = load_negative_sampling_data(keys)
     # DEBUG using one fake summary, to get unbiased data
@@ -116,6 +120,7 @@ def glove_neg_main():
     embedding_layer = load_embedding(tokenizer)
     model = build_binary_glove_model(embedding_layer)
     model = build_separate_model(embedding_layer)
+    plot_model(model, to_file='model.png', show_shapes=True)
     train_binary_model(model, data)
     return
 
@@ -149,9 +154,12 @@ def USE_neg_main():
     3.1 load article, ref_sum, nega_samples
     3.2 run negative sampling models
     """
-    with open(os.path.join(USE_DAN_DIR, 'story.pickle'), 'rb') as f:
+    d = USE_DAN_DIR
+    d = INFERSENT_DIR
+    
+    with open(os.path.join(d, 'story.pickle'), 'rb') as f:
         stories = pickle.load(f)
-    with open(os.path.join(USE_DAN_DIR, 'negative.pickle'), 'rb') as f:
+    with open(os.path.join(d, 'negative.pickle'), 'rb') as f:
         negatives = pickle.load(f)
     story_keys = set(stories.keys())
     negative_keys = set(negatives.keys())
@@ -160,12 +168,13 @@ def USE_neg_main():
     # story_keys
     intersect_keys = story_keys.intersection(negative_keys)
     len(intersect_keys)
+    # intersect_keys = set(random.sample(intersect_keys, 10000))
 
     articles = np.array([stories[key]['article'] for key in intersect_keys])
     reference_summaries = np.array([stories[key]['summary'] for key in
                                     intersect_keys])
     fake_summaries = np.array([negatives[key] for key in intersect_keys])
-    fake_summaries = fake_summaries[:,:1]
+    # fake_summaries = fake_summaries[:,:1]
     reference_labels = np.ones_like(reference_summaries, dtype=int)
     fake_labels = np.zeros_like(fake_summaries, dtype=int)
 
@@ -184,7 +193,10 @@ def USE_neg_main():
     summaries.shape
     labels.shape
     group = fake_summaries.shape[1] + 1
+    
     data = prepare_data_with_USE(articles, summaries,
+                                 labels, group=group)
+    data = prepare_data_with_INFER(articles, summaries,
                                  labels, group=group)
 
     (x_train, y_train), (x_val, y_val) = data
@@ -194,10 +206,10 @@ def USE_neg_main():
     y_val.shape
     
     model = build_binary_USE_model()
+    model = build_binary_INFER_model()
+    
     train_binary_model(model, data)
     return
-    
-    
 
 def glove_main():
     # data v2

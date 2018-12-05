@@ -4,7 +4,7 @@ import os
 
 import numpy as np
 
-from keras.layers import Dense, Input, GlobalMaxPooling1D
+from keras.layers import Dense, Input, GlobalMaxPooling1D, GlobalMaxPooling2D
 from keras.layers import Conv1D, MaxPooling1D, Embedding, Conv2D, MaxPooling2D
 from keras.layers import Lambda, Reshape
 from keras import regularizers
@@ -271,17 +271,35 @@ def build_USE_model():
 def build_binary_USE_model():
     sequence_input = Input(shape=(ARTICLE_MAX_SENT + SUMMARY_MAX_SENT, 512),
                            dtype='float32')
-    x = Conv1D(128, 3, activation='relu')(sequence_input)
-    x = MaxPooling1D(2)(x)
+    x = Conv1D(128, 5, activation='relu')(sequence_input)
+    x = MaxPooling1D(3)(x)
+    # x = Conv2D(100, (3,3), activation='relu')(sequence_input)
     # x = Conv1D(128, 5, activation='relu')(x)
     # x = MaxPooling1D(5)(x)
-    x = Conv1D(128, 3, activation='relu')(x)
+    # x = Conv1D(128, 3, activation='relu')(x)
     x = GlobalMaxPooling1D()(x)
     x = Dense(128, activation='relu')(x)
     preds = Dense(1, activation='sigmoid')(x)
-
+    # preds = Dense(2, activation='softmax')(x)
     model = Model(sequence_input, preds)
     return model
+
+def build_test_model():
+    sequence_length = ARTICLE_MAX_SENT + SUMMARY_MAX_SENT
+    sequence_input = Input(shape=(sequence_length, 512),
+                           dtype='float32')
+    reshape = Reshape((sequence_length, 512, 1))(sequence_input)
+    # conv = Conv2D(128, (5, 512), activation='relu', padding='valid',
+    #               kernel_regularizer=regularizers.l2(0.01))(reshape)
+    conv = Conv2D(128, (5, 512), activation='relu', padding='valid')(reshape)
+    # maxpool = MaxPooling2D((sequence_length - 5 + 1, 1), strides=(1,1))(conv)
+    # flatten = keras.layers.Flatten()(maxpool)
+    x = GlobalMaxPooling2D()(conv)
+    x = Dense(128, activation='relu')(x)
+    preds = Dense(1, activation='sigmoid')(x)
+    model = Model(sequence_input, preds)
+    return model
+
 
 def build_binary_INFER_model():
     """Only difference: 4096

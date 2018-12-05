@@ -22,6 +22,7 @@ from model import build_USE_model, build_glove_model, build_glove_summary_only_m
 from model import build_binary_glove_model, build_separate_model
 from model import build_binary_USE_model, build_binary_INFER_model
 from model import build_glove_LSTM_model, build_glove_2dCONV_model
+from model import build_test_model
 from utils import save_data, load_data
 from utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
 
@@ -155,6 +156,7 @@ def USE_neg_main():
     3.2 run negative sampling models
     """
     d = USE_DAN_DIR
+    d = USE_TRANSFORMER_DIR
     d = INFERSENT_DIR
     
     with open(os.path.join(d, 'story.pickle'), 'rb') as f:
@@ -200,15 +202,21 @@ def USE_neg_main():
                                  labels, group=group)
 
     (x_train, y_train), (x_val, y_val) = data
+
+    # one_hot_data = ((x_train, K.eval(K.one_hot(y_train, num_classes=2))),
+    #                 (x_val, K.eval(K.one_hot(y_val, num_classes=2))))
+    
     x_train.shape
     y_train.shape
     x_val.shape
     y_val.shape
-    
+
     model = build_binary_USE_model()
+    model = build_test_model()
     model = build_binary_INFER_model()
     
     train_binary_model(model, data)
+    # train_binary_model(model, one_hot_data)
     return
 
 def glove_main():
@@ -288,6 +296,7 @@ def train_binary_model(model, data):
     optimizer = tf.train.RMSPropOptimizer(0.001)
     model.compile(optimizer=optimizer,
                   loss='binary_crossentropy',
+                  # loss='categorical_crossentropy',
                   metrics=['accuracy', pearson_correlation_f])
     model.fit(x_train, y_train,
               epochs=20, batch_size=128,

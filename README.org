@@ -33,7 +33,14 @@ N/A
 *** TODO negative sampling difference loss function
 *** TODO validation and test dataset
 *** TODO regularizers (L1, L2, dropout)
-*** TODO USE-Large
+*** DONE USE-Large
+    CLOSED: [2018-12-04 Tue 21:03]
+*** DONE CNN architecture change
+    CLOSED: [2018-12-04 Tue 21:58]
+- smaller number of CNN
+- dropout
+- conv2d
+*** TODO separate architecture
 
 ** Paper writing
 *** TODO write method

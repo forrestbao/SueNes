@@ -63,6 +63,32 @@ class SentenceEmbedder():
             res = self.embed_session.run(embedded)
             return res
 
+class SentenceEmbedderLarge():
+    """This module is outputing:
+
+    INFO:tensorflow:Saver not created because there are no variables
+    in the graph to restore
+
+    Quite annoying, so:
+
+    >>> tf.logging.set_verbosity(logging.WARN)
+    """
+    def __init__(self):
+        module_url = "https://tfhub.dev/google/universal-sentence-encoder-large/3"
+        self.module = hub.Module(module_url)
+        self.embed_session = tf.Session()
+        self.embed_session.run(tf.global_variables_initializer())
+        self.embed_session.run(tf.tables_initializer())
+    def embed(self, sentences):
+        with tf.device('/cpu:0'):
+            embedded = self.module(sentences)
+            res = self.embed_session.run(embedded)
+            return res
+    def embed_list(self, sentences_list):
+        with tf.device('/cpu:0'):
+            embedded = [self.module(sentences) for sentences in sentences_list]
+            res = self.embed_session.run(embedded)
+            return res
 
 sys.path.append('/home/hebi/github/reading/InferSent/')
 
@@ -123,21 +149,15 @@ def test_infersent():
                 break
     
 
-def myembed(sentence):
-    embedder = SentenceEmbedder()
-    embedder.embed(sentence)
+def test():
     """Embed a string into 512 dim vector
     """
-    sentence = ["The quick brown fox jumps over the lazy dog."]
-    sentence = ["The quick brown fox is a jumping dog."]
-    embed = hub.Module("https://tfhub.dev/google/universal-sentence-encoder/2")
-    # embeddings = embed(["The quick brown fox jumps over the lazy dog."])
-    embed_session = tf.Session()
-    embed_session.run([tf.global_variables_initializer(), tf.tables_initializer()])
-    with tf.device('/cpu:0'):
-        embedded = embed(sentence)
-    res = embed_session.run(embedded)
-    return res
+    sentences = ["The quick brown fox jumps over the lazy dog."]
+    sentences = ["The quick brown fox is a jumping dog."]
+    embedder = SentenceEmbedder()
+    embedder = SentenceEmbedderLarge()
+    embeddings = embedder.embed(sentences)
+    embeddings.shape
 
 def test():
     myembed(["The quick brown fox jumps over the lazy dog."])
@@ -148,7 +168,6 @@ def test():
         session.run([tf.global_variables_initializer(), tf.tables_initializer()])
         embedded = session.run(embeddings)
         print (embedded)
-    pass
 
 def main():
     with tf.device('/cpu:0'):

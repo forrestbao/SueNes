@@ -9,7 +9,7 @@ import numpy as np
 from utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
 from utils import read_text_file, sentence_split
 
-from embedding import SentenceEmbedder, InferSentEmbedder
+from embedding import SentenceEmbedder, SentenceEmbedderLarge, InferSentEmbedder
 
 import random
 
@@ -234,6 +234,16 @@ def USE_encode_keep_shape(v):
     """This will create sentence embedder!
     """
     use_embedder = SentenceEmbedder()
+    flattened = collect(v)
+    shape = get_shape(v)
+    print('embedding', len(flattened), 'sentences ..')
+    embedding_flattened = use_embedder.embed(flattened)
+    embedding, _ = restore_shape(embedding_flattened, 0, shape)
+    return embedding
+def USE_Large_encode_keep_shape(v):
+    """This will create sentence embedder!
+    """
+    use_embedder = SentenceEmbedderLarge()
     flattened = collect(v)
     shape = get_shape(v)
     print('embedding', len(flattened), 'sentences ..')
@@ -588,3 +598,106 @@ def use_pregen():
             with open(story_uae_file, 'wb') as f:
                 pickle.dump(data, f)
 
+def preprocess_USE_Large_story(num):
+    """
+    This function needs to be called multiple times.
+
+    Currently setting num to 1000 should work
+
+    - 1000 (40,000 sents): 30s
+    - 10000 (382,000): out-of-memory
+    - 5000: 2min about 10G memory
+    """
+    if not os.path.exists(USE_TRANSFORMER_DIR):
+        os.makedirs(USE_TRANSFORMER_DIR)
+    story_file = os.path.join(USE_TRANSFORMER_DIR, 'story.pickle')
+    with open(STORY_PICKLE_FILE, 'rb') as f:
+        stories = pickle.load(f)
+    if os.path.exists(story_file):
+        with open(story_file, 'rb') as f:
+            encoded_stories = pickle.load(f)
+    else:
+        encoded_stories = {}
+    ct = 0
+    print('Encoded stories:', len(encoded_stories))
+    keys = []
+    to_encode = []
+    for key in stories.keys():
+        if key not in encoded_stories:
+            ct += 1
+            if ct % num == 0:
+                break
+            keys.append(key)
+            story = stories[key]
+            article = story['article']
+            summary = story['summary']
+            to_encode.append(article)
+            to_encode.append(summary)
+    # encode
+    if not keys:
+        print('All encoded!')
+    to_encode_array = [sentence_split(a) for a in to_encode]
+    # this embedding should be (21, 512)
+    encoded = USE_Large_encode_keep_shape(to_encode_array)
+    [1,2,3,4][1::2]
+    articles = encoded[0::2]
+    summaries = encoded[1::2]
+    for key,a,s in zip(keys, articles, summaries):
+        item = {}
+        item['article'] = a
+        item['summary'] = s
+        encoded_stories[key] = item
+    # write back
+    # write to a new file
+    tmp_file = os.path.join(USE_TRANSFORMER_DIR, 'story-tmp.pickle')
+    with open(tmp_file, 'wb') as f:
+        pickle.dump(encoded_stories, f)
+    shutil.copyfile(tmp_file, story_file)
+
+
+def preprocess_USE_Large_negative(num):
+    """
+    This function needs to be called multiple times.
+    - 1000 (7524 sents): 20s
+    - 10000 (75236 sents): 1min
+    - can be all actually: 100,000: (613,000 sents)
+    """
+    if not os.path.exists(USE_TRANSFORMER_DIR):
+        os.makedirs(USE_TRANSFORMER_DIR)
+    outfile = os.path.join(USE_TRANSFORMER_DIR, 'negative.pickle')
+    with open(NEGATIVE_SAMPLING_FILE, 'rb') as f:
+        stories = pickle.load(f)
+    if os.path.exists(outfile):
+        with open(outfile, 'rb') as f:
+            encoded_stories = pickle.load(f)
+    else:
+        encoded_stories = {}
+    ct = 0
+    print('Encoded stories:', len(encoded_stories))
+    keys = []
+    to_encode = []
+    for key in stories.keys():
+        if key not in encoded_stories:
+            ct += 1
+            if ct % num == 0:
+                break
+            keys.append(key)
+            fake_summaries = stories[key]
+            to_encode.extend(fake_summaries)
+    # encode
+    if not keys:
+        print('All encoded!')
+    to_encode_array = [sentence_split(a) for a in to_encode]
+    # this embedding should be (21, 512)
+    encoded = USE_Large_encode_keep_shape(to_encode_array)
+    # encoded contains 5 per entry, so len(encoded) should be 5 * len(keys)
+    assert(len(encoded) == len(keys)*5)
+    # np.split(np.array([1,2,3,4,5,6,7,8,9,10]), 2)
+    splits = np.split(np.array(encoded), len(keys))
+    for key,e in zip(keys, splits):
+        encoded_stories[key] = e
+    # write back
+    tmp_file = os.path.join(USE_TRANSFORMER_DIR, 'negative-tmp.pickle')
+    with open(tmp_file, 'wb') as f:
+        pickle.dump(encoded_stories, f)
+    shutil.copyfile(tmp_file, outfile)

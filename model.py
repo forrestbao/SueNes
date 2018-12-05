@@ -7,6 +7,7 @@ import numpy as np
 from keras.layers import Dense, Input, GlobalMaxPooling1D, GlobalMaxPooling2D
 from keras.layers import Conv1D, MaxPooling1D, Embedding, Conv2D, MaxPooling2D
 from keras.layers import Lambda, Reshape
+from keras.layers import LSTM, Dropout
 from keras import regularizers
 from keras.models import Model
 from keras.initializers import Constant
@@ -111,6 +112,7 @@ def build_glove_model(embedding_layer):
     model = Model(sequence_input, preds)
     return model
 
+
 def build_glove_2dCONV_model(embedding_layer):
     sequence_length = MAX_ARTICLE_LENGTH + MAX_SUMMARY_LENGTH
     sequence_input = Input(shape=(sequence_length,), dtype='int32')
@@ -139,15 +141,22 @@ def build_glove_2dCONV_model(embedding_layer):
 
 def build_glove_LSTM_model(embedding_layer):
     """Bad performance.
+    model = Sequential()
+    model.add(Embedding(max_features, output_dim=256))
+    model.add(LSTM(128))
+    model.add(Dropout(0.5))
+    model.add(Dense(1, activation='sigmoid'))
     """
     # train a 1D convnet with global maxpooling
     sequence_input = Input(shape=(MAX_ARTICLE_LENGTH + MAX_SUMMARY_LENGTH,),
                            dtype='int32')
     embedded_sequences = embedding_layer(sequence_input)
+    # (640, 100)
     embedded_sequences
+    
     # x= keras.layers.LSTM(EMBEDDING_DIM, return_sequences=True)(embedded_sequences)
-    x= keras.layers.LSTM(EMBEDDING_DIM)(embedded_sequences)
-    x = keras.layers.Dropout(0.5)(x)
+    x= keras.layers.LSTM(128)(embedded_sequences)
+    x = Dropout(0.5)(x)
     
     # x = Conv1D(128, 5, activation='relu')(x)
     # x = MaxPooling1D(5)(x)
@@ -284,7 +293,7 @@ def build_binary_USE_model():
     model = Model(sequence_input, preds)
     return model
 
-def build_test_model():
+def build_binary_USE_2D_model():
     sequence_length = ARTICLE_MAX_SENT + SUMMARY_MAX_SENT
     sequence_input = Input(shape=(sequence_length, 512),
                            dtype='float32')
@@ -300,6 +309,48 @@ def build_test_model():
     model = Model(sequence_input, preds)
     return model
 
+def build_glove_test_model(embedding_layer):
+    # train a 1D convnet with global maxpooling
+    sequence_input = Input(shape=(MAX_ARTICLE_LENGTH + MAX_SUMMARY_LENGTH,),
+                           dtype='int32')
+    # 640, 100
+    embedded_sequences = embedding_layer(sequence_input)
+
+    # x = keras.layers.Flatten()(embedded_sequences)
+    # x = Dense(128, activation='relu')(x)
+    
+    # x = Conv1D(128, 5, activation='relu')(embedded_sequences)
+    # x = MaxPooling1D(5)(x)
+    # x = Conv1D(128, 5, activation='relu')(x)
+    # x = MaxPooling1D(5)(x)
+    # x = Conv1D(128, 5, activation='relu')(x)
+    # x = GlobalMaxPooling1D()(x)
+    # x = Dense(128, activation='relu')(x)
+
+    x= keras.layers.LSTM(128)(embedded_sequences)
+    x = Dropout(0.5)(x)
+    
+    preds = Dense(1, activation='sigmoid')(x)
+    # preds = Dense(1)(x)
+
+    model = Model(sequence_input, preds)
+    return model
+
+def build_test_model():
+    sequence_length = ARTICLE_MAX_SENT + SUMMARY_MAX_SENT
+    sequence_input = Input(shape=(sequence_length, 512),
+                           dtype='float32')
+
+    # x = keras.layers.Flatten()(sequence_input)
+    # x = Dense(128, activation='relu')(x)
+    
+    x= keras.layers.LSTM(128)(sequence_input)
+    x = Dropout(0.5)(x)
+    # x = Dense(128, activation='relu')(x)
+    
+    preds = Dense(1, activation='sigmoid')(x)
+    model = Model(sequence_input, preds)
+    return model
 
 def build_binary_INFER_model():
     """Only difference: 4096

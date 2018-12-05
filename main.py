@@ -22,7 +22,7 @@ from model import build_USE_model, build_glove_model, build_glove_summary_only_m
 from model import build_binary_glove_model, build_separate_model
 from model import build_binary_USE_model, build_binary_INFER_model
 from model import build_glove_LSTM_model, build_glove_2dCONV_model
-from model import build_test_model
+from model import build_test_model, build_glove_test_model
 from utils import save_data, load_data
 from utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
 
@@ -121,6 +121,9 @@ def glove_neg_main():
     embedding_layer = load_embedding(tokenizer)
     model = build_binary_glove_model(embedding_layer)
     model = build_separate_model(embedding_layer)
+
+    model = build_glove_test_model(embedding_layer)
+    
     plot_model(model, to_file='model.png', show_shapes=True)
     train_binary_model(model, data)
     return
@@ -262,10 +265,13 @@ def glove_main():
     model = build_glove_LSTM_model(embedding_layer)
     model = build_glove_summary_only_model(embedding_layer)
     model = build_glove_2dCONV_model(embedding_layer)
+
+    model = build_glove_test_model(embedding_layer)
+    
     model.summary()
     
     train_model(model, data)
-    train_model_with_test(model, data)
+    # train_model_with_test(model, data)
     return
 
 def glove_summary_main():

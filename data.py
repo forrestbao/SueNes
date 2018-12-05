@@ -111,13 +111,6 @@ def create_tokenizer():
         save_tokenizer(tokenizer)
     
     
-def load_negative_sampling_data(keys):
-    """Return (fake-samples) for each key
-    """
-    with open(NEGATIVE_SAMPLING_FILE, 'rb') as f:
-        neg = pickle.load(f)
-        return np.array([neg[key] for key in keys])
-
 def load_word_mutated_data(keys, mode):
     """
     Return (summaries, scores)
@@ -143,14 +136,6 @@ def load_word_mutated_data(keys, mode):
             scores.append([p[1] for p in pairs])
         return np.array(summaries), np.array(scores)
 
-def load_article_and_summary_data(keys):
-    """Return (articles, summaries)"""
-    with open(STORY_PICKLE_FILE, 'rb') as f:
-        stories = pickle.load(f)
-        articles = [stories[key]['article'] for key in keys]
-        summaries = [stories[key]['summary'] for key in keys]
-        return np.array(articles), np.array(summaries)
-        
     
 
 def test_keras_preprocessing():
@@ -184,17 +169,21 @@ def shuffle_and_split(features, labels, group):
     # split the data into a training set and a validation set
     print('splitting ..')
     num_validation_samples = int(0.1 * features.shape[0])
-    x_train = features[:-num_validation_samples]
-    y_train = labels[:-num_validation_samples]
-    x_val = features[-num_validation_samples:]
-    y_val = labels[-num_validation_samples:]
+    x_train = features[:-num_validation_samples*2]
+    y_train = labels[:-num_validation_samples*2]
+    x_val = features[-num_validation_samples*2:-num_validation_samples]
+    y_val = labels[-num_validation_samples*2:-num_validation_samples]
+    x_test = features[-num_validation_samples:]
+    y_test = labels[-num_validation_samples:]
 
     # concate
     x_train = np.concatenate(x_train)
     y_train = np.concatenate(y_train)
     x_val = np.concatenate(x_val)
     y_val = np.concatenate(y_val)
-    return (x_train, y_train), (x_val, y_val)
+    x_test = np.concatenate(x_test)
+    y_test = np.concatenate(y_test)
+    return (x_train, y_train), (x_val, y_val), (x_test, y_test)
 
 def prepare_data_using_tokenizer(articles, summaries, labels,
                                  tokenizer, group):
@@ -327,3 +316,14 @@ def prepare_data_string(articles, summaries, scores):
     data.shape
 
     return shuffle_and_split(data, np.array(scores))
+def pad_shuffle_split_data(articles, summaries, labels,
+                           article_pad_length, summary_pad_length,
+                           group):
+    dtype = np.array(articles[0]).dtype
+    articles = pad_sequences(articles, value=0, padding='post',
+                             maxlen=article_pad_length, dtype=dtype)
+    summaries = pad_sequences(summaries, value=0, padding='post',
+                              maxlen=summary_pad_length, dtype=dtype)
+    data = np.concatenate((articles, summaries), axis=1)
+    return shuffle_and_split(data, np.array(labels), group=group)
+

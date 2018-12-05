@@ -28,8 +28,14 @@ N/A
 *** TODO negative sampling with NYT
 *** TODO sentence level mutation with NYT
 
+*** TODO 2nd negative sampling
+For reference summary, shuffle the order of words, so that the
+sentence don't make sense. Expect the word embedding (glove) based
+model to have no impact, but sentence embedding method should observe
+a major drop, since the sentence does not make sense.
 
-*** TODO softmax instead of sigmoid
+*** DONE softmax instead of sigmoid
+    CLOSED: [2018-12-05 Wed 12:41]
 *** TODO negative sampling difference loss function
 *** TODO validation and test dataset
 *** TODO regularizers (L1, L2, dropout)

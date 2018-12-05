@@ -69,127 +69,53 @@ def load_embedding(tokenizer):
                                 trainable=False)
     return embedding_layer
 
-def build_model():
-    """The model contains:
-    """
-    model = Sequential()
-    # Adds a densely-connected layer with 64 units to the model:
-    model.add(layers.Dense(64,
-                           # input_shape=(768,),
-                           activation='relu'))
-    # Add another:
-    model.add(layers.Dense(64, activation='relu'))
-    # Add a softmax layer with 10 output units:
-    # model.add(layers.Dense(10, activation='softmax'))
-    # output the score
-    model.add(layers.Dense(1, activation='sigmoid'))
+def build_model(embedding_method, label_type, embedding_layer,
+                input_shape, architecture):
+    # Embedding layer
+    if embedding_method is 'glove':
+        sequence_input = Input(shape=input_shape, dtype='int32')
+        # (640, 100)
+        embedded_input = embedding_layer(sequence_input)
+    else:
+        # (13, 512) or (13, 4096)
+        sequence_input = Input(shape=input_shape, dtype='float32')
+        embedded_input = sequence_input
+        
+    # Architecture layer
+    if architecture == 'CNN':
+        # 1 layer CNN
+        x = Conv1D(128, 5, activation='relu')(embedded_input)
+        x = MaxPooling1D(3)(x)
+        x = GlobalMaxPooling1D()(x)
+        x = Dense(128, activation='relu')(x)
+    elif architecture == 'CNN-3':
+        # 3 layer CNN
+        x = Conv1D(128, 5, activation='relu')(embedded_input)
+        x = MaxPooling1D(5)(x)
+        x = Conv1D(128, 5, activation='relu')(x)
+        x = MaxPooling1D(5)(x)
+        x = Conv1D(128, 5, activation='relu')(x)
+        x = GlobalMaxPooling1D()(x)
+        x = Dense(128, activation='relu')(x)
+    elif architecture == 'CNN-2D':
+        # Alternative 2D CNN model
+        reshape = Reshape((embedded_sequence.shape[0], 512, 1))(embedded_input)
+        conv = Conv2D(128, (5, 512), activation='relu', padding='valid')(reshape)
+        x = GlobalMaxPooling2D()(conv)
+        x = Dense(128, activation='relu')(x)
+    elif architecture == 'LSTM':
+        x= keras.layers.LSTM(128)(embedded_input)
+        x = Dropout(0.5)(x)
+        # x = Dense(128, activation='relu')(x)
+    else:
+        x = keras.layers.Flatten()(embedded_input)
+        x = Dense(128, activation='relu')(x)
 
-    # x = Conv1D(128, 5, activation='relu')(embedded_sequences)
-    # x = MaxPooling1D(5)(x)
-    # x = Conv1D(128, 5, activation='relu')(x)
-    # x = MaxPooling1D(5)(x)
-    # x = Conv1D(128, 5, activation='relu')(x)
-    # x = GlobalMaxPooling1D()(x)
-    # x = Dense(128, activation='relu')(x)
-    
-    return model
-
-def build_glove_model(embedding_layer):
-    # train a 1D convnet with global maxpooling
-    sequence_input = Input(shape=(MAX_ARTICLE_LENGTH + MAX_SUMMARY_LENGTH,),
-                           dtype='int32')
-    embedded_sequences = embedding_layer(sequence_input)
-    # FIXME The literature to apply CNN to NLP is to use the filter size
-    x = Conv1D(128, 5, activation='relu')(embedded_sequences)
-    x = MaxPooling1D(5)(x)
-    x = Conv1D(128, 5, activation='relu')(x)
-    x = MaxPooling1D(5)(x)
-    x = Conv1D(128, 5, activation='relu')(x)
-    x = GlobalMaxPooling1D()(x)
-    x = Dense(128, activation='relu')(x)
-    preds = Dense(1)(x)
-
-    model = Model(sequence_input, preds)
-    return model
-
-
-def build_glove_2dCONV_model(embedding_layer):
-    sequence_length = MAX_ARTICLE_LENGTH + MAX_SUMMARY_LENGTH
-    sequence_input = Input(shape=(sequence_length,), dtype='int32')
-    embedded_sequences = embedding_layer(sequence_input)
-    reshape = Reshape((sequence_length, EMBEDDING_DIM, 1))(embedded_sequences)
-    # conv_0 = Conv2D(100, (3, EMBEDDING_DIM), activation='relu',
-    #                 kernel_regularizer=regularizers.l2(0.01))(reshape)
-    # conv_1 = Conv2D(100, (4, EMBEDDING_DIM), activation='relu',
-    #                 kernel_regularizer=regularizers.l2(0.01))(reshape)
-    conv_0 = Conv2D(100, (3, 3), activation='relu',
-                    kernel_regularizer=regularizers.l2(0.01))(reshape)
-    maxpool_0 = MaxPooling2D((sequence_length - 3 + 1, 1), strides=(1,1))(conv_0)
-    # maxpool_1 = MaxPooling2D((sequence_length - 4 + 1, 1), strides=(1,1))(conv_1)
-    maxpool_0
-    maxpool_1
-    # merged_tensor = keras.layers.Concatenate()([maxpool_0, maxpool_1])
-    # merged_tensor
-    flatten = keras.layers.Flatten()(maxpool_0)
-    flatten
-    x = Dense(64, activation='relu')(flatten)
-    preds = Dense(1)(x)
-    model = Model(sequence_input, preds)
-    return model
-    
-    
-
-def build_glove_LSTM_model(embedding_layer):
-    """Bad performance.
-    model = Sequential()
-    model.add(Embedding(max_features, output_dim=256))
-    model.add(LSTM(128))
-    model.add(Dropout(0.5))
-    model.add(Dense(1, activation='sigmoid'))
-    """
-    # train a 1D convnet with global maxpooling
-    sequence_input = Input(shape=(MAX_ARTICLE_LENGTH + MAX_SUMMARY_LENGTH,),
-                           dtype='int32')
-    embedded_sequences = embedding_layer(sequence_input)
-    # (640, 100)
-    embedded_sequences
-    
-    # x= keras.layers.LSTM(EMBEDDING_DIM, return_sequences=True)(embedded_sequences)
-    x= keras.layers.LSTM(128)(embedded_sequences)
-    x = Dropout(0.5)(x)
-    
-    # x = Conv1D(128, 5, activation='relu')(x)
-    # x = MaxPooling1D(5)(x)
-    # x = Conv1D(128, 5, activation='relu')(x)
-    # x = MaxPooling1D(5)(x)
-    # x = Conv1D(128, 5, activation='relu')(x)
-    # x = GlobalMaxPooling1D()(x)
-    x = Dense(128, activation='relu')(x)
-    # x = keras.layers.TimeDistributed(Dense(128, activation='relu'))(x)
-    preds = Dense(1)(x)
-
-    model = Model(sequence_input, preds)
-    return model
-
-def build_binary_glove_model(embedding_layer):
-    # a = K.ones((640, 100))
-    # b = K.ones((640, 100, 120))
-    # Conv1D(128, 5)(a)
-    # Conv2D(128, (5,5))(a)
-    # Conv1D(128, 5)(b)
-    # Conv2D(128, (5,5))(b)
-    # train a 1D convnet with global maxpooling
-    sequence_input = Input(shape=(MAX_ARTICLE_LENGTH + MAX_SUMMARY_LENGTH,),
-                           dtype='int32')
-    embedded_sequences = embedding_layer(sequence_input)
-    x = Conv1D(128, 5, activation='relu')(embedded_sequences)
-    x = MaxPooling1D(5)(x)
-    x = Conv1D(128, 5, activation='relu')(x)
-    x = MaxPooling1D(5)(x)
-    x = Conv1D(128, 5, activation='relu')(x)
-    x = GlobalMaxPooling1D()(x)
-    x = Dense(128, activation='relu')(x)
-    preds = Dense(1, activation='sigmoid')(x)
+    # Output layer
+    if label_type == 'classification':
+        preds = Dense(1, activation='sigmoid')(x)
+    else:
+        preds = Dense(1)(x)
 
     model = Model(sequence_input, preds)
     return model
@@ -239,12 +165,10 @@ def build_separate_model(embedding_layer):
     # preds = Dense(1, activation='sigmoid')(dotproduct)
     # preds
     # sequence_input
-
     
     # preds = Dense(1, activation='sigmoid')(x)
     model = Model(sequence_input, preds)
     return model
-    
 
 def build_glove_summary_only_model(embedding_layer):
     # train a 1D convnet with global maxpooling
@@ -255,168 +179,6 @@ def build_glove_summary_only_model(embedding_layer):
     x = Conv1D(128, 3, activation='relu')(x)
     x = MaxPooling1D(5)(x)
     x = Conv1D(128, 3, activation='relu')(x)
-    x = GlobalMaxPooling1D()(x)
-    x = Dense(128, activation='relu')(x)
-    preds = Dense(1)(x)
-
-    model = Model(sequence_input, preds)
-    return model
-
-def build_USE_model():
-    sequence_input = Input(shape=(ARTICLE_MAX_SENT + SUMMARY_MAX_SENT, 512),
-                           dtype='float32')
-    x = Conv1D(128, 3, activation='relu')(sequence_input)
-    x = MaxPooling1D(2)(x)
-    # x = Conv1D(128, 5, activation='relu')(x)
-    # x = MaxPooling1D(5)(x)
-    x = Conv1D(128, 3, activation='relu')(x)
-    x = GlobalMaxPooling1D()(x)
-    x = Dense(128, activation='relu')(x)
-    preds = Dense(1)(x)
-
-    model = Model(sequence_input, preds)
-    return model
-    
-def build_binary_USE_model():
-    sequence_input = Input(shape=(ARTICLE_MAX_SENT + SUMMARY_MAX_SENT, 512),
-                           dtype='float32')
-    x = Conv1D(128, 5, activation='relu')(sequence_input)
-    x = MaxPooling1D(3)(x)
-    # x = Conv2D(100, (3,3), activation='relu')(sequence_input)
-    # x = Conv1D(128, 5, activation='relu')(x)
-    # x = MaxPooling1D(5)(x)
-    # x = Conv1D(128, 3, activation='relu')(x)
-    x = GlobalMaxPooling1D()(x)
-    x = Dense(128, activation='relu')(x)
-    preds = Dense(1, activation='sigmoid')(x)
-    # preds = Dense(2, activation='softmax')(x)
-    model = Model(sequence_input, preds)
-    return model
-
-def build_binary_USE_2D_model():
-    sequence_length = ARTICLE_MAX_SENT + SUMMARY_MAX_SENT
-    sequence_input = Input(shape=(sequence_length, 512),
-                           dtype='float32')
-    reshape = Reshape((sequence_length, 512, 1))(sequence_input)
-    # conv = Conv2D(128, (5, 512), activation='relu', padding='valid',
-    #               kernel_regularizer=regularizers.l2(0.01))(reshape)
-    conv = Conv2D(128, (5, 512), activation='relu', padding='valid')(reshape)
-    # maxpool = MaxPooling2D((sequence_length - 5 + 1, 1), strides=(1,1))(conv)
-    # flatten = keras.layers.Flatten()(maxpool)
-    x = GlobalMaxPooling2D()(conv)
-    x = Dense(128, activation='relu')(x)
-    preds = Dense(1, activation='sigmoid')(x)
-    model = Model(sequence_input, preds)
-    return model
-
-def build_glove_test_model(embedding_layer):
-    # train a 1D convnet with global maxpooling
-    sequence_input = Input(shape=(MAX_ARTICLE_LENGTH + MAX_SUMMARY_LENGTH,),
-                           dtype='int32')
-    # 640, 100
-    embedded_sequences = embedding_layer(sequence_input)
-
-    # x = keras.layers.Flatten()(embedded_sequences)
-    # x = Dense(128, activation='relu')(x)
-    
-    # x = Conv1D(128, 5, activation='relu')(embedded_sequences)
-    # x = MaxPooling1D(5)(x)
-    # x = Conv1D(128, 5, activation='relu')(x)
-    # x = MaxPooling1D(5)(x)
-    # x = Conv1D(128, 5, activation='relu')(x)
-    # x = GlobalMaxPooling1D()(x)
-    # x = Dense(128, activation='relu')(x)
-
-    x= keras.layers.LSTM(128)(embedded_sequences)
-    x = Dropout(0.5)(x)
-    
-    preds = Dense(1, activation='sigmoid')(x)
-    # preds = Dense(1)(x)
-
-    model = Model(sequence_input, preds)
-    return model
-
-def build_test_model():
-    sequence_length = ARTICLE_MAX_SENT + SUMMARY_MAX_SENT
-    sequence_input = Input(shape=(sequence_length, 512),
-                           dtype='float32')
-
-    # x = keras.layers.Flatten()(sequence_input)
-    # x = Dense(128, activation='relu')(x)
-    
-    x= keras.layers.LSTM(128)(sequence_input)
-    x = Dropout(0.5)(x)
-    # x = Dense(128, activation='relu')(x)
-    
-    preds = Dense(1, activation='sigmoid')(x)
-    model = Model(sequence_input, preds)
-    return model
-
-def build_binary_INFER_model():
-    """Only difference: 4096
-    """
-    sequence_input = Input(shape=(ARTICLE_MAX_SENT + SUMMARY_MAX_SENT, 4096),
-                           dtype='float32')
-    x = Conv1D(128, 3, activation='relu')(sequence_input)
-    x = MaxPooling1D(2)(x)
-    # x = Conv1D(128, 5, activation='relu')(x)
-    # x = MaxPooling1D(5)(x)
-    x = Conv1D(128, 3, activation='relu')(x)
-    x = GlobalMaxPooling1D()(x)
-    x = Dense(128, activation='relu')(x)
-    preds = Dense(1, activation='sigmoid')(x)
-
-    model = Model(sequence_input, preds)
-    return model
-
-def build_model_test():
-    # apply a layer multiple times
-    i = Input(shape=(13,100), dtype='float32')
-    i.shape
-    l = Dense(512, input_dim=(100))
-    tf.concat([l(t) for t in tf.split(i, 13, 1)], 1)
-    x = tf.reshape(i, shape=(100,13))
-    #
-    # original:
-    # 100 -> 512
-    i = Dense(512, input_dim=(100))(i)
-    return
-
-    
-def build_use_string_model(use_embed):
-    """Since USE can only used CPU, I'd better not getting it into the
-Model layers.
-    """
-    sequence_input = Input(shape=(13,), dtype=tf.string)
-    # (?, 13)
-    sequence_input
-    
-    # Simply doing this is not working:
-    # >>> embedded_sequences = use_embed(sequence_input)
-    # So instead, split the tensors and concatenate afterwards
-    in_sub_tensors = tf.split(sequence_input, 13, 1)
-    in_sub_tensors
-    # takes time to construct
-    # (?) to (512)
-    out_sub_tensors = [use_embed(tf.reshape(t, [-1]))
-                       for t in in_sub_tensors]
-    embedded_sequences = tf.concat([tf.reshape(t, (-1, 1, 512))
-                                 for t in out_sub_tensors], axis=1)
-    # (?, 13, 512)
-    embedded_sequences
-
-    # testing use_embed:
-    # >>> holder = tf.placeholder(tf.string, shape=(None))
-    # >>> holder.shape
-    # >>> holder
-    # >>> similarity_message_encodings = use_embed(holder)
-    # (13, 512)
-
-    x = Conv1D(128, 5, activation='relu')(embedded_sequences)
-    x = MaxPooling1D(5)(x)
-    x = Conv1D(128, 5, activation='relu')(x)
-    x = MaxPooling1D(5)(x)
-    x = Conv1D(128, 5, activation='relu')(x)
     x = GlobalMaxPooling1D()(x)
     x = Dense(128, activation='relu')(x)
     preds = Dense(1)(x)

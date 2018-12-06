@@ -24,6 +24,7 @@ STORY_PICKLE_FILE = os.path.join(CNNDM_DIR, 'story.pickle')
 WORD_MUTATED_FILE = os.path.join(CNNDM_DIR, 'word-mutated.pickle')
 SENT_MUTATED_FILE = os.path.join(CNNDM_DIR, 'sent-mutated.pickle')
 NEGATIVE_SAMPLING_FILE = os.path.join(CNNDM_DIR, 'negative-sampling.pickle')
+NEGATIVE_SHUFFLE_FILE = os.path.join(CNNDM_DIR, 'negative-shuffle.pickle')
 
 USE_DAN_DIR = os.path.join(CNNDM_DIR, 'USE-DAN')
 USE_TRANSFORMER_DIR = os.path.join(CNNDM_DIR, 'USE-Transformer')

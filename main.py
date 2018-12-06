@@ -70,45 +70,58 @@ def merge_summaries(articles, reference_summaries, reference_labels,
     labels = np.ndarray.flatten(labels)
     return articles, summaries, labels
 
-def load_data_helper(fake_method, embedding_method, num_samples,
-                     num_fake_samples):
+def load_pickles(fake_method, embedding_method):
+    """Load true stroies pickle and negative pickle.
     """
-    return articles, reference_summaries, reference_labels,
+    if embedding_method == 'glove':
+        with open(STORY_PICKLE_FILE, 'rb') as f:
+            stories = pickle.load(f)
+        neg_file = {'neg': NEGATIVE_SAMPLING_FILE,
+                    'mutate': WORD_MUTATED_FILE,
+                    'shuffle': NEGATIVE_SHUFFLE_FILE}[fake_method]
+        with open(neg_file, 'rb') as f:
+            negatives = pickle.load(f)
+    else:
+        embed2dir = {'USE': USE_DAN_DIR,
+                     'USE-Large': USE_TRANSFORMER_DIR,
+                     'InferSent': INFERSENT_DIR}
+        d = embed2dir[embedding_method]
+        with open(os.path.join(d, 'story.pickle'), 'rb') as f:
+            stories = pickle.load(f)
+        neg_filename = {'neg': 'negative.pickle',
+                        'mutate': 'word-mutated.pickle',
+                        'shuffle': 'shuffle.pickle'}[fake_method]
+        with open(os.path.join(d, neg_filename), 'rb') as f:
+            negatives = pickle.load(f)
+    return stories, negatives
+
+def load_data_helper(fake_method, embedding_method, num_samples,
+                     num_fake_samples, fake_extra_option=None):
+    """return articles, reference_summaries, reference_labels,
     fake_summaries, fake_labels
     """
     tokenizer = None
-    if fake_method == 'neg':
-        if embedding_method == 'glove':
-            keys = load_story_keys(num_samples)
-            fake_summaries = load_negative_summary_string(keys)
-            articles, reference_summaries = load_article_and_summary_string(keys)
-        else:
-            embed2dir = {'USE': USE_DAN_DIR,
-                         'USE-Large': USE_TRANSFORMER_DIR,
-                         'InferSent': INFERSENT_DIR}
-            d = embed2dir[embedding_method]
-            with open(os.path.join(d, 'story.pickle'), 'rb') as f:
-                stories = pickle.load(f)
-            with open(os.path.join(d, 'negative.pickle'), 'rb') as f:
-                negatives = pickle.load(f)
-            story_keys = set(stories.keys())
-            negative_keys = set(negatives.keys())
-            keys = story_keys.intersection(negative_keys)
-            keys = set(random.sample(keys, num_samples))
-            articles = np.array([stories[key]['article'] for key in keys])
-            reference_summaries = np.array([stories[key]['summary'] for key in
-                                            keys])
-            fake_summaries = np.array([negatives[key] for key in keys])
-            
+    stories, negatives = load_pickles(fake_method, embedding_method)
+    story_keys = set(stories.keys())
+    negative_keys = set(negatives.keys())
+    keys = story_keys.intersection(negative_keys)
+    keys = set(random.sample(keys, num_samples))
+    articles = np.array([stories[key]['article'] for key in keys])
+    reference_summaries = np.array([stories[key]['summary'] for key in keys])
+    if fake_method == 'neg' or fake_method == 'shuffle':
+        fake_summaries = np.array([negatives[key] for key in keys])
         fake_summaries = fake_summaries[:,:num_fake_samples]
         reference_labels = np.ones_like(reference_summaries, dtype=int)
         fake_labels = np.zeros_like(fake_summaries, dtype=int)
-        return (articles, reference_summaries, reference_labels,
-                fake_summaries, fake_labels, keys)
-    else:
-        # TODO mutate
-        pass
-    return
+    elif fake_method == 'mutate':
+        # add, delete, replace
+        section = fake_extra_option
+        # This is protocol
+        fake_summaries = np.array([negatives[key][section]['text'] for key in keys])
+        fake_labels = np.array([negatives[key][section]['label'] for key in keys])
+        reference_labels = np.ones_like(reference_summaries, dtype=float)
+    return (articles, reference_summaries, reference_labels,
+            fake_summaries, fake_labels, keys)
 
 def glove_summary_only_main():
     """TODO Use only summary data for prediction. The expected results
@@ -136,50 +149,61 @@ def pearson_correlation_f(y_true, y_pred):
     return K.mean(fsp*fst)/(devP*devT)
 def test():
     num_samples = 1000
+    num_samples = 100
     num_fake_samples = 1
     fake_method = 'neg'
+    fake_method = 'shuffle'
+    fake_method = 'mutate'
     embedding_method = 'glove'
     embedding_method = 'USE'
     architecture = 'CNN'
-    
+    fake_extra_option = 'delete'
     
 def main():
-    fake_methods = ['neg', 'mutate']
+    fake_methods = ['neg', 'shuffle', 'mutate']
     embedding_methods = ['glove', 'USE', 'USE-Large', 'InferSent']
     architectures = ['CNN', 'FC', 'LSTM']
+    num_samples = 1000
+    num_samples = 10000
+    num_samples = 30000
     for fake_method in fake_methods:
         for embedding_method in embedding_methods:
-            for num_samples in [10000, 30000]:
-                for num_fake_samples in [1, 3]:
-                    for arch in architectures:
-                        run_exp(fake_method, embedding_method,
-                                num_samples, num_fake_samples,
-                                architecture)
+            for num_fake_samples in [1, 3]:
+                for arch in architectures:
+                    run_exp(fake_method, embedding_method,
+                            num_samples, num_fake_samples,
+                            architecture)
+    run_exp('neg', 'USE', 10000, 1, 'LSTM')
     run_exp('neg', 'glove', 10000, 1, 'CNN')
+    run_exp('shuffle', 'USE', 1000, 1, 'CNN')
     run_exp('neg', 'USE', 10000, 1, 'CNN')
+    
+    run_exp('neg', 'glove', 10000, 1, 'CNN')
+    run_exp('neg', 'USE', 1000, 1, 'CNN')
     run_exp('neg', 'USE', 10000, 1, 'LSTM')
     run_exp('neg', 'USE', 10000, 1, 'FC')
     run_exp('neg', 'USE-Large', 10000, 1, 'CNN')
     run_exp('neg', 'InferSent', 10000, 1, 'CNN')
-    run_exp('mutate', 'glove', 1000, 1, 'CNN')
     run_exp('neg', 'glove', 10000, 5, 'CNN')
+    
+    run_exp('mutate', 'glove', 100, 1, 'CNN', 'add')
+    run_exp('mutate', 'glove', 100, 1, 'CNN', 'delete')
+    run_exp('mutate', 'glove', 100, 1, 'CNN', 'replace')
     return
 
 def run_exp(fake_method, embedding_method, num_samples,
-            num_fake_samples, architecture):
-    """
-    FAKE_METHOD: neg, mutate
-    NUM_FAKE_SAMPLES: 1 or 5 or 10
-    EMBEDDING_METHOD: 'glove', 'USE', 'USE-Large', 'InferSent'
-    ARCHITECTURE: 'CNN', 'FC', 'LSTM'
-    """
-    assert(fake_method in ['neg', 'mutate'])
+            num_fake_samples, architecture, fake_extra_option=None):
+    assert(fake_method in ['neg', 'shuffle', 'mutate'])
     assert(embedding_method in ['glove', 'USE', 'USE-Large', 'InferSent'])
     assert(architecture in ['CNN', 'FC', 'LSTM'])
+    
     print('loading data ..')
     (articles, reference_summaries, reference_labels, fake_summaries,
-     fake_labels, keys) = load_data_helper(fake_method, embedding_method,
-                                   num_samples, num_fake_samples)
+     fake_labels, keys) = load_data_helper(fake_method,
+                                           embedding_method,
+                                           num_samples,
+                                           num_fake_samples,
+                                           fake_extra_option)
     print('merging data ..')
     articles, summaries, labels = merge_summaries(articles,
                                                   reference_summaries,
@@ -211,29 +235,32 @@ def run_exp(fake_method, embedding_method, num_samples,
 
     print('building model ..')
     # build model
-    if fake_method == 'mutate':
-        label_type = 'regression'
-    else:
-        label_type = 'classification'
+    label_dict = {'neg': 'classification',
+                  'shuffle': 'classification',
+                  'mutate': 'regression'}
+    label_type = label_dict[fake_method]
+    # embedding_layer
     if embedding_method == 'glove':
         embedding_layer = load_embedding(tokenizer)
     else:
         embedding_layer = None
-    if embedding_method is 'glove':
+    # input_sahpe
+    if embedding_method == 'glove':
         input_shape = (MAX_ARTICLE_LENGTH + MAX_SUMMARY_LENGTH,)
-    elif embedding_method is 'USE':
+    elif embedding_method == 'USE':
         input_shape = (ARTICLE_MAX_SENT + SUMMARY_MAX_SENT, 512)
     else:
         input_shape = (ARTICLE_MAX_SENT + SUMMARY_MAX_SENT, 4096)
+    # build model
     model = build_model(embedding_method, label_type, embedding_layer,
                         input_shape, architecture)
 
     model.summary()
-    plot_model(model, to_file='model.png', show_shapes=True)
+    # plot_model(model, to_file='model.png', show_shapes=True)
 
     if label_type == 'regression':
         loss = 'mse'
-        metrics = ['mae', pearson_correlation_f]
+        metrics = ['mae', 'accuracy', pearson_correlation_f]
     else:
         loss = 'binary_crossentropy'
         metrics=['accuracy', pearson_correlation_f]
@@ -244,41 +271,50 @@ def run_exp(fake_method, embedding_method, num_samples,
     print('training ..')
     history = model.fit(x_train, y_train, epochs=20, batch_size=128,
                         validation_data=(x_val, y_val), verbose=1)
-    # TODO plot history
-    plot_history(history)
-    # TODO print out test results
-    results = model.evaluate(x_test, y_test)
-    print(results)
-    return
+    # plot history
+    filename = '-'.join([fake_method, embedding_method,
+                         str(num_samples), str(num_fake_samples),
+                         architecture]) + '.png'
+    plot_history(history, filename)
+    # print out test results
+    result = model.evaluate(x_test, y_test)
+    print('Test result: ', result)
+    # return history, result
+    # accuracy
+    return result[1]
 
 
-def plot_history(history):
+def plot_history(history, filename):
     """
-    Should I plot acc and loss in the same figure?
+    Plot acc and loss in the same figure.
     """
-    filename = 'history.png'
+    # filename = 'history.png'
     # Plot training & validation accuracy values
-    plt.figure()
-    plt.plot(history.history['acc'])
-    plt.plot(history.history['val_acc'])
-    plt.title('Model accuracy')
-    plt.ylabel('Accuracy')
-    plt.xlabel('Epoch')
-    plt.legend(['Train', 'Test'], loc='upper left')
-    plt.savefig(filename)
+    fig, axe = plt.subplots(nrows=1, ncols=2)
+    # plt.figure()
+    ax = axe[0]
+    ax.plot(history.history['acc'])
+    ax.plot(history.history['val_acc'])
+    ax.set_title('Model accuracy')
+    ax.set_ylabel('Accuracy')
+    ax.set_xlabel('Epoch')
+    ax.legend(['Train', 'Test'], loc='upper left')
     # plt.show()
     
     # Plot training & validation loss values
-    file2 = 'history2.png'
+    # file2 = 'history2.png'
     # plt.figure()
-    plt.plot(history.history['loss'])
-    plt.plot(history.history['val_loss'])
-    plt.title('Model loss')
-    plt.ylabel('Loss')
-    plt.xlabel('Epoch')
-    plt.legend(['Train', 'Test'], loc='upper left')
-    plt.savefig(file2)
+    ax = axe[1]
+    ax.plot(history.history['loss'])
+    ax.plot(history.history['val_loss'])
+    ax.set_title('Model loss')
+    ax.set_ylabel('Loss')
+    ax.set_xlabel('Epoch')
+    ax.legend(['Train', 'Test'], loc='upper left')
+    # plt.savefig(file2)
+    fig.savefig(filename)
     # plt.show()
+    # plt.savefig(filename)
     
 
 

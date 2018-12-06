@@ -43,8 +43,9 @@ class RandomItemGenerator():
         self.length = len(self.l)
         self.reset_cache()
     def reset_cache(self):
-        # FIXME I should probably sample uniformly, with return
-        self.randomed_list = random.sample(self.l, self.length)
+        # self.randomed_list = random.sample(self.l, self.length)
+        # I should probably sample uniformly, with replacement:
+        self.randomed_list = random.choices(self.l, k=self.length)
         self.random_index = 0
     def random_item(self, exclude=[]):
         self.random_index += 1
@@ -65,6 +66,18 @@ def delete_words(summary, ratio):
     return ' '.join([words[i] for i in range(length)
                      if i not in indices])
 
+def replace_words(summary, ratio, random_word_generator):
+    words = summary.split(' ')
+    length = len(words)
+    indices = set([random.randint(0, length)
+                   for _ in range(int((1 - ratio) * length))])
+    res = []
+    for i in range(length):
+        if i in indices:
+            res.append(random_word_generator.random_item())
+        else:
+            res.append(words[i])
+    return ' '.join(res)
 
 def add_words(summary, ratio, random_word_generator):
     words = summary.split(' ')
@@ -80,17 +93,34 @@ def add_words(summary, ratio, random_word_generator):
 
 def mutate_summary_add(summary, random_word_generator):
     ratios = [random.random() for _ in range(10)]
-    res = []
+    res = {}
+    res['text'] = []
+    res['label'] = []
     for r in ratios:
         s = add_words(summary, r, random_word_generator)
-        res.append((s, r))
+        res['text'].append(s)
+        res['label'].append(r)
     return res
 def mutate_summary_delete(summary):
     ratios = [random.random() for _ in range(10)]
-    res = []
+    res = {}
+    res['text'] = []
+    res['label'] = []
     for r in ratios:
         s = delete_words(summary, r)
-        res.append((s, r, 'del'))
+        res['text'].append(s)
+        res['label'].append(r)
+    return res
+
+def mutate_summary_replace(summary, random_word_generator):
+    ratios = [random.random() for _ in range(10)]
+    res = {}
+    res['text'] = []
+    res['label'] = []
+    for r in ratios:
+        s = replace_words(summary, r, random_word_generator)
+        res['text'].append(s)
+        res['label'].append(r)
     return res
 
 def preprocess_story_pickle():
@@ -138,14 +168,19 @@ def preprocess_word_mutated():
         story = stories[key]
         summary = story['summary']
         item = {}
-        # this generates 20 mutations
-        add_pairs = mutate_summary_add(summary, random_word_generator)
-        delete_pairs = mutate_summary_delete(summary)
-        item['add-pairs'] = add_pairs
-        item['delete-pairs'] = delete_pairs
+        # this generates 10 mutations for each setting
+        add = mutate_summary_add(summary, random_word_generator)
+        delete = mutate_summary_delete(summary)
+        replace = mutate_summary_replace(summary, random_word_generator)
+        item['add'] = add
+        item['delete'] = delete
+        item['replace'] = replace
         outdata[key] = item
     with open(WORD_MUTATED_FILE, 'wb') as f:
         pickle.dump(outdata, f)
+
+def test():
+    preprocess_word_mutated()
 
 def preprocess_sent_mutated():
     """
@@ -153,8 +188,7 @@ def preprocess_sent_mutated():
     """
     return
 
-
-def preprocess_negtive_sampling():
+def preprocess_negative_sampling():
     """Read all articles and summaries. For each (article + summary) with
     label 1 pair, construct 5 (article + fake summary) pair with label
     0, as a block.
@@ -180,7 +214,47 @@ def preprocess_negtive_sampling():
     with open(NEGATIVE_SAMPLING_FILE, 'wb') as f:
         pickle.dump(outdata, f)
 
+def shuffle_string(s):
+    """Shuffle all words in the string.
+    - find all sentence splits
+    - shuffle inner sentence
+    """
+    sents = sentence_split(s)
+    res = []
+    for sent in sents:
+        tokens = sent.split(' ')
+        new_sent = ' '.join(random.sample(tokens[:-1], len(tokens)-1) + tokens[-1:])
+        res.append(new_sent)
+    return ' '.join(res)
 
+def test():
+    sentence_split('hello world bababa . yes and no')
+    shuffle_string('hello world bababa . yes and no')
+    
+def preprocess_negative_shuffle():
+    """FIXME if sentence is too small, we may end up with really tiny
+    change.
+
+    """
+    print('loading article ..')
+    with open(STORY_PICKLE_FILE, 'rb') as f:
+        stories = pickle.load(f)
+    articles = [s['article'] for s in stories.values()]
+    summaries = [s['summary'] for s in stories.values()]
+    outdata = {}
+    ct = 0
+    print('generating negative shuffle sampling for', len(stories), 'stories ..')
+    for key in stories:
+        ct += 1
+        if ct % 100 == 0:
+            print ('--', ct)
+        story = stories[key]
+        summary = story['summary']
+        article = story['article']
+        # shuffle the words
+        outdata[key] = [shuffle_string(summary) for _ in range(5)]
+    with open(NEGATIVE_SHUFFLE_FILE, 'wb') as f:
+        pickle.dump(outdata, f)
 
 
 # collect into one arry
@@ -229,33 +303,17 @@ def test():
 
     v = [[['hello', 'world'], ['hello', 'world', 'ok']], [['yes', 'no']]]
     encoded = USE_encode_keep_shape(v)
-    
-def USE_encode_keep_shape(v):
-    """This will create sentence embedder!
-    """
-    use_embedder = SentenceEmbedder()
-    flattened = collect(v)
-    shape = get_shape(v)
-    print('embedding', len(flattened), 'sentences ..')
-    embedding_flattened = use_embedder.embed(flattened)
-    embedding, _ = restore_shape(embedding_flattened, 0, shape)
-    return embedding
-def USE_Large_encode_keep_shape(v):
-    """This will create sentence embedder!
-    """
-    use_embedder = SentenceEmbedderLarge()
-    flattened = collect(v)
-    shape = get_shape(v)
-    print('embedding', len(flattened), 'sentences ..')
-    embedding_flattened = use_embedder.embed(flattened)
-    embedding, _ = restore_shape(embedding_flattened, 0, shape)
-    return embedding
 
-
-def InferSent_encode_keep_shape(v):
-    """This will create sentence embedder!
-    """
-    embedder = InferSentEmbedder()
+def embed_keep_shape(v, embedder_name):
+    if embedder_name == 'USE':
+        embedder = SentenceEmbedder()
+    elif embedder_name == 'USE-Large':
+        embedder = SentenceEmbedderLarge()
+    elif embedder_name == 'InferSent':
+        embedder = InferSentEmbedder()
+    else:
+        print(embedder_name)
+        raise Exception('Embedder not specified error.')
     flattened = collect(v)
     shape = get_shape(v)
     print('embedding', len(flattened), 'sentences ..')
@@ -263,441 +321,117 @@ def InferSent_encode_keep_shape(v):
     embedding, _ = restore_shape(embedding_flattened, 0, shape)
     return embedding
 
-def preprocess_InferSent_story(num):
-    """
-    This function needs to be called multiple times.
-
-    Currently setting num to 1000 should work
-
-    - 1000 (40,000 sents): 30s
-    - 10000 (382,000): out-of-memory
-    - 5000: 2min about 10G memory
-    """
-    if not os.path.exists(INFERSENT_DIR):
-        os.makedirs(INFERSENT_DIR)
-    story_file = os.path.join(INFERSENT_DIR, 'story.pickle')
-    with open(STORY_PICKLE_FILE, 'rb') as f:
-        stories = pickle.load(f)
-    if os.path.exists(story_file):
-        with open(story_file, 'rb') as f:
-            encoded_stories = pickle.load(f)
-    else:
-        encoded_stories = {}
-    ct = 0
-    print('Encoded stories:', len(encoded_stories))
-    keys = []
+def load_to_encode(target_name, previously_encoded, num):
+    assert(target_name in ['story', 'negative', 'mutated', 'shuffle'])
+    target_dict = {'story': STORY_PICKLE_FILE, 'negative':
+                   NEGATIVE_SAMPLING_FILE, 'mutated':
+                   WORD_MUTATED_FILE, 'shuffle':
+                   NEGATIVE_SHUFFLE_FILE}
+    plain_file = target_dict[target_name]
     to_encode = []
-    for key in stories.keys():
-        if key not in encoded_stories:
+    with open(plain_file, 'rb') as f:
+        plain_stories = pickle.load(f)
+    ct = 0
+    keys = []
+    for key in plain_stories.keys():
+        if key not in previously_encoded:
             ct += 1
             if ct % num == 0:
                 break
             keys.append(key)
-            story = stories[key]
-            article = story['article']
-            summary = story['summary']
-            to_encode.append(article)
-            to_encode.append(summary)
-    # encode
-    if not keys:
-        print('All encoded!')
-    to_encode_array = [sentence_split(a) for a in to_encode]
-    # this embedding should be (21, 512)
-    encoded = InferSent_encode_keep_shape(to_encode_array)
-    [1,2,3,4][1::2]
-    articles = encoded[0::2]
-    summaries = encoded[1::2]
-    for key,a,s in zip(keys, articles, summaries):
-        item = {}
-        item['article'] = a
-        item['summary'] = s
-        encoded_stories[key] = item
-    # write back
-    # write to a new file
-    tmp_file = os.path.join(INFERSENT_DIR, 'story-tmp.pickle')
-    with open(tmp_file, 'wb') as f:
-        pickle.dump(encoded_stories, f)
-    shutil.copyfile(tmp_file, story_file)
-    
-def preprocess_USE_story(num):
-    """
-    This function needs to be called multiple times.
-
-    Currently setting num to 1000 should work
-
-    - 1000 (40,000 sents): 30s
-    - 10000 (382,000): out-of-memory
-    - 5000: 2min about 10G memory
-    """
-    if not os.path.exists(USE_DAN_DIR):
-        os.makedirs(USE_DAN_DIR)
-    story_file = os.path.join(USE_DAN_DIR, 'story.pickle')
-    with open(STORY_PICKLE_FILE, 'rb') as f:
-        stories = pickle.load(f)
-    if os.path.exists(story_file):
-        with open(story_file, 'rb') as f:
-            encoded_stories = pickle.load(f)
-    else:
-        encoded_stories = {}
-    ct = 0
-    print('Encoded stories:', len(encoded_stories))
-    keys = []
-    to_encode = []
-    for key in stories.keys():
-        if key not in encoded_stories:
-            ct += 1
-            if ct % num == 0:
-                break
-            keys.append(key)
-            story = stories[key]
-            article = story['article']
-            summary = story['summary']
-            to_encode.append(article)
-            to_encode.append(summary)
-    # encode
-    if not keys:
-        print('All encoded!')
-    to_encode_array = [sentence_split(a) for a in to_encode]
-    # this embedding should be (21, 512)
-    encoded = USE_encode_keep_shape(to_encode_array)
-    [1,2,3,4][1::2]
-    articles = encoded[0::2]
-    summaries = encoded[1::2]
-    for key,a,s in zip(keys, articles, summaries):
-        item = {}
-        item['article'] = a
-        item['summary'] = s
-        encoded_stories[key] = item
-    # write back
-    # write to a new file
-    tmp_file = os.path.join(USE_DAN_DIR, 'story-tmp.pickle')
-    with open(tmp_file, 'wb') as f:
-        pickle.dump(encoded_stories, f)
-    shutil.copyfile(tmp_file, story_file)
-
-
-def preprocess_USE_negative(num):
-    """
-    This function needs to be called multiple times.
-    - 1000 (7524 sents): 20s
-    - 10000 (75236 sents): 1min
-    - can be all actually: 100,000: (613,000 sents)
-    """
-    if not os.path.exists(USE_DAN_DIR):
-        os.makedirs(USE_DAN_DIR)
-    outfile = os.path.join(USE_DAN_DIR, 'negative.pickle')
-    with open(NEGATIVE_SAMPLING_FILE, 'rb') as f:
-        stories = pickle.load(f)
-    if os.path.exists(outfile):
-        with open(outfile, 'rb') as f:
-            encoded_stories = pickle.load(f)
-    else:
-        encoded_stories = {}
-    ct = 0
-    print('Encoded stories:', len(encoded_stories))
-    keys = []
-    to_encode = []
-    for key in stories.keys():
-        if key not in encoded_stories:
-            ct += 1
-            if ct % num == 0:
-                break
-            keys.append(key)
-            fake_summaries = stories[key]
-            to_encode.extend(fake_summaries)
-    # encode
-    if not keys:
-        print('All encoded!')
-    to_encode_array = [sentence_split(a) for a in to_encode]
-    # this embedding should be (21, 512)
-    encoded = USE_encode_keep_shape(to_encode_array)
-    # encoded contains 5 per entry, so len(encoded) should be 5 * len(keys)
-    assert(len(encoded) == len(keys)*5)
-    # np.split(np.array([1,2,3,4,5,6,7,8,9,10]), 2)
-    splits = np.split(np.array(encoded), len(keys))
-    for key,e in zip(keys, splits):
-        encoded_stories[key] = e
-    # write back
-    tmp_file = os.path.join(USE_DAN_DIR, 'negative-tmp.pickle')
-    with open(tmp_file, 'wb') as f:
-        pickle.dump(encoded_stories, f)
-    shutil.copyfile(tmp_file, outfile)
-
-def preprocess_InferSent_negative(num):
-    """
-    This function needs to be called multiple times.
-    - 1000 (7524 sents): 20s
-    - 10000 (75236 sents): 1min
-    - can be all actually: 100,000: (613,000 sents)
-    """
-    if not os.path.exists(INFERSENT_DIR):
-        os.makedirs(INFERSENTDIR)
-    outfile = os.path.join(INFERSENT_DIR, 'negative.pickle')
-    with open(NEGATIVE_SAMPLING_FILE, 'rb') as f:
-        stories = pickle.load(f)
-    if os.path.exists(outfile):
-        with open(outfile, 'rb') as f:
-            encoded_stories = pickle.load(f)
-    else:
-        encoded_stories = {}
-    ct = 0
-    print('Encoded stories:', len(encoded_stories))
-    keys = []
-    to_encode = []
-    for key in stories.keys():
-        if key not in encoded_stories:
-            ct += 1
-            if ct % num == 0:
-                break
-            keys.append(key)
-            fake_summaries = stories[key]
-            to_encode.extend(fake_summaries)
-    # encode
-    if not keys:
-        print('All encoded!')
-    to_encode_array = [sentence_split(a) for a in to_encode]
-    # this embedding should be (21, 512)
-    encoded = InferSent_encode_keep_shape(to_encode_array)
-    # encoded contains 5 per entry, so len(encoded) should be 5 * len(keys)
-    assert(len(encoded) == len(keys)*5)
-    # np.split(np.array([1,2,3,4,5,6,7,8,9,10]), 2)
-    splits = np.split(np.array(encoded), len(keys))
-    for key,e in zip(keys, splits):
-        encoded_stories[key] = e
-    # write back
-    tmp_file = os.path.join(INFERSENT_DIR, 'negative-tmp.pickle')
-    with open(tmp_file, 'wb') as f:
-        pickle.dump(encoded_stories, f)
-    shutil.copyfile(tmp_file, outfile)
-
-def preprocess_USE_mutated(num):
-    """
-    This function needs to be called multiple times.
-    - 1000 (7524 sents): 20s
-    - 10000 (75236 sents):
-    - can be all actually: 100,000: 
-    """
-    # TODO Not implemented.
-    print('Not implemented.')
-    exit(1)
-    if not os.path.exists(USE_DAN_DIR):
-        os.makedirs(USE_DAN_DIR)
-    outfile = os.path.join(USE_DAN_DIR, 'mutated.pickle')
-    with open(WORD_MUTATED_FILE, 'rb') as f:
-        stories = pickle.load(f)
-    if os.path.exists(outfile):
-        with open(outfile, 'rb') as f:
-            encoded_stories = pickle.load(f)
-    else:
-        encoded_stories = {}
-    ct = 0
-    print('Encoded stories:', len(encoded_stories))
-    keys = []
-    to_encode = []
-    for key in stories.keys():
-        if key not in encoded_stories:
-            ct += 1
-            if ct % num == 0:
-                break
-            keys.append(key)
-            add_pairs = stories[key]['add-pairs']
-            delete_pairs = stories[key]['delete-pairs']
-            fake_summaries = [p[0] for p in (add_pairs + delete_pairs)]
-            to_encode.extend(fake_summaries)
-    # encode
-    if not keys:
-        print('All encoded!')
-    to_encode_array = [sentence_split(a) for a in to_encode]
-    # this embedding should be (21, 512)
-    encoded = USE_encode_keep_shape(to_encode_array)
-    # encoded contains 5 per entry, so len(encoded) should be 5 * len(keys)
-    assert(len(encoded) == len(keys)*20)
-    # np.split(np.array([1,2,3,4,5,6,7,8,9,10]), 2)
-    splits = np.split(np.array(encoded), len(keys))
-    for key,e in zip(keys, splits):
-        encoded_stories[key] = e
-    # write back
-    with open(outfile, 'wb') as f:
-        pickle.dump(encoded_stories, f)
-
-        
-def use_pregen():
-    """Pre-generate the uae for data folder.
-    """
-    hebi_dir = os.path.join(cnndm_dir, 'hebi')
-    data_dir = os.path.join(cnndm_dir, 'hebi-sample-10000')
-    hebi_uae_dir = os.path.join(cnndm_dir, 'hebi-uae')
-    # For each folder (with hash) in hebi_dir, check if hebi_uae_dir
-    # contains this folder or not. If not, parse the article and
-    # summaries into data.
-    stories = os.listdir(data_dir)
-
-    # printing out current progress
-    finished_stories = os.listdir(hebi_uae_dir)
-    print('total stories:', len(stories))
-    print('finished:', len(finished_stories))
-
-    print('creating UAE instance ..')
-    use_embedder = SentenceEmbedder()
-
-    ct = 0
-
-    for s in stories:
-        data = {}
-        to_encode = []
-        scores = []
-        story_dir = os.path.join(data_dir, s)
-        story_uae_file = os.path.join(hebi_uae_dir, s)
-        if not os.path.exists(story_uae_file):
-            print('processing', s, '..')
-            ct += 1
-            if ct % 50 == 0:
-                # This function returns after processing 50 stories,
-                # due to memory reason.
-                print('reaches 50 stories, existing ..')
-                return
-            
-            # create the embedding
-            article_file = os.path.join(story_dir, 'article.txt')
-            summary_file = os.path.join(story_dir, 'summary.json')
-            with open(article_file) as f:
-                article = f.read()
+            story = plain_stories[key]
+            if target_name == 'story':
+                article = story['article']
+                summary = story['summary']
                 to_encode.append(article)
-            with open(summary_file) as f:
-                j = json.load(f)
-                for summary,score,_ in j:
-                    to_encode.append(summary)
-                    scores.append(score)
-            # now, encode to_encode
-            # to_encode should have 21 paragraphs
-            # split into sentences
-            to_encode_array = [sentence_split(a) for a in to_encode]
-            def get_shape(vv):
-                return [len(v) for v in vv]
-            def flatten(vv):
-                res = []
-                for v in vv:
-                    res.extend(v)
-                return res
-            def restructure(v, shape):
-                if not shape:
-                    return []
-                l = shape[0]
-                return [v[:l]] + restructure(v[l:], shape[1:])
-            shape = get_shape(to_encode_array)
-            flattened = flatten(to_encode_array)
-            print('embedding', len(flattened), 'sentences ..')
-            embedding_flattened = use_embedder.embed(flattened)
-            embedding = restructure(embedding_flattened, shape)
-            # this embedding should be (21, 512)
-            data = {}
-            #(numsent, 512)
-            data['article'] = embedding[0]
-            data['summary'] = embedding[1:]
-            data['score'] = scores
-            with open(story_uae_file, 'wb') as f:
-                pickle.dump(data, f)
-
-def preprocess_USE_Large_story(num):
-    """
-    This function needs to be called multiple times.
-
-    Currently setting num to 1000 should work
-
-    - 1000 (40,000 sents): 30s
-    - 10000 (382,000): out-of-memory
-    - 5000: 2min about 10G memory
-    """
-    if not os.path.exists(USE_TRANSFORMER_DIR):
-        os.makedirs(USE_TRANSFORMER_DIR)
-    story_file = os.path.join(USE_TRANSFORMER_DIR, 'story.pickle')
-    with open(STORY_PICKLE_FILE, 'rb') as f:
-        stories = pickle.load(f)
-    if os.path.exists(story_file):
-        with open(story_file, 'rb') as f:
-            encoded_stories = pickle.load(f)
-    else:
-        encoded_stories = {}
-    ct = 0
-    print('Encoded stories:', len(encoded_stories))
-    keys = []
-    to_encode = []
-    for key in stories.keys():
-        if key not in encoded_stories:
-            ct += 1
-            if ct % num == 0:
-                break
-            keys.append(key)
-            story = stories[key]
-            article = story['article']
-            summary = story['summary']
-            to_encode.append(article)
-            to_encode.append(summary)
-    # encode
+                to_encode.append(summary)
+            elif target_name == 'negative' or target_name == 'shuffle':
+                fake_summaries = plain_stories[key]
+                to_encode.extend(fake_summaries)
+            else:
+                add = plain_stories[key]['add']
+                delete = plain_stories[key]['delete']
+                replace = plain_stories[key]['replace']
+                to_encode.extend(add['text'])
+                to_encode.extend(delete['text'])
+                to_encode.extend(replace['text'])
     if not keys:
         print('All encoded!')
     to_encode_array = [sentence_split(a) for a in to_encode]
-    # this embedding should be (21, 512)
-    encoded = USE_Large_encode_keep_shape(to_encode_array)
-    [1,2,3,4][1::2]
-    articles = encoded[0::2]
-    summaries = encoded[1::2]
-    for key,a,s in zip(keys, articles, summaries):
-        item = {}
-        item['article'] = a
-        item['summary'] = s
-        encoded_stories[key] = item
-    # write back
-    # write to a new file
-    tmp_file = os.path.join(USE_TRANSFORMER_DIR, 'story-tmp.pickle')
-    with open(tmp_file, 'wb') as f:
-        pickle.dump(encoded_stories, f)
-    shutil.copyfile(tmp_file, story_file)
+    return keys, to_encode_array
 
-
-def preprocess_USE_Large_negative(num):
-    """
-    This function needs to be called multiple times.
-    - 1000 (7524 sents): 20s
-    - 10000 (75236 sents): 1min
-    - can be all actually: 100,000: (613,000 sents)
-    """
-    if not os.path.exists(USE_TRANSFORMER_DIR):
-        os.makedirs(USE_TRANSFORMER_DIR)
-    outfile = os.path.join(USE_TRANSFORMER_DIR, 'negative.pickle')
-    with open(NEGATIVE_SAMPLING_FILE, 'rb') as f:
-        stories = pickle.load(f)
-    if os.path.exists(outfile):
-        with open(outfile, 'rb') as f:
-            encoded_stories = pickle.load(f)
+def save_encoded(target_name, keys, encoded):
+    res = {}
+    if target_name == 'story':
+        articles = encoded[0::2]
+        summaries = encoded[1::2]
+        for key,a,s in zip(keys, articles, summaries):
+            item = {}
+            item['article'] = a
+            item['summary'] = s
+            res[key] = item
+    elif target_name == 'negative' or target_name == 'shuffle':
+        splits = np.split(np.array(encoded), len(keys))
+        for key,e in zip(keys, splits):
+            res[key] = e
+    elif target_name == 'mutated':
+        splits = np.split(np.array(encoded), len(keys))
+        with open(WORD_MUTATED_FILE, 'rb') as f:
+            orig_mutated = pickle.load(f)
+        for key,e in zip(keys, splits):
+            sp = np.split(e, 3)
+            
+            res[key]['add'] = {}
+            res[key]['delete'] = {}
+            res[key]['replace'] = {}
+            
+            res[key]['add']['text'] = sp[0]
+            res[key]['delete']['text'] = sp[1]
+            res[key]['replace']['text'] = sp[2]
+            
+            res[key]['add']['label'] = orig_mutated[key]['add']['label']
+            res[key]['delete']['text'] = orig_mutated[key]['delete']['label']
+            res[key]['replace']['text'] = orig_mutated[key]['replace']['label']
+    return res
+    
+                
+def preprocess_sentence_embed(embedder_name, target_name, num):
+    assert(embedder_name in ['InferSent', 'USE', 'USE-Large'])
+    assert(target_name in ['story', 'negative', 'mutated', 'shuffle'])
+    folder_dict = {'InferSent': INFERSENT_DIR, 'USE': USE_DAN_DIR,
+                   'USE-Large': USE_TRANSFORMER_DIR}
+    folder = folder_dict[embedder_name]
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    target_file = os.path.join(folder, target_name + '.pickle')
+    # TODO find all files in folder with pattern
+    # <target_name>-<digit>.pickle
+    tmp_file = os.path.join(folder, 'tmp.pickle')
+    if os.path.exists(target_file):
+        with open(target_file, 'rb') as f:
+            previously_encoded = pickle.load(f)
     else:
-        encoded_stories = {}
-    ct = 0
-    print('Encoded stories:', len(encoded_stories))
-    keys = []
-    to_encode = []
-    for key in stories.keys():
-        if key not in encoded_stories:
-            ct += 1
-            if ct % num == 0:
-                break
-            keys.append(key)
-            fake_summaries = stories[key]
-            to_encode.extend(fake_summaries)
-    # encode
-    if not keys:
-        print('All encoded!')
-    to_encode_array = [sentence_split(a) for a in to_encode]
-    # this embedding should be (21, 512)
-    encoded = USE_Large_encode_keep_shape(to_encode_array)
-    # encoded contains 5 per entry, so len(encoded) should be 5 * len(keys)
-    assert(len(encoded) == len(keys)*5)
-    # np.split(np.array([1,2,3,4,5,6,7,8,9,10]), 2)
-    splits = np.split(np.array(encoded), len(keys))
-    for key,e in zip(keys, splits):
-        encoded_stories[key] = e
-    # write back
-    tmp_file = os.path.join(USE_TRANSFORMER_DIR, 'negative-tmp.pickle')
+        previously_encoded = {}
+    print('Previously encoded: ', len(previously_encoded))
+    # Load what to encode, based on target name
+    keys, to_encode = load_to_encode(target_name, previously_encoded, num)
+    encoded = embed_keep_shape(to_encode, embedder_name)
+    newly_encoded = save_encoded(target_name, keys, encoded)
+    # TODO I want to save it to a new file, such that we won't have
+    # the overhead of writing big files every time. I shall also
+    # provide a procedure to combine all these files.
+    # DEBUG
+    previously_encoded.update(newly_encoded)
     with open(tmp_file, 'wb') as f:
-        pickle.dump(encoded_stories, f)
-    shutil.copyfile(tmp_file, outfile)
+        pickle.dump(previously_encoded, f)
+    shutil.copyfile(tmp_file, target_file)
+    return
+
+
+def test():
+    preprocess_sentence_embed('InferSent', 'story', 10)
+    preprocess_sentence_embed('InferSent', 'negative', 10)
+    preprocess_sentence_embed('USE', 'mutated', 10)
+    preprocess_sentence_embed('USE', 'shuffle', 10000)
+    preprocess_sentence_embed('USE-Large', 'negative', 10)
+    preprocess_sentence_embed('InferSent', 'story', 10)

@@ -115,7 +115,7 @@ def load_word_mutated_data(keys, mode):
     """
     Return (summaries, scores)
 
-    MODE can be 'add', 'del', 'both'
+    MODE can be 'add', 'del', 'both', 'shuffle'
     """
     with open(WORD_MUTATED_FILE, 'rb') as f:
         mut = pickle.load(f)

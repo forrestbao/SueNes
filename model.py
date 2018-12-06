@@ -72,7 +72,7 @@ def load_embedding(tokenizer):
 def build_model(embedding_method, label_type, embedding_layer,
                 input_shape, architecture):
     # Embedding layer
-    if embedding_method is 'glove':
+    if embedding_method == 'glove':
         sequence_input = Input(shape=input_shape, dtype='int32')
         # (640, 100)
         embedded_input = embedding_layer(sequence_input)

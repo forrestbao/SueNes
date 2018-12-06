@@ -50,9 +50,24 @@ def load_data(filename):
         return data
 
 def sentence_split(s):
-    # FIXME keep the seperator
-    res = re.split(r'\.|!|\?', s)
-    res = [r.strip() for r in res if r]
+    # KEEP THE SEPERATOR
+    # res = re.split(r'\.|!|\?', s)
+    tokens = s.split(' ')
+    res = []
+
+    l = []
+    for t in tokens:
+        l.append(t)
+        if t == '.' or t == '!' or t == '?':
+            res.append(' '.join(l))
+            l = []
+    if l:
+        # if no separator at the end, add one.
+        res.append(' '.join(l + ['.']))
+    # \s+(?=[.!?])
+    # res = re.findall('.*?[.!\?]', s)
+    # res = re.split(r'\s+(?=[.!?])', s)
+    # res = [r.strip() for r in res if r]
     return res
 
 def test():

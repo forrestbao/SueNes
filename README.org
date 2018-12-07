@@ -19,6 +19,11 @@ All with 4 settings:
 - UAE-Large
 - Glove
 - Glove-SO
+*** TODO FIXME word mutate avoid sepator
+*** TODO [#A] sigmoid on regression problem
+*** TODO [#A] classification, use hinge loss
+*** TODO LSTM model train more epochs
+*** TODO sentence-level mutate
 
 *** TODO mutation with deletion only
 good
@@ -47,6 +52,8 @@ a major drop, since the sentence does not make sense.
 - dropout
 - conv2d
 *** TODO separate architecture
+
+*** TODO NOW automatic early stop keras
 
 ** Paper writing
 *** TODO write method

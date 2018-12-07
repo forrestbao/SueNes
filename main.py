@@ -89,17 +89,25 @@ def load_pickles(fake_method, embedding_method):
         with open(os.path.join(d, 'story.pickle'), 'rb') as f:
             stories = pickle.load(f)
         neg_filename = {'neg': 'negative.pickle',
-                        'mutate': 'word-mutated.pickle',
+                        'mutate': 'mutated.pickle',
                         'shuffle': 'shuffle.pickle'}[fake_method]
         with open(os.path.join(d, neg_filename), 'rb') as f:
             negatives = pickle.load(f)
     return stories, negatives
+
+def test():
+    fake_method = 'mutate'
+    embedding_method = 'USE-Large'
+    num_samples = 100
+    num_fake_samples = 1
+    fake_extra_option = 'add'
 
 def load_data_helper(fake_method, embedding_method, num_samples,
                      num_fake_samples, fake_extra_option=None):
     """return articles, reference_summaries, reference_labels,
     fake_summaries, fake_labels
     """
+    # embedding_method = 'USE'
     tokenizer = None
     stories, negatives = load_pickles(fake_method, embedding_method)
     story_keys = set(stories.keys())
@@ -116,10 +124,28 @@ def load_data_helper(fake_method, embedding_method, num_samples,
     elif fake_method == 'mutate':
         # add, delete, replace
         section = fake_extra_option
+        # section = 'delete'
+        # HACK
+        if embedding_method != 'glove':
+            valid_pred = lambda k: negatives[k][section]['text'].shape == (10,)
+            valid_keys = [key for key in keys if valid_pred(key)]
+            if len(valid_keys) < len(keys):
+                print('Warning: removed invalid samples. Valid:',
+                      len(valid_keys), 'all:', len(keys))
+            # HACK
+            keys = valid_keys
+            articles = np.array([stories[key]['article'] for key in keys])
+            reference_summaries = np.array([stories[key]['summary'] for key in keys])
+        # Resume normal
         # This is protocol
-        fake_summaries = np.array([negatives[key][section]['text'] for key in keys])
+        fake_summaries = np.array([negatives[key][section]['text'] for
+                                   key in keys])
+        fake_summaries = fake_summaries[:,:num_fake_samples]
         fake_labels = np.array([negatives[key][section]['label'] for key in keys])
+        fake_labels = fake_labels[:,:num_fake_samples]
         reference_labels = np.ones_like(reference_summaries, dtype=float)
+    else:
+        raise Exception()
     return (articles, reference_summaries, reference_labels,
             fake_summaries, fake_labels, keys)
 
@@ -160,19 +186,59 @@ def test():
     fake_extra_option = 'delete'
     
 def main():
+    # setting parameters
     fake_methods = ['neg', 'shuffle', 'mutate']
     embedding_methods = ['glove', 'USE', 'USE-Large', 'InferSent']
     architectures = ['CNN', 'FC', 'LSTM']
+    mutate_extra_options = ['add', 'delete', 'replace']
+
+    # random settings
+    num_samples = 100
     num_samples = 1000
     num_samples = 10000
     num_samples = 30000
-    for fake_method in fake_methods:
-        for embedding_method in embedding_methods:
-            for num_fake_samples in [1, 3]:
-                for arch in architectures:
-                    run_exp(fake_method, embedding_method,
-                            num_samples, num_fake_samples,
-                            architecture)
+    fake_method = 'neg'
+    fake_method = 'shuffle'
+    fake_method = 'mutate'
+    num_fake_samples = 1
+    fake_extra_option = 'add'
+
+    # Setting:  mutate USE-Large 5000 1 CNN add
+    run_all_exp(['neg'], ['glove', 'USE', 'USE-Large', 'InferSent'],
+                [100], [1], ['LSTM'])
+
+
+    # Negative sampling experiment
+    run_all_exp(['neg'], ['glove', 'USE', 'USE-Large', 'InferSent'],
+                [30000], [1], ['CNN'])
+    run_all_exp(['neg'], ['glove', 'USE', 'USE-Large', 'InferSent'],
+                [30000], [1], ['FC'])
+    run_all_exp(['neg'], ['glove', 'USE', 'USE-Large', 'InferSent'],
+                [30000], [1], ['LSTM'])
+    # mutate experiment
+    run_all_exp(['mutate'], ['glove', 'USE', 'USE-Large', 'InferSent'],
+                [5000], [1], ['CNN'], ['add', 'delete', 'replace'])
+    run_all_exp(['mutate'], ['glove', 'USE', 'USE-Large', 'InferSent'],
+                [5000], [1], ['FC'], ['add', 'delete', 'replace'])
+    run_all_exp(['mutate'], ['glove', 'USE', 'USE-Large', 'InferSent'],
+                [5000], [1], ['LSTM'], ['add', 'delete', 'replace'])
+    
+    run_all_exp(['mutate'], [
+        # 'glove', 'USE', 'USE-Large',
+                             'InferSent'],
+                [100], [1], ['CNN', 'FC'], ['add', 'delete', 'replace'])
+
+
+    run_exp('mutate', 'USE', 100, 1, 'CNN', 'replace')
+    run_exp('mutate', 'USE-Large', 100, 1, 'CNN', 'delete')
+    run_exp('mutate', 'InferSent', 100, 1, 'CNN', 'replace')
+
+    # np.array([np.zeros((10,1,512)), np.zeros((10,2,512))])
+    # np.array(['hell', 'world'])
+    # np.array([np.array([1,3]), np.array([[2,3], [2,3]])], dtype=object)
+
+    # np.asarray([np.array([1,3]), np.array([[2,3], [2,3]])])
+    
     run_exp('neg', 'USE', 10000, 1, 'LSTM')
     run_exp('neg', 'glove', 10000, 1, 'CNN')
     run_exp('shuffle', 'USE', 1000, 1, 'CNN')
@@ -191,11 +257,33 @@ def main():
     run_exp('mutate', 'glove', 100, 1, 'CNN', 'replace')
     return
 
+def run_all_exp(fake_methods, embedding_methods, num_samples_list,
+                num_fake_samples_list, architectures,
+                fake_extra_options=[]):
+    for f in fake_methods:
+        for e in embedding_methods:
+            for ns in num_samples_list:
+                for nf in num_fake_samples_list:
+                    for a in architectures:
+                        if fake_extra_options:
+                            for option in fake_extra_options:
+                                res = run_exp(f,e,ns,nf,a,option)
+                                print('SETTING:', f,e,ns,nf,a,option)
+                                print('RESULT:', res)
+                        else:
+                            res = run_exp(f,e,ns,nf,a)
+                            print('SETTING:', f,e,ns,nf,a)
+                            print('RESULT:', res)
+
+
 def run_exp(fake_method, embedding_method, num_samples,
             num_fake_samples, architecture, fake_extra_option=None):
     assert(fake_method in ['neg', 'shuffle', 'mutate'])
     assert(embedding_method in ['glove', 'USE', 'USE-Large', 'InferSent'])
     assert(architecture in ['CNN', 'FC', 'LSTM'])
+
+    print('Setting: ', fake_method, embedding_method, num_samples,
+          num_fake_samples, architecture, fake_extra_option)
     
     print('loading data ..')
     (articles, reference_summaries, reference_labels, fake_summaries,
@@ -247,7 +335,7 @@ def run_exp(fake_method, embedding_method, num_samples,
     # input_sahpe
     if embedding_method == 'glove':
         input_shape = (MAX_ARTICLE_LENGTH + MAX_SUMMARY_LENGTH,)
-    elif embedding_method == 'USE':
+    elif embedding_method == 'USE' or embedding_method == 'USE-Large':
         input_shape = (ARTICLE_MAX_SENT + SUMMARY_MAX_SENT, 512)
     else:
         input_shape = (ARTICLE_MAX_SENT + SUMMARY_MAX_SENT, 4096)
@@ -260,10 +348,12 @@ def run_exp(fake_method, embedding_method, num_samples,
 
     if label_type == 'regression':
         loss = 'mse'
-        metrics = ['mae', 'accuracy', pearson_correlation_f]
-    else:
+        metrics = ['mae', 'mse', 'accuracy', pearson_correlation_f]
+    elif label_type == 'classification':
         loss = 'binary_crossentropy'
         metrics=['accuracy', pearson_correlation_f]
+    else:
+        raise Exception()
     # optimizer=tf.train.AdamOptimizer(0.01)
     optimizer = tf.train.RMSPropOptimizer(0.001)
     model.compile(optimizer=optimizer, loss=loss, metrics=metrics)

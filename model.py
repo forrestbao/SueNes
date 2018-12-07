@@ -107,15 +107,19 @@ def build_model(embedding_method, label_type, embedding_layer,
         x= keras.layers.LSTM(128)(embedded_input)
         x = Dropout(0.5)(x)
         # x = Dense(128, activation='relu')(x)
-    else:
+    elif architecture == 'FC':
         x = keras.layers.Flatten()(embedded_input)
         x = Dense(128, activation='relu')(x)
+    else:
+        raise Exception()
 
     # Output layer
     if label_type == 'classification':
         preds = Dense(1, activation='sigmoid')(x)
-    else:
+    elif label_type == 'regression':
         preds = Dense(1)(x)
+    else:
+        raise Exception()
 
     model = Model(sequence_input, preds)
     return model

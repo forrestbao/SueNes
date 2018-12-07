@@ -64,9 +64,10 @@ def delete_words(summary, ratio):
     indices = set(random.sample(range(length),
                                 int((1 - ratio) * length)))
     return ' '.join([words[i] for i in range(length)
-                     if i not in indices])
+                     if i not in indices or words[i] in ['.', '?', '!']])
 
 def replace_words(summary, ratio, random_word_generator):
+    """FIXME do not add or delete sentence seperators."""
     words = summary.split(' ')
     length = len(words)
     indices = set([random.randint(0, length)
@@ -180,7 +181,13 @@ def preprocess_word_mutated():
         pickle.dump(outdata, f)
 
 def test():
+    """
+    First set of preprocessing. Quite efficient.
+    """
+    preprocess_story_pickle()
     preprocess_word_mutated()
+    preprocess_negative_sampling()
+    preprocess_negative_shuffle()
 
 def preprocess_sent_mutated():
     """
@@ -336,7 +343,7 @@ def load_to_encode(target_name, previously_encoded, num):
     for key in plain_stories.keys():
         if key not in previously_encoded:
             ct += 1
-            if ct % num == 0:
+            if ct > num:
                 break
             keys.append(key)
             story = plain_stories[key]
@@ -380,6 +387,8 @@ def save_encoded(target_name, keys, encoded):
             orig_mutated = pickle.load(f)
         for key,e in zip(keys, splits):
             sp = np.split(e, 3)
+
+            res[key] = {}
             
             res[key]['add'] = {}
             res[key]['delete'] = {}
@@ -390,14 +399,64 @@ def save_encoded(target_name, keys, encoded):
             res[key]['replace']['text'] = sp[2]
             
             res[key]['add']['label'] = orig_mutated[key]['add']['label']
-            res[key]['delete']['text'] = orig_mutated[key]['delete']['label']
-            res[key]['replace']['text'] = orig_mutated[key]['replace']['label']
+            res[key]['delete']['label'] = orig_mutated[key]['delete']['label']
+            res[key]['replace']['label'] = orig_mutated[key]['replace']['label']
     return res
     
-                
-def preprocess_sentence_embed(embedder_name, target_name, num):
+def preprocess_sentence_embed_batch(embedder_names, target_names, num, up_limit):
+    for e in embedder_names:
+        for t in target_names:
+            preprocess_sentence_embed(e, t, num, up_limit)
+
+def inspect_preprocess_progress():
+    """Inspect progress of all the preprocess. Probably validate the data here.
+
+    CURRENT:
+        In [5]: inspect_preprocess_progress()
+        USE story 47471
+        USE negative 92000
+        USE mutated 10000
+        USE shuffle 11007
+        InferSent story 13074
+        InferSent negative 30169
+        InferSent mutated 5100
+        InferSent shuffle 1098
+        USE-Large story 41320
+        USE-Large negative 42415
+        USE-Large mutated 100
+        exUSE-Large shuffle -1
+    
+    """
+    embedder_names = ['USE', 'InferSent', 'USE-Large']
+    target_names = ['story', 'negative', 'mutated', 'shuffle']
+    for embedder_name in embedder_names:
+        for target_name in target_names:
+            num = get_num_encoded_story(embedder_name, target_name)
+            print(embedder_name, target_name, num)
+
+def get_num_encoded_story(embedder_name, target_name):
     assert(embedder_name in ['InferSent', 'USE', 'USE-Large'])
     assert(target_name in ['story', 'negative', 'mutated', 'shuffle'])
+    folder_dict = {'InferSent': INFERSENT_DIR, 'USE': USE_DAN_DIR,
+                   'USE-Large': USE_TRANSFORMER_DIR}
+    folder = folder_dict[embedder_name]
+    if not os.path.exists(folder):
+        return -1
+    target_file = os.path.join(folder, target_name + '.pickle')
+    if os.path.exists(target_file):
+        with open(target_file, 'rb') as f:
+            previously_encoded = pickle.load(f)
+            return len(previously_encoded)
+    else:
+        return -1
+
+    
+def preprocess_sentence_embed(embedder_name, target_name, num, up_limit):
+    """UP_LIMIT: will not process if already encoded up_limit entries.
+    """
+    assert(embedder_name in ['InferSent', 'USE', 'USE-Large'])
+    assert(target_name in ['story', 'negative', 'mutated', 'shuffle'])
+    print('Setting:', embedder_name, target_name, num, up_limit)
     folder_dict = {'InferSent': INFERSENT_DIR, 'USE': USE_DAN_DIR,
                    'USE-Large': USE_TRANSFORMER_DIR}
     folder = folder_dict[embedder_name]
@@ -413,6 +472,9 @@ def preprocess_sentence_embed(embedder_name, target_name, num):
     else:
         previously_encoded = {}
     print('Previously encoded: ', len(previously_encoded))
+    if len(previously_encoded) >= up_limit:
+        print('Reach up limit', up_limit, '. Doing nothing')
+        return
     # Load what to encode, based on target name
     keys, to_encode = load_to_encode(target_name, previously_encoded, num)
     encoded = embed_keep_shape(to_encode, embedder_name)
@@ -429,9 +491,47 @@ def preprocess_sentence_embed(embedder_name, target_name, num):
 
 
 def test():
-    preprocess_sentence_embed('InferSent', 'story', 10)
-    preprocess_sentence_embed('InferSent', 'negative', 10)
-    preprocess_sentence_embed('USE', 'mutated', 10)
-    preprocess_sentence_embed('USE', 'shuffle', 10000)
-    preprocess_sentence_embed('USE-Large', 'negative', 10)
-    preprocess_sentence_embed('InferSent', 'story', 10)
+    """Using sentence embedder to preprocess."""
+    # performance in terms of stories:
+    # USE: 1000, InferSent: 100, USE-Large: 100
+    embedder_names = ['USE', 'InferSent', 'USE-Large']
+    # story is considerably larger, so process alone. About 10 times
+    # of others.
+    target_names = ['story', 'negative', 'mutated', 'shuffle']
+    
+    up_limit = 10000
+    
+    for embedder_name in embedder_names:
+        for target_name in target_names:
+            preprocess_sentence_embed(embedder_name, target_name, 100, up_limit)
+
+
+    # mutated
+    preprocess_sentence_embed('USE', 'mutated', 10000, up_limit)
+    preprocess_sentence_embed('USE-Large', 'mutated', 100, up_limit)
+    preprocess_sentence_embed('USE', 'mutated', 10000, up_limit)
+    preprocess_sentence_embed('USE', 'mutated', 10000, up_limit)
+
+    # stories
+    preprocess_sentence_embed('USE', 'story', 1000, up_limit)
+    preprocess_sentence_embed('USE-Large', 'story', 100, up_limit)
+    preprocess_sentence_embed('InferSent', 'story', 100, up_limit)
+
+    # negative and mutate
+    up_limit = 10000
+    preprocess_sentence_embed_batch(['USE'], ['negative', 'mutated'],
+                                    10000, up_limit)
+    preprocess_sentence_embed_batch(['InferSent'],
+                                    ['negative', 'mutated'], 500,
+                                    up_limit)
+    preprocess_sentence_embed_batch(['USE-Large'],
+                                    ['negative', 'mutated'], 100,
+                                    up_limit)
+
+    # other random settings
+    preprocess_sentence_embed('InferSent', 'story', 10, 3000)
+    preprocess_sentence_embed('InferSent', 'negative', 10, 3000)
+    preprocess_sentence_embed('USE', 'mutated', 10, 3000)
+    preprocess_sentence_embed('USE', 'shuffle', 10000, 3000)
+    preprocess_sentence_embed('USE-Large', 'negative', 10, 3000)
+    preprocess_sentence_embed('InferSent', 'story', 10, 3000)

@@ -1,6 +1,6 @@
 #+TITLE: Architecture Detail
 
-* Embedding Input
+* Data dimension for each embedding method
 
 ** Glove
 train:  (8000, 640) (8000,)
@@ -33,7 +33,7 @@ test:  (1000, 13, 4096) (1000,)
 
 - 4096 is the sentence embedding output dimension of InferSent
 
-* CNN architectures
+* CNN
 
 ** glove CNN
 

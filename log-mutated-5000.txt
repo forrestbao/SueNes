@@ -1840,3 +1840,888 @@ Epoch 20/20
 Test result:  [0.036441526412963866, 0.1510746046304703, 0.036441526412963866, 0.5, 0.8433566784858704]
 SETTING: mutate InferSent 5000 1 FC replace
 RESULT: 0.1510746046304703
+
+
+In [3]: run_all_exp(['mutate'], ['glove', 'USE', 'USE-Large', 'InferSent'],
+   ...:             [5000], [1], ['LSTM'], ['add', 'delete', 'replace'])
+Setting:  mutate glove 5000 1 LSTM add
+loading data ..
+merging data ..
+creating tokenizer ..
+padding ..
+shuffling ..
+splitting ..
+train:  (8000, 640) (8000,)
+val:  (1000, 640) (1000,)
+test:  (1000, 640) (1000,)
+building model ..
+Indexing word vectors.
+Found 400000 word vectors.
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_1 (InputLayer)         (None, 640)               0         
+_________________________________________________________________
+embedding_1 (Embedding)      (None, 640, 100)          6609700   
+_________________________________________________________________
+lstm_1 (LSTM)                (None, 128)               117248    
+_________________________________________________________________
+dropout_1 (Dropout)          (None, 128)               0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 6,727,077
+Trainable params: 117,377
+Non-trainable params: 6,609,700
+_________________________________________________________________
+training ..
+Train on 8000 samples, validate on 1000 samples
+Epoch 1/20
+2018-12-07 04:42:15.977119: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2018-12-07 04:42:16.086679: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:964] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-12-07 04:42:16.087124: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1432] Found device 0 with properties: 
+name: GeForce GTX 1060 3GB major: 6 minor: 1 memoryClockRate(GHz): 1.7085
+pciBusID: 0000:0b:00.0
+totalMemory: 2.95GiB freeMemory: 2.75GiB
+2018-12-07 04:42:16.087141: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1511] Adding visible gpu devices: 0
+2018-12-07 04:42:16.808864: I tensorflow/core/common_runtime/gpu/gpu_device.cc:982] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-12-07 04:42:16.808897: I tensorflow/core/common_runtime/gpu/gpu_device.cc:988]      0 
+2018-12-07 04:42:16.808903: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1001] 0:   N 
+2018-12-07 04:42:16.809049: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 2454 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1060 3GB, pci bus id: 0000:0b:00.0, compute capability: 6.1)
+8000/8000 [==============================] - 43s 5ms/step - loss: 0.4240 - mean_absolute_error: 0.5773 - mean_squared_error: 0.4240 - acc: 0.0206 - pearson_correlation_f: -0.0197 - val_loss: 0.1366 - val_mean_absolute_error: 0.3416 - val_mean_squared_error: 0.1366 - val_acc: 0.5000 - val_pearson_correlation_f: 0.2074
+Epoch 2/20
+8000/8000 [==============================] - 42s 5ms/step - loss: 0.1126 - mean_absolute_error: 0.2931 - mean_squared_error: 0.1126 - acc: 0.4940 - pearson_correlation_f: 0.0089 - val_loss: 0.1008 - val_mean_absolute_error: 0.2567 - val_mean_squared_error: 0.1008 - val_acc: 0.5000 - val_pearson_correlation_f: 0.2228
+Epoch 3/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1119 - mean_absolute_error: 0.2882 - mean_squared_error: 0.1119 - acc: 0.4989 - pearson_correlation_f: -0.0107 - val_loss: 0.1007 - val_mean_absolute_error: 0.2569 - val_mean_squared_error: 0.1007 - val_acc: 0.5000 - val_pearson_correlation_f: -0.1018
+Epoch 4/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1114 - mean_absolute_error: 0.2878 - mean_squared_error: 0.1114 - acc: 0.4996 - pearson_correlation_f: -0.0210 - val_loss: 0.0995 - val_mean_absolute_error: 0.2821 - val_mean_squared_error: 0.0995 - val_acc: 0.5000 - val_pearson_correlation_f: -0.0452
+Epoch 5/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1093 - mean_absolute_error: 0.2855 - mean_squared_error: 0.1093 - acc: 0.4996 - pearson_correlation_f: -0.0053 - val_loss: 0.0995 - val_mean_absolute_error: 0.2821 - val_mean_squared_error: 0.0995 - val_acc: 0.5000 - val_pearson_correlation_f: -0.0016
+Epoch 6/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1079 - mean_absolute_error: 0.2837 - mean_squared_error: 0.1079 - acc: 0.4999 - pearson_correlation_f: 0.0138 - val_loss: 0.1027 - val_mean_absolute_error: 0.2541 - val_mean_squared_error: 0.1027 - val_acc: 0.5000 - val_pearson_correlation_f: -0.1360
+Epoch 7/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1080 - mean_absolute_error: 0.2839 - mean_squared_error: 0.1080 - acc: 0.5000 - pearson_correlation_f: 0.0062 - val_loss: 0.0974 - val_mean_absolute_error: 0.2680 - val_mean_squared_error: 0.0974 - val_acc: 0.5000 - val_pearson_correlation_f: -0.0442
+Epoch 8/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1085 - mean_absolute_error: 0.2849 - mean_squared_error: 0.1085 - acc: 0.5000 - pearson_correlation_f: -0.0159 - val_loss: 0.0977 - val_mean_absolute_error: 0.2741 - val_mean_squared_error: 0.0977 - val_acc: 0.5000 - val_pearson_correlation_f: -0.0896
+Epoch 9/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1081 - mean_absolute_error: 0.2843 - mean_squared_error: 0.1081 - acc: 0.5000 - pearson_correlation_f: -0.0093 - val_loss: 0.0982 - val_mean_absolute_error: 0.2628 - val_mean_squared_error: 0.0982 - val_acc: 0.5000 - val_pearson_correlation_f: 0.0086
+Epoch 10/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1073 - mean_absolute_error: 0.2838 - mean_squared_error: 0.1073 - acc: 0.5000 - pearson_correlation_f: -0.0146 - val_loss: 0.0979 - val_mean_absolute_error: 0.2751 - val_mean_squared_error: 0.0979 - val_acc: 0.5000 - val_pearson_correlation_f: -0.1126
+Epoch 11/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1073 - mean_absolute_error: 0.2839 - mean_squared_error: 0.1073 - acc: 0.5000 - pearson_correlation_f: -0.0039 - val_loss: 0.0975 - val_mean_absolute_error: 0.2674 - val_mean_squared_error: 0.0975 - val_acc: 0.5000 - val_pearson_correlation_f: 0.1430
+Epoch 12/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1068 - mean_absolute_error: 0.2825 - mean_squared_error: 0.1068 - acc: 0.5000 - pearson_correlation_f: 3.3765e-04 - val_loss: 0.1032 - val_mean_absolute_error: 0.2921 - val_mean_squared_error: 0.1032 - val_acc: 0.5000 - val_pearson_correlation_f: 0.0021
+Epoch 13/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1075 - mean_absolute_error: 0.2847 - mean_squared_error: 0.1075 - acc: 0.5000 - pearson_correlation_f: -0.0139 - val_loss: 0.0974 - val_mean_absolute_error: 0.2684 - val_mean_squared_error: 0.0974 - val_acc: 0.5000 - val_pearson_correlation_f: 0.0592
+Epoch 14/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1059 - mean_absolute_error: 0.2819 - mean_squared_error: 0.1059 - acc: 0.5000 - pearson_correlation_f: 0.0102 - val_loss: 0.0974 - val_mean_absolute_error: 0.2698 - val_mean_squared_error: 0.0974 - val_acc: 0.5000 - val_pearson_correlation_f: -0.0370
+Epoch 15/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1071 - mean_absolute_error: 0.2845 - mean_squared_error: 0.1071 - acc: 0.5000 - pearson_correlation_f: -0.0063 - val_loss: 0.0986 - val_mean_absolute_error: 0.2789 - val_mean_squared_error: 0.0986 - val_acc: 0.5000 - val_pearson_correlation_f: 0.0039
+Epoch 16/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1059 - mean_absolute_error: 0.2825 - mean_squared_error: 0.1059 - acc: 0.5000 - pearson_correlation_f: 0.0068 - val_loss: 0.0993 - val_mean_absolute_error: 0.2813 - val_mean_squared_error: 0.0993 - val_acc: 0.5000 - val_pearson_correlation_f: 0.0629
+Epoch 17/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1065 - mean_absolute_error: 0.2835 - mean_squared_error: 0.1065 - acc: 0.5000 - pearson_correlation_f: -0.0035 - val_loss: 0.0986 - val_mean_absolute_error: 0.2788 - val_mean_squared_error: 0.0986 - val_acc: 0.5000 - val_pearson_correlation_f: 0.0033
+Epoch 18/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1061 - mean_absolute_error: 0.2833 - mean_squared_error: 0.1061 - acc: 0.5000 - pearson_correlation_f: -0.0061 - val_loss: 0.0978 - val_mean_absolute_error: 0.2645 - val_mean_squared_error: 0.0978 - val_acc: 0.5000 - val_pearson_correlation_f: -0.0261
+Epoch 19/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1057 - mean_absolute_error: 0.2823 - mean_squared_error: 0.1057 - acc: 0.5000 - pearson_correlation_f: 0.0031 - val_loss: 0.0974 - val_mean_absolute_error: 0.2705 - val_mean_squared_error: 0.0974 - val_acc: 0.5000 - val_pearson_correlation_f: -0.0140
+Epoch 20/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1054 - mean_absolute_error: 0.2819 - mean_squared_error: 0.1054 - acc: 0.5000 - pearson_correlation_f: 0.0162 - val_loss: 0.0977 - val_mean_absolute_error: 0.2650 - val_mean_squared_error: 0.0977 - val_acc: 0.5000 - val_pearson_correlation_f: -0.0117
+1000/1000 [==============================] - 6s 6ms/step
+Test result:  [0.1078196696639061, 0.27736028003692625, 0.1078196696639061, 0.5, 0.020595259533263743]
+SETTING: mutate glove 5000 1 LSTM add
+RESULT: 0.27736028003692625
+Setting:  mutate glove 5000 1 LSTM delete
+loading data ..
+merging data ..
+creating tokenizer ..
+padding ..
+shuffling ..
+splitting ..
+train:  (8000, 640) (8000,)
+val:  (1000, 640) (1000,)
+test:  (1000, 640) (1000,)
+building model ..
+Indexing word vectors.
+Found 400000 word vectors.
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_2 (InputLayer)         (None, 640)               0         
+_________________________________________________________________
+embedding_2 (Embedding)      (None, 640, 100)          6676100   
+_________________________________________________________________
+lstm_2 (LSTM)                (None, 128)               117248    
+_________________________________________________________________
+dropout_2 (Dropout)          (None, 128)               0         
+_________________________________________________________________
+dense_2 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 6,793,477
+Trainable params: 117,377
+Non-trainable params: 6,676,100
+_________________________________________________________________
+training ..
+Train on 8000 samples, validate on 1000 samples
+Epoch 1/20
+8000/8000 [==============================] - 42s 5ms/step - loss: 0.4231 - mean_absolute_error: 0.5760 - mean_squared_error: 0.4231 - acc: 0.0225 - pearson_correlation_f: -8.3705e-04 - val_loss: 0.1427 - val_mean_absolute_error: 0.3493 - val_mean_squared_error: 0.1427 - val_acc: 0.5000 - val_pearson_correlation_f: -0.2280
+Epoch 2/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1169 - mean_absolute_error: 0.2984 - mean_squared_error: 0.1169 - acc: 0.4949 - pearson_correlation_f: -0.0043 - val_loss: 0.1063 - val_mean_absolute_error: 0.2884 - val_mean_squared_error: 0.1063 - val_acc: 0.5000 - val_pearson_correlation_f: -0.2179
+Epoch 3/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1143 - mean_absolute_error: 0.2921 - mean_squared_error: 0.1143 - acc: 0.4986 - pearson_correlation_f: 0.0090 - val_loss: 0.1060 - val_mean_absolute_error: 0.2785 - val_mean_squared_error: 0.1060 - val_acc: 0.5000 - val_pearson_correlation_f: -0.1967
+Epoch 4/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1135 - mean_absolute_error: 0.2903 - mean_squared_error: 0.1135 - acc: 0.4995 - pearson_correlation_f: 0.0165 - val_loss: 0.1063 - val_mean_absolute_error: 0.2886 - val_mean_squared_error: 0.1063 - val_acc: 0.5000 - val_pearson_correlation_f: -0.1628
+Epoch 5/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1137 - mean_absolute_error: 0.2920 - mean_squared_error: 0.1137 - acc: 0.4997 - pearson_correlation_f: -0.0165 - val_loss: 0.1059 - val_mean_absolute_error: 0.2848 - val_mean_squared_error: 0.1059 - val_acc: 0.5000 - val_pearson_correlation_f: -0.1205
+Epoch 6/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1112 - mean_absolute_error: 0.2883 - mean_squared_error: 0.1112 - acc: 0.4997 - pearson_correlation_f: 0.0219 - val_loss: 0.1115 - val_mean_absolute_error: 0.2664 - val_mean_squared_error: 0.1115 - val_acc: 0.5000 - val_pearson_correlation_f: -0.1264
+Epoch 7/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1125 - mean_absolute_error: 0.2898 - mean_squared_error: 0.1125 - acc: 0.4996 - pearson_correlation_f: 0.0028 - val_loss: 0.1078 - val_mean_absolute_error: 0.2723 - val_mean_squared_error: 0.1078 - val_acc: 0.5000 - val_pearson_correlation_f: -0.0390
+Epoch 8/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1116 - mean_absolute_error: 0.2888 - mean_squared_error: 0.1116 - acc: 0.4999 - pearson_correlation_f: 0.0050 - val_loss: 0.1162 - val_mean_absolute_error: 0.3127 - val_mean_squared_error: 0.1162 - val_acc: 0.5000 - val_pearson_correlation_f: nan
+Epoch 9/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1125 - mean_absolute_error: 0.2913 - mean_squared_error: 0.1125 - acc: 0.4999 - pearson_correlation_f: -0.0249 - val_loss: 0.1118 - val_mean_absolute_error: 0.2660 - val_mean_squared_error: 0.1118 - val_acc: 0.5000 - val_pearson_correlation_f: -0.1032
+Epoch 10/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1115 - mean_absolute_error: 0.2895 - mean_squared_error: 0.1115 - acc: 0.5000 - pearson_correlation_f: -0.0097 - val_loss: 0.1077 - val_mean_absolute_error: 0.2726 - val_mean_squared_error: 0.1077 - val_acc: 0.5000 - val_pearson_correlation_f: -0.0596
+Epoch 11/20
+8000/8000 [==============================] - 42s 5ms/step - loss: 0.1104 - mean_absolute_error: 0.2874 - mean_squared_error: 0.1104 - acc: 0.5000 - pearson_correlation_f: 0.0195 - val_loss: 0.1059 - val_mean_absolute_error: 0.2795 - val_mean_squared_error: 0.1059 - val_acc: 0.5000 - val_pearson_correlation_f: -0.0828
+Epoch 12/20
+8000/8000 [==============================] - 42s 5ms/step - loss: 0.1102 - mean_absolute_error: 0.2874 - mean_squared_error: 0.1102 - acc: 0.5000 - pearson_correlation_f: 0.0256 - val_loss: 0.1073 - val_mean_absolute_error: 0.2926 - val_mean_squared_error: 0.1073 - val_acc: 0.5000 - val_pearson_correlation_f: -0.0333
+Epoch 13/20
+8000/8000 [==============================] - 42s 5ms/step - loss: 0.1101 - mean_absolute_error: 0.2875 - mean_squared_error: 0.1101 - acc: 0.5000 - pearson_correlation_f: 0.0082 - val_loss: 0.1081 - val_mean_absolute_error: 0.2955 - val_mean_squared_error: 0.1081 - val_acc: 0.5000 - val_pearson_correlation_f: -0.0815
+Epoch 14/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1102 - mean_absolute_error: 0.2882 - mean_squared_error: 0.1102 - acc: 0.5000 - pearson_correlation_f: -0.0026 - val_loss: 0.1058 - val_mean_absolute_error: 0.2830 - val_mean_squared_error: 0.1058 - val_acc: 0.5000 - val_pearson_correlation_f: -1.3326e-04
+Epoch 15/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1097 - mean_absolute_error: 0.2871 - mean_squared_error: 0.1097 - acc: 0.5000 - pearson_correlation_f: 0.0109 - val_loss: 0.1070 - val_mean_absolute_error: 0.2744 - val_mean_squared_error: 0.1070 - val_acc: 0.5000 - val_pearson_correlation_f: -0.0124
+Epoch 16/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1101 - mean_absolute_error: 0.2878 - mean_squared_error: 0.1101 - acc: 0.5000 - pearson_correlation_f: 0.0018 - val_loss: 0.1081 - val_mean_absolute_error: 0.2953 - val_mean_squared_error: 0.1081 - val_acc: 0.5000 - val_pearson_correlation_f: 0.0076
+Epoch 17/20
+8000/8000 [==============================] - 42s 5ms/step - loss: 0.1093 - mean_absolute_error: 0.2871 - mean_squared_error: 0.1093 - acc: 0.5000 - pearson_correlation_f: 0.0103 - val_loss: 0.1064 - val_mean_absolute_error: 0.2765 - val_mean_squared_error: 0.1064 - val_acc: 0.5000 - val_pearson_correlation_f: nan
+Epoch 18/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1102 - mean_absolute_error: 0.2885 - mean_squared_error: 0.1102 - acc: 0.5000 - pearson_correlation_f: -0.0059 - val_loss: 0.1060 - val_mean_absolute_error: 0.2861 - val_mean_squared_error: 0.1060 - val_acc: 0.5000 - val_pearson_correlation_f: -0.0151
+Epoch 19/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1096 - mean_absolute_error: 0.2874 - mean_squared_error: 0.1096 - acc: 0.5000 - pearson_correlation_f: 8.4785e-04 - val_loss: 0.1069 - val_mean_absolute_error: 0.2748 - val_mean_squared_error: 0.1069 - val_acc: 0.5000 - val_pearson_correlation_f: nan
+Epoch 20/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1090 - mean_absolute_error: 0.2866 - mean_squared_error: 0.1090 - acc: 0.5000 - pearson_correlation_f: 0.0096 - val_loss: 0.1059 - val_mean_absolute_error: 0.2851 - val_mean_squared_error: 0.1059 - val_acc: 0.5000 - val_pearson_correlation_f: nan
+1000/1000 [==============================] - 6s 6ms/step
+Test result:  [0.10599950170516968, 0.28689010691642763, 0.10599950170516968, 0.5, nan]
+SETTING: mutate glove 5000 1 LSTM delete
+RESULT: 0.28689010691642763
+Setting:  mutate glove 5000 1 LSTM replace
+loading data ..
+merging data ..
+creating tokenizer ..
+padding ..
+shuffling ..
+splitting ..
+train:  (8000, 640) (8000,)
+val:  (1000, 640) (1000,)
+test:  (1000, 640) (1000,)
+building model ..
+Indexing word vectors.
+Found 400000 word vectors.
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_3 (InputLayer)         (None, 640)               0         
+_________________________________________________________________
+embedding_3 (Embedding)      (None, 640, 100)          6574800   
+_________________________________________________________________
+lstm_3 (LSTM)                (None, 128)               117248    
+_________________________________________________________________
+dropout_3 (Dropout)          (None, 128)               0         
+_________________________________________________________________
+dense_3 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 6,692,177
+Trainable params: 117,377
+Non-trainable params: 6,574,800
+_________________________________________________________________
+training ..
+Train on 8000 samples, validate on 1000 samples
+Epoch 1/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.4284 - mean_absolute_error: 0.5805 - mean_squared_error: 0.4284 - acc: 0.0169 - pearson_correlation_f: 0.0097 - val_loss: 0.1528 - val_mean_absolute_error: 0.3612 - val_mean_squared_error: 0.1528 - val_acc: 0.5000 - val_pearson_correlation_f: 0.3007
+Epoch 2/20
+8000/8000 [==============================] - 40s 5ms/step - loss: 0.1161 - mean_absolute_error: 0.2980 - mean_squared_error: 0.1161 - acc: 0.4911 - pearson_correlation_f: -0.0132 - val_loss: 0.1090 - val_mean_absolute_error: 0.2954 - val_mean_squared_error: 0.1090 - val_acc: 0.5000 - val_pearson_correlation_f: 0.2922
+Epoch 3/20
+8000/8000 [==============================] - 40s 5ms/step - loss: 0.1131 - mean_absolute_error: 0.2898 - mean_squared_error: 0.1131 - acc: 0.4995 - pearson_correlation_f: -0.0055 - val_loss: 0.1085 - val_mean_absolute_error: 0.2907 - val_mean_squared_error: 0.1085 - val_acc: 0.5000 - val_pearson_correlation_f: 0.3093
+Epoch 4/20
+8000/8000 [==============================] - 40s 5ms/step - loss: 0.1118 - mean_absolute_error: 0.2889 - mean_squared_error: 0.1118 - acc: 0.4995 - pearson_correlation_f: -0.0033 - val_loss: 0.1091 - val_mean_absolute_error: 0.2960 - val_mean_squared_error: 0.1091 - val_acc: 0.5000 - val_pearson_correlation_f: 0.2453
+Epoch 5/20
+8000/8000 [==============================] - 40s 5ms/step - loss: 0.1108 - mean_absolute_error: 0.2873 - mean_squared_error: 0.1108 - acc: 0.4999 - pearson_correlation_f: -0.0020 - val_loss: 0.1126 - val_mean_absolute_error: 0.3066 - val_mean_squared_error: 0.1126 - val_acc: 0.5000 - val_pearson_correlation_f: -0.0791
+Epoch 6/20
+8000/8000 [==============================] - 41s 5ms/step - loss: 0.1097 - mean_absolute_error: 0.2859 - mean_squared_error: 0.1097 - acc: 0.4999 - pearson_correlation_f: 0.0171 - val_loss: 0.1125 - val_mean_absolute_error: 0.3063 - val_mean_squared_error: 0.1125 - val_acc: 0.5000 - val_pearson_correlation_f: -0.0973
+Epoch 7/20
+8000/8000 [==============================] - 40s 5ms/step - loss: 0.1106 - mean_absolute_error: 0.2878 - mean_squared_error: 0.1106 - acc: 0.4997 - pearson_correlation_f: -0.0054 - val_loss: 0.1105 - val_mean_absolute_error: 0.3011 - val_mean_squared_error: 0.1105 - val_acc: 0.5000 - val_pearson_correlation_f: 0.1596
+Epoch 8/20
+8000/8000 [==============================] - 40s 5ms/step - loss: 0.1101 - mean_absolute_error: 0.2873 - mean_squared_error: 0.1101 - acc: 0.5000 - pearson_correlation_f: -0.0011 - val_loss: 0.1088 - val_mean_absolute_error: 0.2938 - val_mean_squared_error: 0.1088 - val_acc: 0.5000 - val_pearson_correlation_f: 0.0214
+Epoch 9/20
+8000/8000 [==============================] - 40s 5ms/step - loss: 0.1096 - mean_absolute_error: 0.2865 - mean_squared_error: 0.1096 - acc: 0.4999 - pearson_correlation_f: 0.0053 - val_loss: 0.1086 - val_mean_absolute_error: 0.2924 - val_mean_squared_error: 0.1086 - val_acc: 0.5000 - val_pearson_correlation_f: 0.0914
+Epoch 10/20
+8000/8000 [==============================] - 40s 5ms/step - loss: 0.1088 - mean_absolute_error: 0.2858 - mean_squared_error: 0.1088 - acc: 0.5000 - pearson_correlation_f: 0.0204 - val_loss: 0.1116 - val_mean_absolute_error: 0.2775 - val_mean_squared_error: 0.1116 - val_acc: 0.5000 - val_pearson_correlation_f: -0.0250
+Epoch 11/20
+8000/8000 [==============================] - 40s 5ms/step - loss: 0.1104 - mean_absolute_error: 0.2878 - mean_squared_error: 0.1104 - acc: 0.5000 - pearson_correlation_f: -0.0366 - val_loss: 0.1084 - val_mean_absolute_error: 0.2896 - val_mean_squared_error: 0.1084 - val_acc: 0.5000 - val_pearson_correlation_f: 0.0302
+Epoch 12/20
+8000/8000 [==============================] - 40s 5ms/step - loss: 0.1085 - mean_absolute_error: 0.2852 - mean_squared_error: 0.1085 - acc: 0.5000 - pearson_correlation_f: 0.0162 - val_loss: 0.1091 - val_mean_absolute_error: 0.2836 - val_mean_squared_error: 0.1091 - val_acc: 0.5000 - val_pearson_correlation_f: 0.0226
+Epoch 13/20
+8000/8000 [==============================] - 40s 5ms/step - loss: 0.1086 - mean_absolute_error: 0.2854 - mean_squared_error: 0.1086 - acc: 0.5000 - pearson_correlation_f: 0.0105 - val_loss: 0.1084 - val_mean_absolute_error: 0.2894 - val_mean_squared_error: 0.1084 - val_acc: 0.5000 - val_pearson_correlation_f: 0.0252
+Epoch 14/20
+8000/8000 [==============================] - 40s 5ms/step - loss: 0.1091 - mean_absolute_error: 0.2858 - mean_squared_error: 0.1091 - acc: 0.5000 - pearson_correlation_f: -0.0045 - val_loss: 0.1086 - val_mean_absolute_error: 0.2922 - val_mean_squared_error: 0.1086 - val_acc: 0.5000 - val_pearson_correlation_f: nan
+Epoch 15/20
+8000/8000 [==============================] - 40s 5ms/step - loss: 0.1083 - mean_absolute_error: 0.2852 - mean_squared_error: 0.1083 - acc: 0.5000 - pearson_correlation_f: 0.0103 - val_loss: 0.1084 - val_mean_absolute_error: 0.2897 - val_mean_squared_error: 0.1084 - val_acc: 0.5000 - val_pearson_correlation_f: nan
+Epoch 16/20
+8000/8000 [==============================] - 40s 5ms/step - loss: 0.1084 - mean_absolute_error: 0.2855 - mean_squared_error: 0.1084 - acc: 0.5000 - pearson_correlation_f: -0.0017 - val_loss: 0.1085 - val_mean_absolute_error: 0.2867 - val_mean_squared_error: 0.1085 - val_acc: 0.5000 - val_pearson_correlation_f: nan
+Epoch 17/20
+8000/8000 [==============================] - 40s 5ms/step - loss: 0.1077 - mean_absolute_error: 0.2843 - mean_squared_error: 0.1077 - acc: 0.5000 - pearson_correlation_f: 0.0153 - val_loss: 0.1098 - val_mean_absolute_error: 0.2986 - val_mean_squared_error: 0.1098 - val_acc: 0.5000 - val_pearson_correlation_f: 0.0139
+Epoch 18/20
+8000/8000 [==============================] - 40s 5ms/step - loss: 0.1079 - mean_absolute_error: 0.2851 - mean_squared_error: 0.1079 - acc: 0.5000 - pearson_correlation_f: 0.0069 - val_loss: 0.1087 - val_mean_absolute_error: 0.2858 - val_mean_squared_error: 0.1087 - val_acc: 0.5000 - val_pearson_correlation_f: -0.0460
+Epoch 19/20
+8000/8000 [==============================] - 40s 5ms/step - loss: 0.1079 - mean_absolute_error: 0.2847 - mean_squared_error: 0.1079 - acc: 0.5000 - pearson_correlation_f: 0.0113 - val_loss: 0.1084 - val_mean_absolute_error: 0.2889 - val_mean_squared_error: 0.1084 - val_acc: 0.5000 - val_pearson_correlation_f: -0.0614
+Epoch 20/20
+8000/8000 [==============================] - 40s 5ms/step - loss: 0.1081 - mean_absolute_error: 0.2852 - mean_squared_error: 0.1081 - acc: 0.5000 - pearson_correlation_f: 0.0095 - val_loss: 0.1093 - val_mean_absolute_error: 0.2967 - val_mean_squared_error: 0.1093 - val_acc: 0.5000 - val_pearson_correlation_f: -0.0051
+1000/1000 [==============================] - 6s 6ms/step
+Test result:  [0.11001651120185853, 0.29699009585380554, 0.11001651120185853, 0.5, nan]
+SETTING: mutate glove 5000 1 LSTM replace
+RESULT: 0.29699009585380554
+Setting:  mutate USE 5000 1 LSTM add
+loading data ..
+merging data ..
+padding ..
+shuffling ..
+splitting ..
+train:  (8000, 13, 512) (8000,)
+val:  (1000, 13, 512) (1000,)
+test:  (1000, 13, 512) (1000,)
+building model ..
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_4 (InputLayer)         (None, 13, 512)           0         
+_________________________________________________________________
+lstm_4 (LSTM)                (None, 128)               328192    
+_________________________________________________________________
+dropout_4 (Dropout)          (None, 128)               0         
+_________________________________________________________________
+dense_4 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 328,321
+Trainable params: 328,321
+Non-trainable params: 0
+_________________________________________________________________
+training ..
+Train on 8000 samples, validate on 1000 samples
+Epoch 1/20
+8000/8000 [==============================] - 2s 282us/step - loss: 0.3853 - mean_absolute_error: 0.5471 - mean_squared_error: 0.3853 - acc: 0.0648 - pearson_correlation_f: 0.1078 - val_loss: 0.1156 - val_mean_absolute_error: 0.3136 - val_mean_squared_error: 0.1156 - val_acc: 0.5000 - val_pearson_correlation_f: 0.2103
+Epoch 2/20
+8000/8000 [==============================] - 1s 178us/step - loss: 0.1066 - mean_absolute_error: 0.2801 - mean_squared_error: 0.1066 - acc: 0.4980 - pearson_correlation_f: 0.1155 - val_loss: 0.0919 - val_mean_absolute_error: 0.2632 - val_mean_squared_error: 0.0919 - val_acc: 0.5000 - val_pearson_correlation_f: 0.3835
+Epoch 3/20
+8000/8000 [==============================] - 1s 177us/step - loss: 0.0936 - mean_absolute_error: 0.2567 - mean_squared_error: 0.0936 - acc: 0.4975 - pearson_correlation_f: 0.3652 - val_loss: 0.0671 - val_mean_absolute_error: 0.2117 - val_mean_squared_error: 0.0671 - val_acc: 0.5000 - val_pearson_correlation_f: 0.6240
+Epoch 4/20
+8000/8000 [==============================] - 1s 178us/step - loss: 0.0695 - mean_absolute_error: 0.2160 - mean_squared_error: 0.0695 - acc: 0.4952 - pearson_correlation_f: 0.6241 - val_loss: 0.0551 - val_mean_absolute_error: 0.1716 - val_mean_squared_error: 0.0551 - val_acc: 0.4980 - val_pearson_correlation_f: 0.7286
+Epoch 5/20
+8000/8000 [==============================] - 1s 176us/step - loss: 0.0531 - mean_absolute_error: 0.1849 - mean_squared_error: 0.0531 - acc: 0.4964 - pearson_correlation_f: 0.7259 - val_loss: 0.0405 - val_mean_absolute_error: 0.1611 - val_mean_squared_error: 0.0405 - val_acc: 0.4970 - val_pearson_correlation_f: 0.7779
+Epoch 6/20
+8000/8000 [==============================] - 1s 179us/step - loss: 0.0452 - mean_absolute_error: 0.1687 - mean_squared_error: 0.0452 - acc: 0.4978 - pearson_correlation_f: 0.7712 - val_loss: 0.0389 - val_mean_absolute_error: 0.1599 - val_mean_squared_error: 0.0389 - val_acc: 0.4970 - val_pearson_correlation_f: 0.8021
+Epoch 7/20
+8000/8000 [==============================] - 1s 178us/step - loss: 0.0411 - mean_absolute_error: 0.1604 - mean_squared_error: 0.0411 - acc: 0.4973 - pearson_correlation_f: 0.7926 - val_loss: 0.0383 - val_mean_absolute_error: 0.1617 - val_mean_squared_error: 0.0383 - val_acc: 0.4980 - val_pearson_correlation_f: 0.8188
+Epoch 8/20
+8000/8000 [==============================] - 1s 175us/step - loss: 0.0384 - mean_absolute_error: 0.1546 - mean_squared_error: 0.0384 - acc: 0.4980 - pearson_correlation_f: 0.8105 - val_loss: 0.0319 - val_mean_absolute_error: 0.1379 - val_mean_squared_error: 0.0319 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8316
+Epoch 9/20
+8000/8000 [==============================] - 1s 180us/step - loss: 0.0369 - mean_absolute_error: 0.1507 - mean_squared_error: 0.0369 - acc: 0.4979 - pearson_correlation_f: 0.8197 - val_loss: 0.0366 - val_mean_absolute_error: 0.1581 - val_mean_squared_error: 0.0366 - val_acc: 0.4980 - val_pearson_correlation_f: 0.8383
+Epoch 10/20
+8000/8000 [==============================] - 1s 178us/step - loss: 0.0344 - mean_absolute_error: 0.1455 - mean_squared_error: 0.0344 - acc: 0.4993 - pearson_correlation_f: 0.8277 - val_loss: 0.0289 - val_mean_absolute_error: 0.1289 - val_mean_squared_error: 0.0289 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8464
+Epoch 11/20
+8000/8000 [==============================] - 1s 176us/step - loss: 0.0328 - mean_absolute_error: 0.1417 - mean_squared_error: 0.0328 - acc: 0.4995 - pearson_correlation_f: 0.8365 - val_loss: 0.0290 - val_mean_absolute_error: 0.1243 - val_mean_squared_error: 0.0290 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8532
+Epoch 12/20
+8000/8000 [==============================] - 1s 178us/step - loss: 0.0314 - mean_absolute_error: 0.1389 - mean_squared_error: 0.0314 - acc: 0.4994 - pearson_correlation_f: 0.8441 - val_loss: 0.0313 - val_mean_absolute_error: 0.1438 - val_mean_squared_error: 0.0313 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8586
+Epoch 13/20
+8000/8000 [==============================] - 1s 176us/step - loss: 0.0305 - mean_absolute_error: 0.1360 - mean_squared_error: 0.0305 - acc: 0.4997 - pearson_correlation_f: 0.8501 - val_loss: 0.0264 - val_mean_absolute_error: 0.1210 - val_mean_squared_error: 0.0264 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8611
+Epoch 14/20
+8000/8000 [==============================] - 1s 178us/step - loss: 0.0300 - mean_absolute_error: 0.1357 - mean_squared_error: 0.0300 - acc: 0.4994 - pearson_correlation_f: 0.8525 - val_loss: 0.0258 - val_mean_absolute_error: 0.1192 - val_mean_squared_error: 0.0258 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8653
+Epoch 15/20
+8000/8000 [==============================] - 1s 179us/step - loss: 0.0286 - mean_absolute_error: 0.1309 - mean_squared_error: 0.0286 - acc: 0.4996 - pearson_correlation_f: 0.8592 - val_loss: 0.0277 - val_mean_absolute_error: 0.1228 - val_mean_squared_error: 0.0277 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8669
+Epoch 16/20
+8000/8000 [==============================] - 1s 180us/step - loss: 0.0273 - mean_absolute_error: 0.1284 - mean_squared_error: 0.0273 - acc: 0.4997 - pearson_correlation_f: 0.8626 - val_loss: 0.0258 - val_mean_absolute_error: 0.1231 - val_mean_squared_error: 0.0258 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8706
+Epoch 17/20
+8000/8000 [==============================] - 1s 177us/step - loss: 0.0276 - mean_absolute_error: 0.1291 - mean_squared_error: 0.0276 - acc: 0.4997 - pearson_correlation_f: 0.8639 - val_loss: 0.0248 - val_mean_absolute_error: 0.1157 - val_mean_squared_error: 0.0248 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8728
+Epoch 18/20
+8000/8000 [==============================] - 1s 177us/step - loss: 0.0271 - mean_absolute_error: 0.1278 - mean_squared_error: 0.0271 - acc: 0.5000 - pearson_correlation_f: 0.8669 - val_loss: 0.0247 - val_mean_absolute_error: 0.1153 - val_mean_squared_error: 0.0247 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8724
+Epoch 19/20
+8000/8000 [==============================] - 1s 177us/step - loss: 0.0260 - mean_absolute_error: 0.1255 - mean_squared_error: 0.0260 - acc: 0.5000 - pearson_correlation_f: 0.8711 - val_loss: 0.0246 - val_mean_absolute_error: 0.1142 - val_mean_squared_error: 0.0246 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8739
+Epoch 20/20
+8000/8000 [==============================] - 1s 178us/step - loss: 0.0262 - mean_absolute_error: 0.1259 - mean_squared_error: 0.0262 - acc: 0.4997 - pearson_correlation_f: 0.8711 - val_loss: 0.0270 - val_mean_absolute_error: 0.1321 - val_mean_squared_error: 0.0270 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8752
+1000/1000 [==============================] - 0s 227us/step
+Test result:  [0.027033527821302413, 0.12973171043395995, 0.027033527821302413, 0.499, 0.8803040499687195]
+SETTING: mutate USE 5000 1 LSTM add
+RESULT: 0.12973171043395995
+Setting:  mutate USE 5000 1 LSTM delete
+loading data ..
+merging data ..
+padding ..
+shuffling ..
+splitting ..
+train:  (8000, 13, 512) (8000,)
+val:  (1000, 13, 512) (1000,)
+test:  (1000, 13, 512) (1000,)
+building model ..
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_5 (InputLayer)         (None, 13, 512)           0         
+_________________________________________________________________
+lstm_5 (LSTM)                (None, 128)               328192    
+_________________________________________________________________
+dropout_5 (Dropout)          (None, 128)               0         
+_________________________________________________________________
+dense_5 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 328,321
+Trainable params: 328,321
+Non-trainable params: 0
+_________________________________________________________________
+training ..
+Train on 8000 samples, validate on 1000 samples
+Epoch 1/20
+8000/8000 [==============================] - 2s 300us/step - loss: 0.4099 - mean_absolute_error: 0.5645 - mean_squared_error: 0.4099 - acc: 0.0429 - pearson_correlation_f: -0.0175 - val_loss: 0.1291 - val_mean_absolute_error: 0.3312 - val_mean_squared_error: 0.1291 - val_acc: 0.4990 - val_pearson_correlation_f: 0.0707
+Epoch 2/20
+8000/8000 [==============================] - 1s 179us/step - loss: 0.1147 - mean_absolute_error: 0.2931 - mean_squared_error: 0.1147 - acc: 0.4930 - pearson_correlation_f: 0.0384 - val_loss: 0.1034 - val_mean_absolute_error: 0.2555 - val_mean_squared_error: 0.1034 - val_acc: 0.5000 - val_pearson_correlation_f: 0.1926
+Epoch 3/20
+8000/8000 [==============================] - 1s 175us/step - loss: 0.1045 - mean_absolute_error: 0.2767 - mean_squared_error: 0.1045 - acc: 0.4971 - pearson_correlation_f: 0.2051 - val_loss: 0.0870 - val_mean_absolute_error: 0.2571 - val_mean_squared_error: 0.0870 - val_acc: 0.5000 - val_pearson_correlation_f: 0.4009
+Epoch 4/20
+8000/8000 [==============================] - 1s 180us/step - loss: 0.0946 - mean_absolute_error: 0.2633 - mean_squared_error: 0.0946 - acc: 0.4948 - pearson_correlation_f: 0.3603 - val_loss: 0.0843 - val_mean_absolute_error: 0.2396 - val_mean_squared_error: 0.0843 - val_acc: 0.4990 - val_pearson_correlation_f: 0.4615
+Epoch 5/20
+8000/8000 [==============================] - 1s 178us/step - loss: 0.0876 - mean_absolute_error: 0.2527 - mean_squared_error: 0.0876 - acc: 0.4881 - pearson_correlation_f: 0.4410 - val_loss: 0.0763 - val_mean_absolute_error: 0.2439 - val_mean_squared_error: 0.0763 - val_acc: 0.4950 - val_pearson_correlation_f: 0.5216
+Epoch 6/20
+8000/8000 [==============================] - 1s 176us/step - loss: 0.0834 - mean_absolute_error: 0.2461 - mean_squared_error: 0.0834 - acc: 0.4850 - pearson_correlation_f: 0.4938 - val_loss: 0.0720 - val_mean_absolute_error: 0.2346 - val_mean_squared_error: 0.0720 - val_acc: 0.4890 - val_pearson_correlation_f: 0.5530
+Epoch 7/20
+8000/8000 [==============================] - 1s 179us/step - loss: 0.0792 - mean_absolute_error: 0.2371 - mean_squared_error: 0.0792 - acc: 0.4820 - pearson_correlation_f: 0.5209 - val_loss: 0.0702 - val_mean_absolute_error: 0.2195 - val_mean_squared_error: 0.0702 - val_acc: 0.4930 - val_pearson_correlation_f: 0.5835
+Epoch 8/20
+8000/8000 [==============================] - 1s 176us/step - loss: 0.0749 - mean_absolute_error: 0.2296 - mean_squared_error: 0.0749 - acc: 0.4799 - pearson_correlation_f: 0.5608 - val_loss: 0.0684 - val_mean_absolute_error: 0.2146 - val_mean_squared_error: 0.0684 - val_acc: 0.4950 - val_pearson_correlation_f: 0.6101
+Epoch 9/20
+8000/8000 [==============================] - 1s 175us/step - loss: 0.0717 - mean_absolute_error: 0.2234 - mean_squared_error: 0.0717 - acc: 0.4795 - pearson_correlation_f: 0.5827 - val_loss: 0.0647 - val_mean_absolute_error: 0.2096 - val_mean_squared_error: 0.0647 - val_acc: 0.4920 - val_pearson_correlation_f: 0.6265
+Epoch 10/20
+8000/8000 [==============================] - 1s 176us/step - loss: 0.0685 - mean_absolute_error: 0.2181 - mean_squared_error: 0.0685 - acc: 0.4806 - pearson_correlation_f: 0.6085 - val_loss: 0.0602 - val_mean_absolute_error: 0.2052 - val_mean_squared_error: 0.0602 - val_acc: 0.4860 - val_pearson_correlation_f: 0.6412
+Epoch 11/20
+8000/8000 [==============================] - 1s 177us/step - loss: 0.0659 - mean_absolute_error: 0.2123 - mean_squared_error: 0.0659 - acc: 0.4793 - pearson_correlation_f: 0.6244 - val_loss: 0.0592 - val_mean_absolute_error: 0.2029 - val_mean_squared_error: 0.0592 - val_acc: 0.4810 - val_pearson_correlation_f: 0.6515
+Epoch 12/20
+8000/8000 [==============================] - 1s 174us/step - loss: 0.0632 - mean_absolute_error: 0.2069 - mean_squared_error: 0.0632 - acc: 0.4784 - pearson_correlation_f: 0.6484 - val_loss: 0.0606 - val_mean_absolute_error: 0.1983 - val_mean_squared_error: 0.0606 - val_acc: 0.4910 - val_pearson_correlation_f: 0.6665
+Epoch 13/20
+8000/8000 [==============================] - 1s 179us/step - loss: 0.0619 - mean_absolute_error: 0.2037 - mean_squared_error: 0.0619 - acc: 0.4810 - pearson_correlation_f: 0.6573 - val_loss: 0.0621 - val_mean_absolute_error: 0.2064 - val_mean_squared_error: 0.0621 - val_acc: 0.4700 - val_pearson_correlation_f: 0.6674
+Epoch 14/20
+8000/8000 [==============================] - 1s 176us/step - loss: 0.0597 - mean_absolute_error: 0.1990 - mean_squared_error: 0.0597 - acc: 0.4790 - pearson_correlation_f: 0.6698 - val_loss: 0.0560 - val_mean_absolute_error: 0.1916 - val_mean_squared_error: 0.0560 - val_acc: 0.4770 - val_pearson_correlation_f: 0.6739
+Epoch 15/20
+8000/8000 [==============================] - 1s 176us/step - loss: 0.0582 - mean_absolute_error: 0.1959 - mean_squared_error: 0.0582 - acc: 0.4813 - pearson_correlation_f: 0.6782 - val_loss: 0.0545 - val_mean_absolute_error: 0.1889 - val_mean_squared_error: 0.0545 - val_acc: 0.4800 - val_pearson_correlation_f: 0.6829
+Epoch 16/20
+8000/8000 [==============================] - 1s 175us/step - loss: 0.0566 - mean_absolute_error: 0.1923 - mean_squared_error: 0.0566 - acc: 0.4813 - pearson_correlation_f: 0.6918 - val_loss: 0.0535 - val_mean_absolute_error: 0.1859 - val_mean_squared_error: 0.0535 - val_acc: 0.4870 - val_pearson_correlation_f: 0.6900
+Epoch 17/20
+8000/8000 [==============================] - 1s 177us/step - loss: 0.0558 - mean_absolute_error: 0.1908 - mean_squared_error: 0.0558 - acc: 0.4821 - pearson_correlation_f: 0.6968 - val_loss: 0.0594 - val_mean_absolute_error: 0.1979 - val_mean_squared_error: 0.0594 - val_acc: 0.4690 - val_pearson_correlation_f: 0.6897
+Epoch 18/20
+8000/8000 [==============================] - 1s 177us/step - loss: 0.0547 - mean_absolute_error: 0.1881 - mean_squared_error: 0.0547 - acc: 0.4809 - pearson_correlation_f: 0.7028 - val_loss: 0.0540 - val_mean_absolute_error: 0.1874 - val_mean_squared_error: 0.0540 - val_acc: 0.4790 - val_pearson_correlation_f: 0.6927
+Epoch 19/20
+8000/8000 [==============================] - 1s 179us/step - loss: 0.0539 - mean_absolute_error: 0.1864 - mean_squared_error: 0.0539 - acc: 0.4825 - pearson_correlation_f: 0.7059 - val_loss: 0.0528 - val_mean_absolute_error: 0.1829 - val_mean_squared_error: 0.0528 - val_acc: 0.4880 - val_pearson_correlation_f: 0.7006
+Epoch 20/20
+8000/8000 [==============================] - 1s 180us/step - loss: 0.0532 - mean_absolute_error: 0.1852 - mean_squared_error: 0.0532 - acc: 0.4838 - pearson_correlation_f: 0.7150 - val_loss: 0.0511 - val_mean_absolute_error: 0.1806 - val_mean_squared_error: 0.0511 - val_acc: 0.4830 - val_pearson_correlation_f: 0.7070
+1000/1000 [==============================] - 0s 244us/step
+Test result:  [0.051727086335420606, 0.1800447589159012, 0.051727086335420606, 0.486, 0.7000296978950501]
+SETTING: mutate USE 5000 1 LSTM delete
+RESULT: 0.1800447589159012
+Setting:  mutate USE 5000 1 LSTM replace
+loading data ..
+merging data ..
+padding ..
+shuffling ..
+splitting ..
+train:  (8000, 13, 512) (8000,)
+val:  (1000, 13, 512) (1000,)
+test:  (1000, 13, 512) (1000,)
+building model ..
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_6 (InputLayer)         (None, 13, 512)           0         
+_________________________________________________________________
+lstm_6 (LSTM)                (None, 128)               328192    
+_________________________________________________________________
+dropout_6 (Dropout)          (None, 128)               0         
+_________________________________________________________________
+dense_6 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 328,321
+Trainable params: 328,321
+Non-trainable params: 0
+_________________________________________________________________
+training ..
+Train on 8000 samples, validate on 1000 samples
+Epoch 1/20
+8000/8000 [==============================] - 3s 321us/step - loss: 0.3977 - mean_absolute_error: 0.5540 - mean_squared_error: 0.3977 - acc: 0.0594 - pearson_correlation_f: 0.0189 - val_loss: 0.1232 - val_mean_absolute_error: 0.3249 - val_mean_squared_error: 0.1232 - val_acc: 0.5000 - val_pearson_correlation_f: 0.0752
+Epoch 2/20
+8000/8000 [==============================] - 1s 176us/step - loss: 0.1094 - mean_absolute_error: 0.2862 - mean_squared_error: 0.1094 - acc: 0.4960 - pearson_correlation_f: 0.0689 - val_loss: 0.1001 - val_mean_absolute_error: 0.2873 - val_mean_squared_error: 0.1001 - val_acc: 0.5000 - val_pearson_correlation_f: 0.4377
+Epoch 3/20
+8000/8000 [==============================] - 1s 177us/step - loss: 0.0882 - mean_absolute_error: 0.2500 - mean_squared_error: 0.0882 - acc: 0.4965 - pearson_correlation_f: 0.4448 - val_loss: 0.0777 - val_mean_absolute_error: 0.2506 - val_mean_squared_error: 0.0777 - val_acc: 0.4930 - val_pearson_correlation_f: 0.7382
+Epoch 4/20
+8000/8000 [==============================] - 1s 178us/step - loss: 0.0573 - mean_absolute_error: 0.1956 - mean_squared_error: 0.0573 - acc: 0.4950 - pearson_correlation_f: 0.7136 - val_loss: 0.0494 - val_mean_absolute_error: 0.1677 - val_mean_squared_error: 0.0494 - val_acc: 0.4980 - val_pearson_correlation_f: 0.7987
+Epoch 5/20
+8000/8000 [==============================] - 1s 177us/step - loss: 0.0445 - mean_absolute_error: 0.1692 - mean_squared_error: 0.0445 - acc: 0.4955 - pearson_correlation_f: 0.7848 - val_loss: 0.0331 - val_mean_absolute_error: 0.1399 - val_mean_squared_error: 0.0331 - val_acc: 0.4980 - val_pearson_correlation_f: 0.8354
+Epoch 6/20
+8000/8000 [==============================] - 1s 175us/step - loss: 0.0386 - mean_absolute_error: 0.1568 - mean_squared_error: 0.0386 - acc: 0.4970 - pearson_correlation_f: 0.8132 - val_loss: 0.0510 - val_mean_absolute_error: 0.1770 - val_mean_squared_error: 0.0510 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8528
+Epoch 7/20
+8000/8000 [==============================] - 1s 178us/step - loss: 0.0354 - mean_absolute_error: 0.1487 - mean_squared_error: 0.0354 - acc: 0.4969 - pearson_correlation_f: 0.8303 - val_loss: 0.0275 - val_mean_absolute_error: 0.1272 - val_mean_squared_error: 0.0275 - val_acc: 0.4990 - val_pearson_correlation_f: 0.8647
+Epoch 8/20
+8000/8000 [==============================] - 1s 176us/step - loss: 0.0325 - mean_absolute_error: 0.1419 - mean_squared_error: 0.0325 - acc: 0.4985 - pearson_correlation_f: 0.8413 - val_loss: 0.0296 - val_mean_absolute_error: 0.1284 - val_mean_squared_error: 0.0296 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8733
+Epoch 9/20
+8000/8000 [==============================] - 1s 175us/step - loss: 0.0317 - mean_absolute_error: 0.1407 - mean_squared_error: 0.0317 - acc: 0.4988 - pearson_correlation_f: 0.8502 - val_loss: 0.0320 - val_mean_absolute_error: 0.1479 - val_mean_squared_error: 0.0320 - val_acc: 0.4980 - val_pearson_correlation_f: 0.8785
+Epoch 10/20
+8000/8000 [==============================] - 1s 178us/step - loss: 0.0292 - mean_absolute_error: 0.1348 - mean_squared_error: 0.0292 - acc: 0.4995 - pearson_correlation_f: 0.8576 - val_loss: 0.0241 - val_mean_absolute_error: 0.1194 - val_mean_squared_error: 0.0241 - val_acc: 0.4990 - val_pearson_correlation_f: 0.8847
+Epoch 11/20
+8000/8000 [==============================] - 1s 175us/step - loss: 0.0284 - mean_absolute_error: 0.1327 - mean_squared_error: 0.0284 - acc: 0.4991 - pearson_correlation_f: 0.8649 - val_loss: 0.0229 - val_mean_absolute_error: 0.1147 - val_mean_squared_error: 0.0229 - val_acc: 0.4990 - val_pearson_correlation_f: 0.8893
+Epoch 12/20
+8000/8000 [==============================] - 1s 177us/step - loss: 0.0276 - mean_absolute_error: 0.1308 - mean_squared_error: 0.0276 - acc: 0.4994 - pearson_correlation_f: 0.8683 - val_loss: 0.0222 - val_mean_absolute_error: 0.1130 - val_mean_squared_error: 0.0222 - val_acc: 0.4990 - val_pearson_correlation_f: 0.8928
+Epoch 13/20
+8000/8000 [==============================] - 1s 178us/step - loss: 0.0261 - mean_absolute_error: 0.1266 - mean_squared_error: 0.0261 - acc: 0.4996 - pearson_correlation_f: 0.8739 - val_loss: 0.0303 - val_mean_absolute_error: 0.1432 - val_mean_squared_error: 0.0303 - val_acc: 0.4970 - val_pearson_correlation_f: 0.8959
+Epoch 14/20
+8000/8000 [==============================] - 1s 177us/step - loss: 0.0251 - mean_absolute_error: 0.1249 - mean_squared_error: 0.0251 - acc: 0.4997 - pearson_correlation_f: 0.8796 - val_loss: 0.0256 - val_mean_absolute_error: 0.1224 - val_mean_squared_error: 0.0256 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8981
+Epoch 15/20
+8000/8000 [==============================] - 1s 179us/step - loss: 0.0248 - mean_absolute_error: 0.1237 - mean_squared_error: 0.0248 - acc: 0.4999 - pearson_correlation_f: 0.8829 - val_loss: 0.0210 - val_mean_absolute_error: 0.1120 - val_mean_squared_error: 0.0210 - val_acc: 0.4990 - val_pearson_correlation_f: 0.9016
+Epoch 16/20
+8000/8000 [==============================] - 1s 176us/step - loss: 0.0239 - mean_absolute_error: 0.1213 - mean_squared_error: 0.0239 - acc: 0.4996 - pearson_correlation_f: 0.8848 - val_loss: 0.0211 - val_mean_absolute_error: 0.1094 - val_mean_squared_error: 0.0211 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9042
+Epoch 17/20
+8000/8000 [==============================] - 1s 178us/step - loss: 0.0237 - mean_absolute_error: 0.1210 - mean_squared_error: 0.0237 - acc: 0.4999 - pearson_correlation_f: 0.8863 - val_loss: 0.0249 - val_mean_absolute_error: 0.1272 - val_mean_squared_error: 0.0249 - val_acc: 0.4980 - val_pearson_correlation_f: 0.9024
+Epoch 18/20
+8000/8000 [==============================] - 1s 177us/step - loss: 0.0226 - mean_absolute_error: 0.1178 - mean_squared_error: 0.0226 - acc: 0.4999 - pearson_correlation_f: 0.8915 - val_loss: 0.0202 - val_mean_absolute_error: 0.1075 - val_mean_squared_error: 0.0202 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9045
+Epoch 19/20
+8000/8000 [==============================] - 1s 174us/step - loss: 0.0225 - mean_absolute_error: 0.1173 - mean_squared_error: 0.0225 - acc: 0.4996 - pearson_correlation_f: 0.8907 - val_loss: 0.0207 - val_mean_absolute_error: 0.1120 - val_mean_squared_error: 0.0207 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9072
+Epoch 20/20
+8000/8000 [==============================] - 1s 177us/step - loss: 0.0221 - mean_absolute_error: 0.1162 - mean_squared_error: 0.0221 - acc: 0.4997 - pearson_correlation_f: 0.8947 - val_loss: 0.0214 - val_mean_absolute_error: 0.1162 - val_mean_squared_error: 0.0214 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9080
+1000/1000 [==============================] - 0s 234us/step
+Test result:  [0.0188404276445508, 0.1082878206372261, 0.0188404276445508, 0.5, 0.915757209777832]
+SETTING: mutate USE 5000 1 LSTM replace
+RESULT: 0.1082878206372261
+Setting:  mutate USE-Large 5000 1 LSTM add
+loading data ..
+Warning: removed invalid samples. Valid: 4929 all: 5000
+merging data ..
+padding ..
+shuffling ..
+splitting ..
+train:  (7890, 13, 512) (7890,)
+val:  (984, 13, 512) (984,)
+test:  (984, 13, 512) (984,)
+building model ..
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_7 (InputLayer)         (None, 13, 512)           0         
+_________________________________________________________________
+lstm_7 (LSTM)                (None, 128)               328192    
+_________________________________________________________________
+dropout_7 (Dropout)          (None, 128)               0         
+_________________________________________________________________
+dense_7 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 328,321
+Trainable params: 328,321
+Non-trainable params: 0
+_________________________________________________________________
+training ..
+Train on 7890 samples, validate on 984 samples
+Epoch 1/20
+7890/7890 [==============================] - 3s 336us/step - loss: 0.4149 - mean_absolute_error: 0.5708 - mean_squared_error: 0.4149 - acc: 0.0283 - pearson_correlation_f: 0.0882 - val_loss: 0.1442 - val_mean_absolute_error: 0.3514 - val_mean_squared_error: 0.1442 - val_acc: 0.4766 - val_pearson_correlation_f: 0.1727
+Epoch 2/20
+7890/7890 [==============================] - 1s 177us/step - loss: 0.1099 - mean_absolute_error: 0.2864 - mean_squared_error: 0.1099 - acc: 0.4888 - pearson_correlation_f: 0.1052 - val_loss: 0.1025 - val_mean_absolute_error: 0.2948 - val_mean_squared_error: 0.1025 - val_acc: 0.5000 - val_pearson_correlation_f: 0.5072
+Epoch 3/20
+7890/7890 [==============================] - 1s 177us/step - loss: 0.0849 - mean_absolute_error: 0.2440 - mean_squared_error: 0.0849 - acc: 0.4977 - pearson_correlation_f: 0.4659 - val_loss: 0.0546 - val_mean_absolute_error: 0.1743 - val_mean_squared_error: 0.0546 - val_acc: 0.4990 - val_pearson_correlation_f: 0.7591
+Epoch 4/20
+7890/7890 [==============================] - 1s 177us/step - loss: 0.0506 - mean_absolute_error: 0.1811 - mean_squared_error: 0.0506 - acc: 0.4973 - pearson_correlation_f: 0.7610 - val_loss: 0.0506 - val_mean_absolute_error: 0.1937 - val_mean_squared_error: 0.0506 - val_acc: 0.4970 - val_pearson_correlation_f: 0.8460
+Epoch 5/20
+7890/7890 [==============================] - 1s 175us/step - loss: 0.0391 - mean_absolute_error: 0.1568 - mean_squared_error: 0.0391 - acc: 0.4981 - pearson_correlation_f: 0.8204 - val_loss: 0.0317 - val_mean_absolute_error: 0.1442 - val_mean_squared_error: 0.0317 - val_acc: 0.4990 - val_pearson_correlation_f: 0.8707
+Epoch 6/20
+7890/7890 [==============================] - 1s 174us/step - loss: 0.0332 - mean_absolute_error: 0.1436 - mean_squared_error: 0.0332 - acc: 0.4991 - pearson_correlation_f: 0.8486 - val_loss: 0.0230 - val_mean_absolute_error: 0.1119 - val_mean_squared_error: 0.0230 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8865
+Epoch 7/20
+7890/7890 [==============================] - 1s 173us/step - loss: 0.0302 - mean_absolute_error: 0.1369 - mean_squared_error: 0.0302 - acc: 0.4992 - pearson_correlation_f: 0.8641 - val_loss: 0.0214 - val_mean_absolute_error: 0.1088 - val_mean_squared_error: 0.0214 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8974
+Epoch 8/20
+7890/7890 [==============================] - 1s 173us/step - loss: 0.0267 - mean_absolute_error: 0.1281 - mean_squared_error: 0.0267 - acc: 0.4997 - pearson_correlation_f: 0.8763 - val_loss: 0.0220 - val_mean_absolute_error: 0.1143 - val_mean_squared_error: 0.0220 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9063
+Epoch 9/20
+7890/7890 [==============================] - 1s 176us/step - loss: 0.0260 - mean_absolute_error: 0.1263 - mean_squared_error: 0.0260 - acc: 0.4997 - pearson_correlation_f: 0.8829 - val_loss: 0.0180 - val_mean_absolute_error: 0.0982 - val_mean_squared_error: 0.0180 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9131
+Epoch 10/20
+7890/7890 [==============================] - 1s 174us/step - loss: 0.0228 - mean_absolute_error: 0.1180 - mean_squared_error: 0.0228 - acc: 0.5000 - pearson_correlation_f: 0.8932 - val_loss: 0.0279 - val_mean_absolute_error: 0.1312 - val_mean_squared_error: 0.0279 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9161
+Epoch 11/20
+7890/7890 [==============================] - 1s 173us/step - loss: 0.0225 - mean_absolute_error: 0.1174 - mean_squared_error: 0.0225 - acc: 0.4999 - pearson_correlation_f: 0.8991 - val_loss: 0.0208 - val_mean_absolute_error: 0.1084 - val_mean_squared_error: 0.0208 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9211
+Epoch 12/20
+7890/7890 [==============================] - 1s 177us/step - loss: 0.0215 - mean_absolute_error: 0.1145 - mean_squared_error: 0.0215 - acc: 0.4999 - pearson_correlation_f: 0.9020 - val_loss: 0.0161 - val_mean_absolute_error: 0.0934 - val_mean_squared_error: 0.0161 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9230
+Epoch 13/20
+7890/7890 [==============================] - 1s 176us/step - loss: 0.0207 - mean_absolute_error: 0.1122 - mean_squared_error: 0.0207 - acc: 0.5000 - pearson_correlation_f: 0.9049 - val_loss: 0.0148 - val_mean_absolute_error: 0.0891 - val_mean_squared_error: 0.0148 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9275
+Epoch 14/20
+7890/7890 [==============================] - 1s 175us/step - loss: 0.0196 - mean_absolute_error: 0.1093 - mean_squared_error: 0.0196 - acc: 0.5000 - pearson_correlation_f: 0.9096 - val_loss: 0.0178 - val_mean_absolute_error: 0.1062 - val_mean_squared_error: 0.0178 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9301
+Epoch 15/20
+7890/7890 [==============================] - 1s 174us/step - loss: 0.0189 - mean_absolute_error: 0.1067 - mean_squared_error: 0.0189 - acc: 0.5000 - pearson_correlation_f: 0.9149 - val_loss: 0.0169 - val_mean_absolute_error: 0.1011 - val_mean_squared_error: 0.0169 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9322
+Epoch 16/20
+7890/7890 [==============================] - 1s 174us/step - loss: 0.0184 - mean_absolute_error: 0.1054 - mean_squared_error: 0.0184 - acc: 0.5000 - pearson_correlation_f: 0.9152 - val_loss: 0.0140 - val_mean_absolute_error: 0.0860 - val_mean_squared_error: 0.0140 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9339
+Epoch 17/20
+7890/7890 [==============================] - 1s 176us/step - loss: 0.0180 - mean_absolute_error: 0.1040 - mean_squared_error: 0.0180 - acc: 0.5000 - pearson_correlation_f: 0.9171 - val_loss: 0.0160 - val_mean_absolute_error: 0.0978 - val_mean_squared_error: 0.0160 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9354
+Epoch 18/20
+7890/7890 [==============================] - 1s 177us/step - loss: 0.0175 - mean_absolute_error: 0.1025 - mean_squared_error: 0.0175 - acc: 0.5000 - pearson_correlation_f: 0.9197 - val_loss: 0.0136 - val_mean_absolute_error: 0.0836 - val_mean_squared_error: 0.0136 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9359
+Epoch 19/20
+7890/7890 [==============================] - 1s 175us/step - loss: 0.0166 - mean_absolute_error: 0.1001 - mean_squared_error: 0.0166 - acc: 0.5000 - pearson_correlation_f: 0.9228 - val_loss: 0.0129 - val_mean_absolute_error: 0.0813 - val_mean_squared_error: 0.0129 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9374
+Epoch 20/20
+7890/7890 [==============================] - 1s 176us/step - loss: 0.0163 - mean_absolute_error: 0.0986 - mean_squared_error: 0.0163 - acc: 0.5000 - pearson_correlation_f: 0.9240 - val_loss: 0.0127 - val_mean_absolute_error: 0.0816 - val_mean_squared_error: 0.0127 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9375
+984/984 [==============================] - 0s 233us/step
+Test result:  [0.012330476618636914, 0.07979921209133738, 0.012330476618636914, 0.5, 0.9388208912640084]
+SETTING: mutate USE-Large 5000 1 LSTM add
+RESULT: 0.07979921209133738
+Setting:  mutate USE-Large 5000 1 LSTM delete
+loading data ..
+Warning: removed invalid samples. Valid: 4920 all: 5000
+merging data ..
+padding ..
+shuffling ..
+splitting ..
+train:  (7872, 13, 512) (7872,)
+val:  (984, 13, 512) (984,)
+test:  (984, 13, 512) (984,)
+building model ..
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_8 (InputLayer)         (None, 13, 512)           0         
+_________________________________________________________________
+lstm_8 (LSTM)                (None, 128)               328192    
+_________________________________________________________________
+dropout_8 (Dropout)          (None, 128)               0         
+_________________________________________________________________
+dense_8 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 328,321
+Trainable params: 328,321
+Non-trainable params: 0
+_________________________________________________________________
+training ..
+Train on 7872 samples, validate on 984 samples
+Epoch 1/20
+7872/7872 [==============================] - 3s 357us/step - loss: 0.4149 - mean_absolute_error: 0.5682 - mean_squared_error: 0.4149 - acc: 0.0353 - pearson_correlation_f: -0.0145 - val_loss: 0.1358 - val_mean_absolute_error: 0.3413 - val_mean_squared_error: 0.1358 - val_acc: 0.4980 - val_pearson_correlation_f: 0.0721
+Epoch 2/20
+7872/7872 [==============================] - 1s 179us/step - loss: 0.1148 - mean_absolute_error: 0.2956 - mean_squared_error: 0.1148 - acc: 0.4925 - pearson_correlation_f: 0.0446 - val_loss: 0.0989 - val_mean_absolute_error: 0.2792 - val_mean_squared_error: 0.0989 - val_acc: 0.5000 - val_pearson_correlation_f: 0.2850
+Epoch 3/20
+7872/7872 [==============================] - 1s 174us/step - loss: 0.0997 - mean_absolute_error: 0.2709 - mean_squared_error: 0.0997 - acc: 0.4981 - pearson_correlation_f: 0.2821 - val_loss: 0.0843 - val_mean_absolute_error: 0.2275 - val_mean_squared_error: 0.0843 - val_acc: 0.5000 - val_pearson_correlation_f: 0.5390
+Epoch 4/20
+7872/7872 [==============================] - 1s 176us/step - loss: 0.0811 - mean_absolute_error: 0.2421 - mean_squared_error: 0.0811 - acc: 0.4925 - pearson_correlation_f: 0.5166 - val_loss: 0.0611 - val_mean_absolute_error: 0.2010 - val_mean_squared_error: 0.0611 - val_acc: 0.4959 - val_pearson_correlation_f: 0.6679
+Epoch 5/20
+7872/7872 [==============================] - 1s 179us/step - loss: 0.0670 - mean_absolute_error: 0.2167 - mean_squared_error: 0.0670 - acc: 0.4892 - pearson_correlation_f: 0.6318 - val_loss: 0.0493 - val_mean_absolute_error: 0.1875 - val_mean_squared_error: 0.0493 - val_acc: 0.4939 - val_pearson_correlation_f: 0.7362
+Epoch 6/20
+7872/7872 [==============================] - 1s 174us/step - loss: 0.0574 - mean_absolute_error: 0.1987 - mean_squared_error: 0.0574 - acc: 0.4911 - pearson_correlation_f: 0.7030 - val_loss: 0.0418 - val_mean_absolute_error: 0.1638 - val_mean_squared_error: 0.0418 - val_acc: 0.4970 - val_pearson_correlation_f: 0.7801
+Epoch 7/20
+7872/7872 [==============================] - 1s 179us/step - loss: 0.0500 - mean_absolute_error: 0.1826 - mean_squared_error: 0.0500 - acc: 0.4929 - pearson_correlation_f: 0.7444 - val_loss: 0.0446 - val_mean_absolute_error: 0.1772 - val_mean_squared_error: 0.0446 - val_acc: 0.4898 - val_pearson_correlation_f: 0.8073
+Epoch 8/20
+7872/7872 [==============================] - 1s 176us/step - loss: 0.0448 - mean_absolute_error: 0.1714 - mean_squared_error: 0.0448 - acc: 0.4928 - pearson_correlation_f: 0.7776 - val_loss: 0.0334 - val_mean_absolute_error: 0.1489 - val_mean_squared_error: 0.0334 - val_acc: 0.4929 - val_pearson_correlation_f: 0.8291
+Epoch 9/20
+7872/7872 [==============================] - 1s 178us/step - loss: 0.0409 - mean_absolute_error: 0.1635 - mean_squared_error: 0.0409 - acc: 0.4944 - pearson_correlation_f: 0.7979 - val_loss: 0.0323 - val_mean_absolute_error: 0.1461 - val_mean_squared_error: 0.0323 - val_acc: 0.4939 - val_pearson_correlation_f: 0.8444
+Epoch 10/20
+7872/7872 [==============================] - 1s 175us/step - loss: 0.0382 - mean_absolute_error: 0.1571 - mean_squared_error: 0.0382 - acc: 0.4943 - pearson_correlation_f: 0.8180 - val_loss: 0.0357 - val_mean_absolute_error: 0.1452 - val_mean_squared_error: 0.0357 - val_acc: 0.4990 - val_pearson_correlation_f: 0.8564
+Epoch 11/20
+7872/7872 [==============================] - 1s 177us/step - loss: 0.0357 - mean_absolute_error: 0.1519 - mean_squared_error: 0.0357 - acc: 0.4962 - pearson_correlation_f: 0.8279 - val_loss: 0.0262 - val_mean_absolute_error: 0.1290 - val_mean_squared_error: 0.0262 - val_acc: 0.4959 - val_pearson_correlation_f: 0.8657
+Epoch 12/20
+7872/7872 [==============================] - 1s 175us/step - loss: 0.0339 - mean_absolute_error: 0.1476 - mean_squared_error: 0.0339 - acc: 0.4959 - pearson_correlation_f: 0.8390 - val_loss: 0.0329 - val_mean_absolute_error: 0.1417 - val_mean_squared_error: 0.0329 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8740
+Epoch 13/20
+7872/7872 [==============================] - 1s 177us/step - loss: 0.0327 - mean_absolute_error: 0.1451 - mean_squared_error: 0.0327 - acc: 0.4967 - pearson_correlation_f: 0.8449 - val_loss: 0.0299 - val_mean_absolute_error: 0.1416 - val_mean_squared_error: 0.0299 - val_acc: 0.4970 - val_pearson_correlation_f: 0.8766
+Epoch 14/20
+7872/7872 [==============================] - 1s 176us/step - loss: 0.0313 - mean_absolute_error: 0.1416 - mean_squared_error: 0.0313 - acc: 0.4958 - pearson_correlation_f: 0.8487 - val_loss: 0.0236 - val_mean_absolute_error: 0.1204 - val_mean_squared_error: 0.0236 - val_acc: 0.4990 - val_pearson_correlation_f: 0.8808
+Epoch 15/20
+7872/7872 [==============================] - 1s 177us/step - loss: 0.0307 - mean_absolute_error: 0.1398 - mean_squared_error: 0.0307 - acc: 0.4970 - pearson_correlation_f: 0.8555 - val_loss: 0.0286 - val_mean_absolute_error: 0.1313 - val_mean_squared_error: 0.0286 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8855
+Epoch 16/20
+7872/7872 [==============================] - 1s 175us/step - loss: 0.0294 - mean_absolute_error: 0.1368 - mean_squared_error: 0.0294 - acc: 0.4972 - pearson_correlation_f: 0.8614 - val_loss: 0.0306 - val_mean_absolute_error: 0.1362 - val_mean_squared_error: 0.0306 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8862
+Epoch 17/20
+7872/7872 [==============================] - 1s 178us/step - loss: 0.0283 - mean_absolute_error: 0.1342 - mean_squared_error: 0.0283 - acc: 0.4976 - pearson_correlation_f: 0.8659 - val_loss: 0.0219 - val_mean_absolute_error: 0.1161 - val_mean_squared_error: 0.0219 - val_acc: 0.4990 - val_pearson_correlation_f: 0.8884
+Epoch 18/20
+7872/7872 [==============================] - 1s 173us/step - loss: 0.0280 - mean_absolute_error: 0.1329 - mean_squared_error: 0.0280 - acc: 0.4976 - pearson_correlation_f: 0.8686 - val_loss: 0.0226 - val_mean_absolute_error: 0.1172 - val_mean_squared_error: 0.0226 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8924
+Epoch 19/20
+7872/7872 [==============================] - 1s 175us/step - loss: 0.0267 - mean_absolute_error: 0.1300 - mean_squared_error: 0.0267 - acc: 0.4978 - pearson_correlation_f: 0.8729 - val_loss: 0.0211 - val_mean_absolute_error: 0.1137 - val_mean_squared_error: 0.0211 - val_acc: 0.4990 - val_pearson_correlation_f: 0.8925
+Epoch 20/20
+7872/7872 [==============================] - 1s 177us/step - loss: 0.0265 - mean_absolute_error: 0.1292 - mean_squared_error: 0.0265 - acc: 0.4977 - pearson_correlation_f: 0.8741 - val_loss: 0.0230 - val_mean_absolute_error: 0.1187 - val_mean_squared_error: 0.0230 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8952
+984/984 [==============================] - 0s 228us/step
+Test result:  [0.02713756817506581, 0.12864915602575472, 0.02713756817506581, 0.4969512197544904, 0.8764017568371161]
+SETTING: mutate USE-Large 5000 1 LSTM delete
+RESULT: 0.12864915602575472
+Setting:  mutate USE-Large 5000 1 LSTM replace
+loading data ..
+Warning: removed invalid samples. Valid: 4926 all: 5000
+merging data ..
+padding ..
+shuffling ..
+splitting ..
+train:  (7884, 13, 512) (7884,)
+val:  (984, 13, 512) (984,)
+test:  (984, 13, 512) (984,)
+building model ..
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_9 (InputLayer)         (None, 13, 512)           0         
+_________________________________________________________________
+lstm_9 (LSTM)                (None, 128)               328192    
+_________________________________________________________________
+dropout_9 (Dropout)          (None, 128)               0         
+_________________________________________________________________
+dense_9 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 328,321
+Trainable params: 328,321
+Non-trainable params: 0
+_________________________________________________________________
+training ..
+Train on 7884 samples, validate on 984 samples
+Epoch 1/20
+7884/7884 [==============================] - 3s 356us/step - loss: 0.4175 - mean_absolute_error: 0.5710 - mean_squared_error: 0.4175 - acc: 0.0311 - pearson_correlation_f: -0.0175 - val_loss: 0.1381 - val_mean_absolute_error: 0.3432 - val_mean_squared_error: 0.1381 - val_acc: 0.4898 - val_pearson_correlation_f: 0.0320
+Epoch 2/20
+7884/7884 [==============================] - 1s 172us/step - loss: 0.1115 - mean_absolute_error: 0.2889 - mean_squared_error: 0.1115 - acc: 0.4902 - pearson_correlation_f: 0.0970 - val_loss: 0.0851 - val_mean_absolute_error: 0.2495 - val_mean_squared_error: 0.0851 - val_acc: 0.5000 - val_pearson_correlation_f: 0.5952
+Epoch 3/20
+7884/7884 [==============================] - 1s 173us/step - loss: 0.0710 - mean_absolute_error: 0.2205 - mean_squared_error: 0.0710 - acc: 0.4975 - pearson_correlation_f: 0.6200 - val_loss: 0.0368 - val_mean_absolute_error: 0.1432 - val_mean_squared_error: 0.0368 - val_acc: 0.4990 - val_pearson_correlation_f: 0.8423
+Epoch 4/20
+7884/7884 [==============================] - 1s 175us/step - loss: 0.0361 - mean_absolute_error: 0.1527 - mean_squared_error: 0.0361 - acc: 0.4973 - pearson_correlation_f: 0.8438 - val_loss: 0.0345 - val_mean_absolute_error: 0.1579 - val_mean_squared_error: 0.0345 - val_acc: 0.4970 - val_pearson_correlation_f: 0.9039
+Epoch 5/20
+7884/7884 [==============================] - 1s 173us/step - loss: 0.0288 - mean_absolute_error: 0.1344 - mean_squared_error: 0.0288 - acc: 0.4991 - pearson_correlation_f: 0.8750 - val_loss: 0.0182 - val_mean_absolute_error: 0.1040 - val_mean_squared_error: 0.0182 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9157
+Epoch 6/20
+7884/7884 [==============================] - 1s 177us/step - loss: 0.0257 - mean_absolute_error: 0.1254 - mean_squared_error: 0.0257 - acc: 0.4996 - pearson_correlation_f: 0.8888 - val_loss: 0.0205 - val_mean_absolute_error: 0.1102 - val_mean_squared_error: 0.0205 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9228
+Epoch 7/20
+7884/7884 [==============================] - 1s 176us/step - loss: 0.0238 - mean_absolute_error: 0.1213 - mean_squared_error: 0.0238 - acc: 0.4997 - pearson_correlation_f: 0.8989 - val_loss: 0.0142 - val_mean_absolute_error: 0.0894 - val_mean_squared_error: 0.0142 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9287
+Epoch 8/20
+7884/7884 [==============================] - 1s 174us/step - loss: 0.0216 - mean_absolute_error: 0.1145 - mean_squared_error: 0.0216 - acc: 0.4999 - pearson_correlation_f: 0.9058 - val_loss: 0.0144 - val_mean_absolute_error: 0.0890 - val_mean_squared_error: 0.0144 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9325
+Epoch 9/20
+7884/7884 [==============================] - 1s 175us/step - loss: 0.0202 - mean_absolute_error: 0.1117 - mean_squared_error: 0.0202 - acc: 0.5000 - pearson_correlation_f: 0.9129 - val_loss: 0.0129 - val_mean_absolute_error: 0.0841 - val_mean_squared_error: 0.0129 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9357
+Epoch 10/20
+7884/7884 [==============================] - 1s 174us/step - loss: 0.0190 - mean_absolute_error: 0.1083 - mean_squared_error: 0.0190 - acc: 0.5000 - pearson_correlation_f: 0.9166 - val_loss: 0.0128 - val_mean_absolute_error: 0.0850 - val_mean_squared_error: 0.0128 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9397
+Epoch 11/20
+7884/7884 [==============================] - 1s 172us/step - loss: 0.0181 - mean_absolute_error: 0.1054 - mean_squared_error: 0.0181 - acc: 0.5000 - pearson_correlation_f: 0.9209 - val_loss: 0.0150 - val_mean_absolute_error: 0.0920 - val_mean_squared_error: 0.0150 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9415
+Epoch 12/20
+7884/7884 [==============================] - 1s 174us/step - loss: 0.0175 - mean_absolute_error: 0.1032 - mean_squared_error: 0.0175 - acc: 0.5000 - pearson_correlation_f: 0.9230 - val_loss: 0.0126 - val_mean_absolute_error: 0.0847 - val_mean_squared_error: 0.0126 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9439
+Epoch 13/20
+7884/7884 [==============================] - 1s 173us/step - loss: 0.0166 - mean_absolute_error: 0.1011 - mean_squared_error: 0.0166 - acc: 0.5000 - pearson_correlation_f: 0.9281 - val_loss: 0.0119 - val_mean_absolute_error: 0.0800 - val_mean_squared_error: 0.0119 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9466
+Epoch 14/20
+7884/7884 [==============================] - 1s 174us/step - loss: 0.0163 - mean_absolute_error: 0.1000 - mean_squared_error: 0.0163 - acc: 0.5000 - pearson_correlation_f: 0.9279 - val_loss: 0.0129 - val_mean_absolute_error: 0.0831 - val_mean_squared_error: 0.0129 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9477
+Epoch 15/20
+7884/7884 [==============================] - 1s 172us/step - loss: 0.0156 - mean_absolute_error: 0.0975 - mean_squared_error: 0.0156 - acc: 0.5000 - pearson_correlation_f: 0.9316 - val_loss: 0.0100 - val_mean_absolute_error: 0.0732 - val_mean_squared_error: 0.0100 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9499
+Epoch 16/20
+7884/7884 [==============================] - 1s 171us/step - loss: 0.0151 - mean_absolute_error: 0.0961 - mean_squared_error: 0.0151 - acc: 0.5000 - pearson_correlation_f: 0.9334 - val_loss: 0.0100 - val_mean_absolute_error: 0.0743 - val_mean_squared_error: 0.0100 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9518
+Epoch 17/20
+7884/7884 [==============================] - 1s 174us/step - loss: 0.0146 - mean_absolute_error: 0.0947 - mean_squared_error: 0.0146 - acc: 0.5000 - pearson_correlation_f: 0.9358 - val_loss: 0.0099 - val_mean_absolute_error: 0.0733 - val_mean_squared_error: 0.0099 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9516
+Epoch 18/20
+7884/7884 [==============================] - 1s 174us/step - loss: 0.0137 - mean_absolute_error: 0.0911 - mean_squared_error: 0.0137 - acc: 0.5000 - pearson_correlation_f: 0.9391 - val_loss: 0.0098 - val_mean_absolute_error: 0.0706 - val_mean_squared_error: 0.0098 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9535
+Epoch 19/20
+7884/7884 [==============================] - 1s 175us/step - loss: 0.0138 - mean_absolute_error: 0.0917 - mean_squared_error: 0.0138 - acc: 0.5000 - pearson_correlation_f: 0.9392 - val_loss: 0.0099 - val_mean_absolute_error: 0.0750 - val_mean_squared_error: 0.0099 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9537
+Epoch 20/20
+7884/7884 [==============================] - 1s 175us/step - loss: 0.0134 - mean_absolute_error: 0.0897 - mean_squared_error: 0.0134 - acc: 0.5000 - pearson_correlation_f: 0.9403 - val_loss: 0.0129 - val_mean_absolute_error: 0.0914 - val_mean_squared_error: 0.0129 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9550
+984/984 [==============================] - 0s 224us/step
+Test result:  [0.013467653662087471, 0.09200919474043497, 0.013467653662087471, 0.5, 0.9489787453558387]
+SETTING: mutate USE-Large 5000 1 LSTM replace
+RESULT: 0.09200919474043497
+Setting:  mutate InferSent 5000 1 LSTM add
+loading data ..
+merging data ..
+padding ..
+shuffling ..
+splitting ..
+train:  (8000, 13, 4096) (8000,)
+val:  (1000, 13, 4096) (1000,)
+test:  (1000, 13, 4096) (1000,)
+building model ..
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_10 (InputLayer)        (None, 13, 4096)          0         
+_________________________________________________________________
+lstm_10 (LSTM)               (None, 128)               2163200   
+_________________________________________________________________
+dropout_10 (Dropout)         (None, 128)               0         
+_________________________________________________________________
+dense_10 (Dense)             (None, 1)                 129       
+=================================================================
+Total params: 2,163,329
+Trainable params: 2,163,329
+Non-trainable params: 0
+_________________________________________________________________
+training ..
+Train on 8000 samples, validate on 1000 samples
+Epoch 1/20
+8000/8000 [==============================] - 8s 1ms/step - loss: 0.3678 - mean_absolute_error: 0.5285 - mean_squared_error: 0.3678 - acc: 0.0975 - pearson_correlation_f: 0.0113 - val_loss: 0.1167 - val_mean_absolute_error: 0.3064 - val_mean_squared_error: 0.1167 - val_acc: 0.4990 - val_pearson_correlation_f: 0.0709
+Epoch 2/20
+8000/8000 [==============================] - 2s 271us/step - loss: 0.1114 - mean_absolute_error: 0.2821 - mean_squared_error: 0.1114 - acc: 0.4918 - pearson_correlation_f: 0.0982 - val_loss: 0.1110 - val_mean_absolute_error: 0.2699 - val_mean_squared_error: 0.1110 - val_acc: 0.5000 - val_pearson_correlation_f: 0.2670
+Epoch 3/20
+8000/8000 [==============================] - 2s 271us/step - loss: 0.1159 - mean_absolute_error: 0.2848 - mean_squared_error: 0.1159 - acc: 0.4662 - pearson_correlation_f: 0.2577 - val_loss: 0.1336 - val_mean_absolute_error: 0.2643 - val_mean_squared_error: 0.1336 - val_acc: 0.5000 - val_pearson_correlation_f: 0.3271
+Epoch 4/20
+8000/8000 [==============================] - 2s 271us/step - loss: 0.0965 - mean_absolute_error: 0.2576 - mean_squared_error: 0.0965 - acc: 0.4834 - pearson_correlation_f: 0.4247 - val_loss: 0.0858 - val_mean_absolute_error: 0.2619 - val_mean_squared_error: 0.0858 - val_acc: 0.4990 - val_pearson_correlation_f: 0.6221
+Epoch 5/20
+8000/8000 [==============================] - 2s 272us/step - loss: 0.0765 - mean_absolute_error: 0.2243 - mean_squared_error: 0.0765 - acc: 0.4911 - pearson_correlation_f: 0.6137 - val_loss: 0.1065 - val_mean_absolute_error: 0.2882 - val_mean_squared_error: 0.1065 - val_acc: 0.4690 - val_pearson_correlation_f: 0.6991
+Epoch 6/20
+8000/8000 [==============================] - 2s 274us/step - loss: 0.0623 - mean_absolute_error: 0.1998 - mean_squared_error: 0.0623 - acc: 0.4961 - pearson_correlation_f: 0.7116 - val_loss: 0.0511 - val_mean_absolute_error: 0.1738 - val_mean_squared_error: 0.0511 - val_acc: 0.5000 - val_pearson_correlation_f: 0.7556
+Epoch 7/20
+8000/8000 [==============================] - 2s 272us/step - loss: 0.0545 - mean_absolute_error: 0.1839 - mean_squared_error: 0.0545 - acc: 0.4988 - pearson_correlation_f: 0.7493 - val_loss: 0.0571 - val_mean_absolute_error: 0.1673 - val_mean_squared_error: 0.0571 - val_acc: 0.5000 - val_pearson_correlation_f: 0.7674
+Epoch 8/20
+8000/8000 [==============================] - 2s 271us/step - loss: 0.0495 - mean_absolute_error: 0.1743 - mean_squared_error: 0.0495 - acc: 0.4995 - pearson_correlation_f: 0.7715 - val_loss: 0.0549 - val_mean_absolute_error: 0.1631 - val_mean_squared_error: 0.0549 - val_acc: 0.5000 - val_pearson_correlation_f: 0.7698
+Epoch 9/20
+8000/8000 [==============================] - 2s 270us/step - loss: 0.0457 - mean_absolute_error: 0.1659 - mean_squared_error: 0.0457 - acc: 0.4993 - pearson_correlation_f: 0.7862 - val_loss: 0.0438 - val_mean_absolute_error: 0.1530 - val_mean_squared_error: 0.0438 - val_acc: 0.5000 - val_pearson_correlation_f: 0.7867
+Epoch 10/20
+8000/8000 [==============================] - 2s 272us/step - loss: 0.0463 - mean_absolute_error: 0.1676 - mean_squared_error: 0.0463 - acc: 0.5000 - pearson_correlation_f: 0.7916 - val_loss: 0.0495 - val_mean_absolute_error: 0.1807 - val_mean_squared_error: 0.0495 - val_acc: 0.5000 - val_pearson_correlation_f: 0.7864
+Epoch 11/20
+8000/8000 [==============================] - 2s 269us/step - loss: 0.0417 - mean_absolute_error: 0.1569 - mean_squared_error: 0.0417 - acc: 0.5000 - pearson_correlation_f: 0.8037 - val_loss: 0.0483 - val_mean_absolute_error: 0.1515 - val_mean_squared_error: 0.0483 - val_acc: 0.5000 - val_pearson_correlation_f: 0.7901
+Epoch 12/20
+8000/8000 [==============================] - 2s 274us/step - loss: 0.0415 - mean_absolute_error: 0.1556 - mean_squared_error: 0.0415 - acc: 0.5000 - pearson_correlation_f: 0.8078 - val_loss: 0.0445 - val_mean_absolute_error: 0.1561 - val_mean_squared_error: 0.0445 - val_acc: 0.5000 - val_pearson_correlation_f: 0.7921
+Epoch 13/20
+8000/8000 [==============================] - 2s 271us/step - loss: 0.0405 - mean_absolute_error: 0.1541 - mean_squared_error: 0.0405 - acc: 0.5000 - pearson_correlation_f: 0.8120 - val_loss: 0.0426 - val_mean_absolute_error: 0.1432 - val_mean_squared_error: 0.0426 - val_acc: 0.5000 - val_pearson_correlation_f: 0.7917
+Epoch 14/20
+8000/8000 [==============================] - 2s 272us/step - loss: 0.0390 - mean_absolute_error: 0.1508 - mean_squared_error: 0.0390 - acc: 0.5000 - pearson_correlation_f: 0.8219 - val_loss: 0.0504 - val_mean_absolute_error: 0.1575 - val_mean_squared_error: 0.0504 - val_acc: 0.5000 - val_pearson_correlation_f: 0.7919
+Epoch 15/20
+8000/8000 [==============================] - 2s 272us/step - loss: 0.0375 - mean_absolute_error: 0.1469 - mean_squared_error: 0.0375 - acc: 0.5000 - pearson_correlation_f: 0.8258 - val_loss: 0.0488 - val_mean_absolute_error: 0.1516 - val_mean_squared_error: 0.0488 - val_acc: 0.5000 - val_pearson_correlation_f: 0.7884
+Epoch 16/20
+8000/8000 [==============================] - 2s 272us/step - loss: 0.0369 - mean_absolute_error: 0.1463 - mean_squared_error: 0.0369 - acc: 0.5000 - pearson_correlation_f: 0.8266 - val_loss: 0.0434 - val_mean_absolute_error: 0.1416 - val_mean_squared_error: 0.0434 - val_acc: 0.5000 - val_pearson_correlation_f: 0.7917
+Epoch 17/20
+8000/8000 [==============================] - 2s 273us/step - loss: 0.0357 - mean_absolute_error: 0.1433 - mean_squared_error: 0.0357 - acc: 0.5000 - pearson_correlation_f: 0.8319 - val_loss: 0.0457 - val_mean_absolute_error: 0.1498 - val_mean_squared_error: 0.0457 - val_acc: 0.5000 - val_pearson_correlation_f: 0.7838
+Epoch 18/20
+8000/8000 [==============================] - 2s 268us/step - loss: 0.0341 - mean_absolute_error: 0.1399 - mean_squared_error: 0.0341 - acc: 0.5000 - pearson_correlation_f: 0.8410 - val_loss: 0.0504 - val_mean_absolute_error: 0.1513 - val_mean_squared_error: 0.0504 - val_acc: 0.5000 - val_pearson_correlation_f: 0.7854
+Epoch 19/20
+8000/8000 [==============================] - 2s 272us/step - loss: 0.0347 - mean_absolute_error: 0.1407 - mean_squared_error: 0.0347 - acc: 0.5000 - pearson_correlation_f: 0.8430 - val_loss: 0.0534 - val_mean_absolute_error: 0.1690 - val_mean_squared_error: 0.0534 - val_acc: 0.5000 - val_pearson_correlation_f: 0.7928
+Epoch 20/20
+8000/8000 [==============================] - 2s 271us/step - loss: 0.0329 - mean_absolute_error: 0.1372 - mean_squared_error: 0.0329 - acc: 0.5000 - pearson_correlation_f: 0.8483 - val_loss: 0.0454 - val_mean_absolute_error: 0.1483 - val_mean_squared_error: 0.0454 - val_acc: 0.5000 - val_pearson_correlation_f: 0.7865
+1000/1000 [==============================] - 0s 315us/step
+Test result:  [0.03706840941309929, 0.13551320445537568, 0.03706840941309929, 0.5, 0.8230019445419312]
+SETTING: mutate InferSent 5000 1 LSTM add
+RESULT: 0.13551320445537568
+Setting:  mutate InferSent 5000 1 LSTM delete
+loading data ..
+merging data ..
+padding ..
+shuffling ..
+splitting ..
+train:  (8000, 13, 4096) (8000,)
+val:  (1000, 13, 4096) (1000,)
+test:  (1000, 13, 4096) (1000,)
+building model ..
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_11 (InputLayer)        (None, 13, 4096)          0         
+_________________________________________________________________
+lstm_11 (LSTM)               (None, 128)               2163200   
+_________________________________________________________________
+dropout_11 (Dropout)         (None, 128)               0         
+_________________________________________________________________
+dense_11 (Dense)             (None, 1)                 129       
+=================================================================
+Total params: 2,163,329
+Trainable params: 2,163,329
+Non-trainable params: 0
+_________________________________________________________________
+training ..
+Train on 8000 samples, validate on 1000 samples
+Epoch 1/20
+8000/8000 [==============================] - 5s 647us/step - loss: 0.3427 - mean_absolute_error: 0.5041 - mean_squared_error: 0.3427 - acc: 0.1301 - pearson_correlation_f: 0.2109 - val_loss: 0.0911 - val_mean_absolute_error: 0.2657 - val_mean_squared_error: 0.0911 - val_acc: 0.4970 - val_pearson_correlation_f: 0.3728
+Epoch 2/20
+8000/8000 [==============================] - 2s 273us/step - loss: 0.0968 - mean_absolute_error: 0.2646 - mean_squared_error: 0.0968 - acc: 0.4929 - pearson_correlation_f: 0.3088 - val_loss: 0.0750 - val_mean_absolute_error: 0.2296 - val_mean_squared_error: 0.0750 - val_acc: 0.4950 - val_pearson_correlation_f: 0.5375
+Epoch 3/20
+8000/8000 [==============================] - 2s 270us/step - loss: 0.0846 - mean_absolute_error: 0.2429 - mean_squared_error: 0.0846 - acc: 0.4771 - pearson_correlation_f: 0.5574 - val_loss: 0.0872 - val_mean_absolute_error: 0.2287 - val_mean_squared_error: 0.0872 - val_acc: 0.4820 - val_pearson_correlation_f: 0.6903
+Epoch 4/20
+8000/8000 [==============================] - 2s 271us/step - loss: 0.0597 - mean_absolute_error: 0.1996 - mean_squared_error: 0.0597 - acc: 0.4851 - pearson_correlation_f: 0.7315 - val_loss: 0.0518 - val_mean_absolute_error: 0.1777 - val_mean_squared_error: 0.0518 - val_acc: 0.4930 - val_pearson_correlation_f: 0.8332
+Epoch 5/20
+8000/8000 [==============================] - 2s 272us/step - loss: 0.0386 - mean_absolute_error: 0.1574 - mean_squared_error: 0.0386 - acc: 0.4961 - pearson_correlation_f: 0.8321 - val_loss: 0.0241 - val_mean_absolute_error: 0.1212 - val_mean_squared_error: 0.0241 - val_acc: 0.4950 - val_pearson_correlation_f: 0.8943
+Epoch 6/20
+8000/8000 [==============================] - 2s 273us/step - loss: 0.0298 - mean_absolute_error: 0.1379 - mean_squared_error: 0.0298 - acc: 0.4980 - pearson_correlation_f: 0.8773 - val_loss: 0.0170 - val_mean_absolute_error: 0.1043 - val_mean_squared_error: 0.0170 - val_acc: 0.4970 - val_pearson_correlation_f: 0.9200
+Epoch 7/20
+8000/8000 [==============================] - 2s 274us/step - loss: 0.0245 - mean_absolute_error: 0.1254 - mean_squared_error: 0.0245 - acc: 0.4991 - pearson_correlation_f: 0.9010 - val_loss: 0.0258 - val_mean_absolute_error: 0.1319 - val_mean_squared_error: 0.0258 - val_acc: 0.4980 - val_pearson_correlation_f: 0.9302
+Epoch 8/20
+8000/8000 [==============================] - 2s 269us/step - loss: 0.0204 - mean_absolute_error: 0.1127 - mean_squared_error: 0.0204 - acc: 0.4997 - pearson_correlation_f: 0.9138 - val_loss: 0.0137 - val_mean_absolute_error: 0.0854 - val_mean_squared_error: 0.0137 - val_acc: 0.4980 - val_pearson_correlation_f: 0.9415
+Epoch 9/20
+8000/8000 [==============================] - 2s 271us/step - loss: 0.0190 - mean_absolute_error: 0.1087 - mean_squared_error: 0.0190 - acc: 0.4997 - pearson_correlation_f: 0.9236 - val_loss: 0.0123 - val_mean_absolute_error: 0.0817 - val_mean_squared_error: 0.0123 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9477
+Epoch 10/20
+8000/8000 [==============================] - 2s 270us/step - loss: 0.0173 - mean_absolute_error: 0.1028 - mean_squared_error: 0.0173 - acc: 0.4997 - pearson_correlation_f: 0.9283 - val_loss: 0.0157 - val_mean_absolute_error: 0.0986 - val_mean_squared_error: 0.0157 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9491
+Epoch 11/20
+8000/8000 [==============================] - 2s 269us/step - loss: 0.0159 - mean_absolute_error: 0.0991 - mean_squared_error: 0.0159 - acc: 0.5000 - pearson_correlation_f: 0.9333 - val_loss: 0.0109 - val_mean_absolute_error: 0.0737 - val_mean_squared_error: 0.0109 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9491
+Epoch 12/20
+8000/8000 [==============================] - 2s 270us/step - loss: 0.0150 - mean_absolute_error: 0.0962 - mean_squared_error: 0.0150 - acc: 0.5000 - pearson_correlation_f: 0.9371 - val_loss: 0.0094 - val_mean_absolute_error: 0.0683 - val_mean_squared_error: 0.0094 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9556
+Epoch 13/20
+8000/8000 [==============================] - 2s 269us/step - loss: 0.0139 - mean_absolute_error: 0.0928 - mean_squared_error: 0.0139 - acc: 0.5000 - pearson_correlation_f: 0.9411 - val_loss: 0.0143 - val_mean_absolute_error: 0.0940 - val_mean_squared_error: 0.0143 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9477
+Epoch 14/20
+8000/8000 [==============================] - 2s 268us/step - loss: 0.0131 - mean_absolute_error: 0.0897 - mean_squared_error: 0.0131 - acc: 0.5000 - pearson_correlation_f: 0.9449 - val_loss: 0.0096 - val_mean_absolute_error: 0.0681 - val_mean_squared_error: 0.0096 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9570
+Epoch 15/20
+8000/8000 [==============================] - 2s 271us/step - loss: 0.0126 - mean_absolute_error: 0.0871 - mean_squared_error: 0.0126 - acc: 0.5000 - pearson_correlation_f: 0.9463 - val_loss: 0.0096 - val_mean_absolute_error: 0.0684 - val_mean_squared_error: 0.0096 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9554
+Epoch 16/20
+8000/8000 [==============================] - 2s 269us/step - loss: 0.0117 - mean_absolute_error: 0.0836 - mean_squared_error: 0.0117 - acc: 0.5000 - pearson_correlation_f: 0.9491 - val_loss: 0.0086 - val_mean_absolute_error: 0.0630 - val_mean_squared_error: 0.0086 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9577
+Epoch 17/20
+8000/8000 [==============================] - 2s 271us/step - loss: 0.0114 - mean_absolute_error: 0.0830 - mean_squared_error: 0.0114 - acc: 0.5000 - pearson_correlation_f: 0.9514 - val_loss: 0.0092 - val_mean_absolute_error: 0.0693 - val_mean_squared_error: 0.0092 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9583
+Epoch 18/20
+8000/8000 [==============================] - 2s 269us/step - loss: 0.0111 - mean_absolute_error: 0.0823 - mean_squared_error: 0.0111 - acc: 0.5000 - pearson_correlation_f: 0.9525 - val_loss: 0.0131 - val_mean_absolute_error: 0.0890 - val_mean_squared_error: 0.0131 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9564
+Epoch 19/20
+8000/8000 [==============================] - 2s 269us/step - loss: 0.0107 - mean_absolute_error: 0.0802 - mean_squared_error: 0.0107 - acc: 0.5000 - pearson_correlation_f: 0.9545 - val_loss: 0.0087 - val_mean_absolute_error: 0.0654 - val_mean_squared_error: 0.0087 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9588
+Epoch 20/20
+8000/8000 [==============================] - 2s 268us/step - loss: 0.0104 - mean_absolute_error: 0.0795 - mean_squared_error: 0.0104 - acc: 0.5000 - pearson_correlation_f: 0.9559 - val_loss: 0.0090 - val_mean_absolute_error: 0.0681 - val_mean_squared_error: 0.0090 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9605
+1000/1000 [==============================] - 0s 408us/step
+Test result:  [0.00824783319234848, 0.06476758229732514, 0.00824783319234848, 0.5, 0.9627694473266601]
+SETTING: mutate InferSent 5000 1 LSTM delete
+RESULT: 0.06476758229732514
+Setting:  mutate InferSent 5000 1 LSTM replace
+loading data ..
+merging data ..
+padding ..
+shuffling ..
+splitting ..
+train:  (8000, 13, 4096) (8000,)
+val:  (1000, 13, 4096) (1000,)
+test:  (1000, 13, 4096) (1000,)
+building model ..
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_12 (InputLayer)        (None, 13, 4096)          0         
+_________________________________________________________________
+lstm_12 (LSTM)               (None, 128)               2163200   
+_________________________________________________________________
+dropout_12 (Dropout)         (None, 128)               0         
+_________________________________________________________________
+dense_12 (Dense)             (None, 1)                 129       
+=================================================================
+Total params: 2,163,329
+Trainable params: 2,163,329
+Non-trainable params: 0
+_________________________________________________________________
+training ..
+Train on 8000 samples, validate on 1000 samples
+Epoch 1/20
+8000/8000 [==============================] - 6s 733us/step - loss: 0.3133 - mean_absolute_error: 0.4809 - mean_squared_error: 0.3133 - acc: 0.1610 - pearson_correlation_f: 0.0956 - val_loss: 0.1026 - val_mean_absolute_error: 0.2780 - val_mean_squared_error: 0.1026 - val_acc: 0.4980 - val_pearson_correlation_f: 0.1764
+Epoch 2/20
+8000/8000 [==============================] - 2s 261us/step - loss: 0.1076 - mean_absolute_error: 0.2773 - mean_squared_error: 0.1076 - acc: 0.4901 - pearson_correlation_f: 0.1604 - val_loss: 0.0992 - val_mean_absolute_error: 0.2802 - val_mean_squared_error: 0.0992 - val_acc: 0.4980 - val_pearson_correlation_f: 0.3379
+Epoch 3/20
+8000/8000 [==============================] - 2s 271us/step - loss: 0.1117 - mean_absolute_error: 0.2791 - mean_squared_error: 0.1117 - acc: 0.4624 - pearson_correlation_f: 0.3170 - val_loss: 0.0838 - val_mean_absolute_error: 0.2350 - val_mean_squared_error: 0.0838 - val_acc: 0.4990 - val_pearson_correlation_f: 0.4892
+Epoch 4/20
+8000/8000 [==============================] - 2s 271us/step - loss: 0.0889 - mean_absolute_error: 0.2468 - mean_squared_error: 0.0889 - acc: 0.4810 - pearson_correlation_f: 0.5339 - val_loss: 0.0659 - val_mean_absolute_error: 0.2262 - val_mean_squared_error: 0.0659 - val_acc: 0.4980 - val_pearson_correlation_f: 0.7257
+Epoch 5/20
+8000/8000 [==============================] - 2s 266us/step - loss: 0.0659 - mean_absolute_error: 0.2080 - mean_squared_error: 0.0659 - acc: 0.4925 - pearson_correlation_f: 0.7123 - val_loss: 0.0459 - val_mean_absolute_error: 0.1806 - val_mean_squared_error: 0.0459 - val_acc: 0.4950 - val_pearson_correlation_f: 0.8040
+Epoch 6/20
+8000/8000 [==============================] - 2s 271us/step - loss: 0.0502 - mean_absolute_error: 0.1796 - mean_squared_error: 0.0502 - acc: 0.4971 - pearson_correlation_f: 0.7862 - val_loss: 0.0320 - val_mean_absolute_error: 0.1378 - val_mean_squared_error: 0.0320 - val_acc: 0.4980 - val_pearson_correlation_f: 0.8439
+Epoch 7/20
+8000/8000 [==============================] - 2s 270us/step - loss: 0.0419 - mean_absolute_error: 0.1628 - mean_squared_error: 0.0419 - acc: 0.4993 - pearson_correlation_f: 0.8214 - val_loss: 0.0676 - val_mean_absolute_error: 0.2205 - val_mean_squared_error: 0.0676 - val_acc: 0.4970 - val_pearson_correlation_f: 0.8466
+Epoch 8/20
+8000/8000 [==============================] - 2s 262us/step - loss: 0.0386 - mean_absolute_error: 0.1548 - mean_squared_error: 0.0386 - acc: 0.4988 - pearson_correlation_f: 0.8368 - val_loss: 0.0308 - val_mean_absolute_error: 0.1347 - val_mean_squared_error: 0.0308 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8705
+Epoch 9/20
+8000/8000 [==============================] - 2s 273us/step - loss: 0.0355 - mean_absolute_error: 0.1489 - mean_squared_error: 0.0355 - acc: 0.4996 - pearson_correlation_f: 0.8513 - val_loss: 0.0251 - val_mean_absolute_error: 0.1182 - val_mean_squared_error: 0.0251 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8769
+Epoch 10/20
+8000/8000 [==============================] - 2s 270us/step - loss: 0.0322 - mean_absolute_error: 0.1408 - mean_squared_error: 0.0322 - acc: 0.4996 - pearson_correlation_f: 0.8622 - val_loss: 0.0271 - val_mean_absolute_error: 0.1193 - val_mean_squared_error: 0.0271 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8795
+Epoch 11/20
+8000/8000 [==============================] - 2s 267us/step - loss: 0.0304 - mean_absolute_error: 0.1361 - mean_squared_error: 0.0304 - acc: 0.4999 - pearson_correlation_f: 0.8689 - val_loss: 0.0295 - val_mean_absolute_error: 0.1270 - val_mean_squared_error: 0.0295 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8805
+Epoch 12/20
+8000/8000 [==============================] - 2s 270us/step - loss: 0.0279 - mean_absolute_error: 0.1303 - mean_squared_error: 0.0279 - acc: 0.4997 - pearson_correlation_f: 0.8763 - val_loss: 0.0231 - val_mean_absolute_error: 0.1094 - val_mean_squared_error: 0.0231 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8856
+Epoch 13/20
+8000/8000 [==============================] - 2s 272us/step - loss: 0.0277 - mean_absolute_error: 0.1299 - mean_squared_error: 0.0277 - acc: 0.4999 - pearson_correlation_f: 0.8801 - val_loss: 0.0331 - val_mean_absolute_error: 0.1365 - val_mean_squared_error: 0.0331 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8816
+Epoch 14/20
+8000/8000 [==============================] - 2s 263us/step - loss: 0.0262 - mean_absolute_error: 0.1256 - mean_squared_error: 0.0262 - acc: 0.4997 - pearson_correlation_f: 0.8846 - val_loss: 0.0371 - val_mean_absolute_error: 0.1393 - val_mean_squared_error: 0.0371 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8819
+Epoch 15/20
+8000/8000 [==============================] - 2s 272us/step - loss: 0.0248 - mean_absolute_error: 0.1227 - mean_squared_error: 0.0248 - acc: 0.4999 - pearson_correlation_f: 0.8893 - val_loss: 0.0247 - val_mean_absolute_error: 0.1135 - val_mean_squared_error: 0.0247 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8884
+Epoch 16/20
+8000/8000 [==============================] - 2s 270us/step - loss: 0.0238 - mean_absolute_error: 0.1198 - mean_squared_error: 0.0238 - acc: 0.4999 - pearson_correlation_f: 0.8936 - val_loss: 0.0254 - val_mean_absolute_error: 0.1158 - val_mean_squared_error: 0.0254 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8912
+Epoch 17/20
+8000/8000 [==============================] - 2s 261us/step - loss: 0.0233 - mean_absolute_error: 0.1176 - mean_squared_error: 0.0233 - acc: 0.5000 - pearson_correlation_f: 0.8989 - val_loss: 0.0239 - val_mean_absolute_error: 0.1115 - val_mean_squared_error: 0.0239 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8914
+Epoch 18/20
+8000/8000 [==============================] - 2s 274us/step - loss: 0.0215 - mean_absolute_error: 0.1133 - mean_squared_error: 0.0215 - acc: 0.5000 - pearson_correlation_f: 0.9049 - val_loss: 0.0287 - val_mean_absolute_error: 0.1248 - val_mean_squared_error: 0.0287 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8901
+Epoch 19/20
+8000/8000 [==============================] - 2s 270us/step - loss: 0.0214 - mean_absolute_error: 0.1131 - mean_squared_error: 0.0214 - acc: 0.4999 - pearson_correlation_f: 0.9077 - val_loss: 0.0294 - val_mean_absolute_error: 0.1295 - val_mean_squared_error: 0.0294 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8898
+Epoch 20/20
+8000/8000 [==============================] - 2s 265us/step - loss: 0.0204 - mean_absolute_error: 0.1098 - mean_squared_error: 0.0204 - acc: 0.4999 - pearson_correlation_f: 0.9114 - val_loss: 0.0240 - val_mean_absolute_error: 0.1076 - val_mean_squared_error: 0.0240 - val_acc: 0.5000 - val_pearson_correlation_f: 0.8931
+1000/1000 [==============================] - 0s 350us/step
+Test result:  [0.02610314966738224, 0.11321007239818573, 0.02610314966738224, 0.5, 0.891541576385498]
+SETTING: mutate InferSent 5000 1 LSTM replace
+RESULT: 0.11321007239818573

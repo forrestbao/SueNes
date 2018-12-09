@@ -78,6 +78,7 @@ def build_model(embedding_method, label_type, embedding_layer,
         embedded_input = embedding_layer(sequence_input)
     else:
         # (13, 512) or (13, 4096)
+        # input_shape = (13, 512)
         sequence_input = Input(shape=input_shape, dtype='float32')
         embedded_input = sequence_input
         
@@ -104,7 +105,13 @@ def build_model(embedding_method, label_type, embedding_layer,
         x = GlobalMaxPooling2D()(conv)
         x = Dense(128, activation='relu')(x)
     elif architecture == 'LSTM':
-        x= keras.layers.LSTM(128)(embedded_input)
+        # DEBUG
+        hidden_size = round(K.int_shape(embedded_input)[1] / 2)
+        if hidden_size > 128:
+            hidden_size = 128
+        # hidden_size = 128
+        x= LSTM(hidden_size)(embedded_input)
+        # x = keras.layers.GRU(hidden_size)(embedded_input)
         x = Dropout(0.5)(x)
         # x = Dense(128, activation='relu')(x)
     elif architecture == 'FC':
@@ -157,20 +164,6 @@ def build_separate_model(embedding_layer):
     x = Dense(128, activation='relu')(x)
     preds = Dense(1, activation='sigmoid')(x)
     
-    # x = GlobalMaxPooling1D()(embedded_article)
-    # flattened_article = keras.layers.Flatten()(embedded_article)
-    # flattened_summary = keras.layers.Flatten()(embedded_summary)
-    # article_vec = Dense(512)(flattened_article)
-    # summary_vec = Dense(512)(flattened_summary)
-    # article_vec
-    # summary_vec
-    # dotproduct = keras.layers.Dot(1)([article_vec, summary_vec])
-    # dotproduct
-    # preds = Dense(1, activation='sigmoid')(dotproduct)
-    # preds
-    # sequence_input
-    
-    # preds = Dense(1, activation='sigmoid')(x)
     model = Model(sequence_input, preds)
     return model
 

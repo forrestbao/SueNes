@@ -8,6 +8,7 @@ import numpy as np
 
 from utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
 from utils import read_text_file, sentence_split
+from utils import dict_pickle_read, dict_pickle_read_keys, dict_pickle_write
 
 from embedding import SentenceEmbedder, SentenceEmbedderLarge, InferSentEmbedder
 
@@ -145,6 +146,39 @@ def preprocess_story_pickle():
         data[key] = item
     with open(STORY_PICKLE_FILE, 'wb') as f:
         pickle.dump(data, f)
+
+
+def plot_story_length():
+    """Plot the length distribution of article and summary.
+    """
+    with open(STORY_PICKLE_FILE, 'rb') as f:
+        stories = pickle.load(f)
+    # [len(sentence_split(s['article'])) for s in stories]
+    words = [len(s['article'].split()) for s in stories.values()]
+    sents = [len(sentence_split(s['article'])) for s in stories.values()]
+    sum_words = [len(s['summary'].split()) for s in stories.values()]
+    sum_sents = [len(sentence_split(s['summary'])) for s in stories.values()]
+    
+    np.median(words)            # 701
+    np.median(sum_words)        # 46
+    np.median(sents)            # 29
+    np.median(sum_sents)        # 1
+
+    np.percentile(words, 80)     # 1091
+    np.percentile(sum_words, 80)  # 55
+    np.percentile(sents, 80)      # 47
+    np.percentile(sum_sents, 80)  # 1
+
+    
+    plt.hist(words)
+    plt.hist(sents)
+    plt.hist(sum_words)
+    plt.hist(sum_sents)
+    
+    plt.plot(sents)
+    plt.show()
+    plt.plot([len(sentence_split(s['article'])) for s in stories])
+    plt.plot([len(sentence_split(s['summary'])) for s in stories])
 
 def preprocess_word_mutated():
     """
@@ -328,7 +362,7 @@ def embed_keep_shape(v, embedder_name):
     embedding, _ = restore_shape(embedding_flattened, 0, shape)
     return embedding
 
-def load_to_encode(target_name, previously_encoded, num):
+def load_to_encode(target_name, previously_encoded_keys, num, skip=0):
     assert(target_name in ['story', 'negative', 'mutated', 'shuffle'])
     target_dict = {'story': STORY_PICKLE_FILE, 'negative':
                    NEGATIVE_SAMPLING_FILE, 'mutated':
@@ -341,9 +375,11 @@ def load_to_encode(target_name, previously_encoded, num):
     ct = 0
     keys = []
     for key in plain_stories.keys():
-        if key not in previously_encoded:
+        if key not in previously_encoded_keys:
             ct += 1
-            if ct > num:
+            if ct < skip:
+                continue
+            if ct > num + skip:
                 break
             keys.append(key)
             story = plain_stories[key]
@@ -415,20 +451,17 @@ def inspect_preprocess_progress():
         In [5]: inspect_preprocess_progress()
         USE story 47471
         USE negative 92000
-        USE mutated 10000
-        USE shuffle 11007
-        InferSent story 13074
+        USE mutated 30000
+        InferSent story 30248
         InferSent negative 30169
-        InferSent mutated 5100
-        InferSent shuffle 1098
+        InferSent mutated 5640
         USE-Large story 41320
         USE-Large negative 42415
-        USE-Large mutated 100
-        exUSE-Large shuffle -1
-    
+        USE-Large mutated 30200
     """
     embedder_names = ['USE', 'InferSent', 'USE-Large']
-    target_names = ['story', 'negative', 'mutated', 'shuffle']
+    # , 'shuffle'
+    target_names = ['story', 'negative', 'mutated']
     for embedder_name in embedder_names:
         for target_name in target_names:
             num = get_num_encoded_story(embedder_name, target_name)
@@ -443,50 +476,49 @@ def get_num_encoded_story(embedder_name, target_name):
     if not os.path.exists(folder):
         return -1
     target_file = os.path.join(folder, target_name + '.pickle')
-    if os.path.exists(target_file):
-        with open(target_file, 'rb') as f:
-            previously_encoded = pickle.load(f)
-            return len(previously_encoded)
-    else:
-        return -1
+    target_folder = os.path.join(folder, target_name)
+    previously_encoded_keys = dict_pickle_read_keys(target_folder)
+    return len(previously_encoded_keys)
 
     
-def preprocess_sentence_embed(embedder_name, target_name, num, up_limit):
+def preprocess_sentence_embed(embedder_name, target_name, num,
+                              up_limit, skip=0):
     """UP_LIMIT: will not process if already encoded up_limit entries.
     """
     assert(embedder_name in ['InferSent', 'USE', 'USE-Large'])
     assert(target_name in ['story', 'negative', 'mutated', 'shuffle'])
-    print('Setting:', embedder_name, target_name, num, up_limit)
+    print('Setting:', embedder_name, target_name, num, up_limit, skip)
     folder_dict = {'InferSent': INFERSENT_DIR, 'USE': USE_DAN_DIR,
                    'USE-Large': USE_TRANSFORMER_DIR}
     folder = folder_dict[embedder_name]
     if not os.path.exists(folder):
         os.makedirs(folder)
-    target_file = os.path.join(folder, target_name + '.pickle')
-    # TODO find all files in folder with pattern
-    # <target_name>-<digit>.pickle
-    tmp_file = os.path.join(folder, 'tmp.pickle')
-    if os.path.exists(target_file):
-        with open(target_file, 'rb') as f:
-            previously_encoded = pickle.load(f)
-    else:
-        previously_encoded = {}
-    print('Previously encoded: ', len(previously_encoded))
-    if len(previously_encoded) >= up_limit:
+    target_folder = os.path.join(folder, target_name)
+    previously_encoded_keys = dict_pickle_read_keys(target_folder)
+    print('Previously encoded: ', len(previously_encoded_keys))
+    if len(previously_encoded_keys) >= up_limit:
         print('Reach up limit', up_limit, '. Doing nothing')
         return
     # Load what to encode, based on target name
-    keys, to_encode = load_to_encode(target_name, previously_encoded, num)
+    print('loading to encode ..')
+    keys, to_encode = load_to_encode(target_name,
+                                     previously_encoded_keys, num, skip=skip)
+    print('embedding ..')
     encoded = embed_keep_shape(to_encode, embedder_name)
+    print('constructing new ..')
     newly_encoded = save_encoded(target_name, keys, encoded)
-    # TODO I want to save it to a new file, such that we won't have
-    # the overhead of writing big files every time. I shall also
-    # provide a procedure to combine all these files.
-    # DEBUG
-    previously_encoded.update(newly_encoded)
-    with open(tmp_file, 'wb') as f:
-        pickle.dump(previously_encoded, f)
-    shutil.copyfile(tmp_file, target_file)
+    print('writing disk ..')
+    dict_pickle_write(newly_encoded, target_folder)
+    return
+
+def dict_pickle_reshape(size):
+    """
+    1. read all pickles
+    2. divide keys into size-block
+    3. write back to tmp-folder
+    4. replace files
+    """
+    raise Exception('Not implemented.')
     return
 
 
@@ -499,7 +531,7 @@ def test():
     # of others.
     target_names = ['story', 'negative', 'mutated', 'shuffle']
     
-    up_limit = 10000
+    up_limit = 30000
     
     for embedder_name in embedder_names:
         for target_name in target_names:
@@ -515,7 +547,7 @@ def test():
     # stories
     preprocess_sentence_embed('USE', 'story', 1000, up_limit)
     preprocess_sentence_embed('USE-Large', 'story', 100, up_limit)
-    preprocess_sentence_embed('InferSent', 'story', 100, up_limit)
+    preprocess_sentence_embed('InferSent', 'story', 200, up_limit)
 
     # negative and mutate
     up_limit = 10000
@@ -534,4 +566,22 @@ def test():
     preprocess_sentence_embed('USE', 'mutated', 10, 3000)
     preprocess_sentence_embed('USE', 'shuffle', 10000, 3000)
     preprocess_sentence_embed('USE-Large', 'negative', 10, 3000)
-    preprocess_sentence_embed('InferSent', 'story', 10, 3000)
+    preprocess_sentence_embed('InferSent', 'story', 30, 3000)
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('embedder', choices=['USE', 'USE-Large', 'InferSent'])
+    parser.add_argument('target', choices=['story', 'negative', 'mutated'])
+    parser.add_argument('num', type=int)
+    parser.add_argument('--skip', type=int, default=0)
+
+    args = parser.parse_args()
+    preprocess_sentence_embed(args.embedder, args.target, args.num, 40000, args.skip)
+    # ./preprocessing.py USE story 1000
+    # ./preprocessing.py USE-Large mutated 300
+    # ./preprocessing.py InferSent story 10
+    # ./preprocessing.py InferSent mutated 30
+
+    

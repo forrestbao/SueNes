@@ -4,6 +4,7 @@ import sys
 
 import tensorflow as tf
 import tensorflow_hub as hub
+import torch
 
 
 def sentence_embedding():
@@ -33,7 +34,6 @@ def sentence_embedding():
             message_embedding_snippet = ", ".join(
                 (str(x) for x in message_embedding[:3]))
             print("Embedding: [{}, ...]\n".format(message_embedding_snippet))
-
 
 class SentenceEmbedder():
     """This module is outputing:
@@ -98,14 +98,19 @@ class InferSentEmbedder():
         from models import InferSent
         V = 2
         MODEL_PATH = 'encoder/infersent%s.pkl' % V
-        params_model = {'bsize': 64, 'word_emb_dim': 300, 'enc_lstm_dim': 2048,
-                        'pool_type': 'max', 'dpout_model': 0.0, 'version': V}
+        params_model = {'bsize': 64, 'word_emb_dim': 300,
+                        'enc_lstm_dim': 2048, 'pool_type': 'max',
+                        'dpout_model': 0.0, 'version': V}
         self.infersent = InferSent(params_model)
-        import torch
+        # use cuda!!
+        self.infersent = self.infersent.cuda()
         self.infersent.load_state_dict(torch.load(MODEL_PATH))
         # Set word vector path for the model:
         W2V_PATH = 'dataset/fastText/crawl-300d-2M.vec'
         self.infersent.set_w2v_path(W2V_PATH)
+        # FIXME load K will probably lose some words. E.g. Vocab size : 100000
+        # embedding 93882 sentences ..
+        # Nb words kept : 3185922/4231554 (75.3%)
         self.loadk()
         pass
     def build_vocab(self, sentences):
@@ -120,7 +125,9 @@ class InferSentEmbedder():
         
     def embed(self, sentences):
         # Encode your sentences (list of n sentences):
-        embeddings = self.infersent.encode(sentences, tokenize=True)
+        # embeddings = self.infersent.encode(sentences, tokenize=True)
+        embeddings = self.infersent.encode(sentences, bsize=64,
+                                           tokenize=False, verbose=True)
         # This outputs a numpy array with n vectors of dimension
         # 4096. Speed is around 1000 sentences per second with batch
         # size 128 on a single GPU.
@@ -132,21 +139,11 @@ def test_infersent():
                  'I like him for the most part , but would still enjoy seeing someone beat him . ',
                  'My favorite restaurants are always at least a hundred miles away from my house . ',
                  'I know exactly . ',
-                 'We have plenty of space in the landfill . ']
-    embedder1 = InferSentEmbedder()
-    embedder2 = InferSentEmbedder()
-    embedder1.build_vocab(sentences[:3])
-    # embedder2.build_vocab(sentences)
-    embedder2.loadk()
-    embeddings1 = embedder1.embed(sentences)
-    embeddings2 = embedder1.embed(sentences)
-    out = (embeddings1 == embeddings2)
-    out.shape
-    for o in out:
-        for i in o:
-            if i != True:
-                print('!!!')
-                break
+                 'We have plenty of space in the landfill . '] * 1000
+
+
+    embedder = InferSentEmbedder()
+    embeddings = embedder.embed(sentences)
     
 
 def test():

@@ -1,4 +1,8 @@
 import re
+import uuid
+
+import pickle
+import os
 
 from keras.preprocessing.text import Tokenizer, one_hot
 from keras.preprocessing.sequence import pad_sequences
@@ -73,3 +77,36 @@ def sentence_split(s):
 def test():
     test_str = 'hello hello hello . world world ! eh eh eh ? yes yes ... ok ok'
     sentence_split(test_str)
+
+    
+
+def dict_pickle_read_keys(folder):
+    """Return a set of keys"""
+    res = set()
+    if os.path.exists(folder):
+        filenames = os.listdir(folder)
+        for filename in filenames:
+            with open(os.path.join(folder, filename), 'rb') as f:
+                p = pickle.load(f)
+                res = res.union(p.keys())
+    return res
+
+def dict_pickle_write(obj, folder):
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    u = uuid.uuid1()
+    s = u.hex
+    filename = os.path.join(folder, s + '.pickle')
+    assert(not os.path.exists(filename))
+    with open(filename, 'wb') as f:
+        pickle.dump(obj, f)
+
+def dict_pickle_read(folder):
+    res = {}
+    if os.path.exists(folder):
+        filenames = os.listdir(folder)
+        for filename in filenames:
+            with open(os.path.join(folder, filename), 'rb') as f:
+                p = pickle.load(f)
+                res.update(p)
+    return res

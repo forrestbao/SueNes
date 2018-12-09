@@ -11,6 +11,7 @@ from keras.models import Sequential
 from keras import layers
 from keras import backend as K
 from keras.utils import plot_model
+import keras
 
 import scipy
 import pickle
@@ -21,6 +22,7 @@ from model import load_embedding
 from model import build_model
 from utils import save_data, load_data
 from utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
+from utils import dict_pickle_read, dict_pickle_read_keys, dict_pickle_write
 
 from data import pad_shuffle_split_data
 from data import prepare_data_using_USE
@@ -86,13 +88,11 @@ def load_pickles(fake_method, embedding_method):
                      'USE-Large': USE_TRANSFORMER_DIR,
                      'InferSent': INFERSENT_DIR}
         d = embed2dir[embedding_method]
-        with open(os.path.join(d, 'story.pickle'), 'rb') as f:
-            stories = pickle.load(f)
-        neg_filename = {'neg': 'negative.pickle',
-                        'mutate': 'mutated.pickle',
-                        'shuffle': 'shuffle.pickle'}[fake_method]
-        with open(os.path.join(d, neg_filename), 'rb') as f:
-            negatives = pickle.load(f)
+        stories = dict_pickle_read(os.path.join(d, 'story'))
+        neg_filename = {'neg': 'negative',
+                        'mutate': 'mutated',
+                        'shuffle': 'shuffle'}[fake_method]
+        negatives = dict_pickle_read(os.path.join(d, neg_filename))
     return stories, negatives
 
 def test():
@@ -109,18 +109,23 @@ def load_data_helper(fake_method, embedding_method, num_samples,
     """
     # embedding_method = 'USE'
     tokenizer = None
+    print('loading pickle ..')
     stories, negatives = load_pickles(fake_method, embedding_method)
     story_keys = set(stories.keys())
     negative_keys = set(negatives.keys())
     keys = story_keys.intersection(negative_keys)
     keys = set(random.sample(keys, num_samples))
+    print('retrieving article ..')
     articles = np.array([stories[key]['article'] for key in keys])
     reference_summaries = np.array([stories[key]['summary'] for key in keys])
     if fake_method == 'neg' or fake_method == 'shuffle':
         fake_summaries = np.array([negatives[key] for key in keys])
         fake_summaries = fake_summaries[:,:num_fake_samples]
         reference_labels = np.ones_like(reference_summaries, dtype=int)
+        # DEBUG
         fake_labels = np.zeros_like(fake_summaries, dtype=int)
+        # fake_labels = np.ones_like(fake_summaries, dtype=int)
+        # fake_labels = - fake_labels
     elif fake_method == 'mutate':
         # add, delete, replace
         section = fake_extra_option
@@ -205,19 +210,24 @@ def main():
 
     # Setting:  mutate USE-Large 5000 1 CNN add
     run_all_exp(['neg'], ['glove', 'USE', 'USE-Large', 'InferSent'],
-                [100], [1], ['LSTM'])
+                [100], [1], ['CNN', 'FC'])
 
+    run_exp('neg', 'InferSent', 30000, 1, 'CNN')
+    run_exp('neg', 'glove', 30000, 1, 'CNN')
+    run_exp('neg', 'USE-Large', 30000, 1, 'CNN')
 
     # Negative sampling experiment
-    run_all_exp(['neg'], ['glove', 'USE', 'USE-Large', 'InferSent'],
-                [30000], [1], ['CNN'])
-    run_all_exp(['neg'], ['glove', 'USE', 'USE-Large', 'InferSent'],
-                [30000], [1], ['FC'])
-    run_all_exp(['neg'], ['glove', 'USE', 'USE-Large', 'InferSent'],
-                [30000], [1], ['LSTM'])
+    run_all_exp(['neg'], ['glove', 'USE', 'USE-Large'],
+                [5000], [1], ['CNN', 'FC', 'LSTM'])
+    run_all_exp(['neg'], ['glove', 'USE', 'USE-Large'],
+                [5000], [1], ['CNN'])
     # mutate experiment
-    run_all_exp(['mutate'], ['glove', 'USE', 'USE-Large', 'InferSent'],
-                [5000], [1], ['CNN'], ['add', 'delete', 'replace'])
+    run_all_exp(['mutate'], ['glove', 'USE', 'USE-Large'],
+                [30000], [1], ['CNN', 'FC', 'LSTM'],
+                ['add', 'delete', 'replace'])
+    run_all_exp(['neg'], ['USE', 'USE-Large'],
+                [30000], [1], ['LSTM'])
+    
     run_all_exp(['mutate'], ['glove', 'USE', 'USE-Large', 'InferSent'],
                 [5000], [1], ['FC'], ['add', 'delete', 'replace'])
     run_all_exp(['mutate'], ['glove', 'USE', 'USE-Large', 'InferSent'],
@@ -233,15 +243,20 @@ def main():
     run_exp('mutate', 'USE-Large', 100, 1, 'CNN', 'delete')
     run_exp('mutate', 'InferSent', 100, 1, 'CNN', 'replace')
 
-    # np.array([np.zeros((10,1,512)), np.zeros((10,2,512))])
-    # np.array(['hell', 'world'])
-    # np.array([np.array([1,3]), np.array([[2,3], [2,3]])], dtype=object)
-
-    # np.asarray([np.array([1,3]), np.array([[2,3], [2,3]])])
     
     run_exp('neg', 'USE', 10000, 1, 'LSTM')
+    run_exp('mutate', 'glove', 10000, 1, 'LSTM', 'add')
+    
+    run_exp('neg', 'USE', 30000, 1, 'LSTM')
+    run_exp('neg', 'USE', 10000, 1, 'FC')
+    
+    run_exp('neg', 'glove', 10000, 1, 'LSTM')
+    run_exp('neg', 'glove', 1000, 1, 'LSTM')
+    run_exp('neg', 'glove', 30000, 1, 'FC')
+    
     run_exp('neg', 'glove', 10000, 1, 'CNN')
     run_exp('shuffle', 'USE', 1000, 1, 'CNN')
+    
     run_exp('neg', 'USE', 10000, 1, 'CNN')
     
     run_exp('neg', 'glove', 10000, 1, 'CNN')
@@ -351,16 +366,26 @@ def run_exp(fake_method, embedding_method, num_samples,
         metrics = ['mae', 'mse', 'accuracy', pearson_correlation_f]
     elif label_type == 'classification':
         loss = 'binary_crossentropy'
+        # loss = 'hinge'
+        # loss = 'categorical_hinge'
         metrics=['accuracy', pearson_correlation_f]
     else:
         raise Exception()
+    num_epochs = 60
     # optimizer=tf.train.AdamOptimizer(0.01)
     optimizer = tf.train.RMSPropOptimizer(0.001)
+    # optimizer = keras.optimizers.SGD(lr=0.00001, clipnorm=1.)
     model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
     
     print('training ..')
-    history = model.fit(x_train, y_train, epochs=20, batch_size=128,
-                        validation_data=(x_val, y_val), verbose=1)
+    history = model.fit(x_train, y_train, epochs=num_epochs, batch_size=128,
+                        validation_data=(x_val, y_val),
+                        callbacks=[keras.callbacks.EarlyStopping(monitor='val_loss',
+                                                                 min_delta=0,
+                                                                 patience=3,
+                                                                 verbose=0,
+                                                                 mode='auto')],
+                        verbose=1)
     # plot history
     filename = '-'.join([fake_method, embedding_method,
                          str(num_samples), str(num_fake_samples),
@@ -408,7 +433,30 @@ def plot_history(history, filename):
     
 
 
+def test():
+    # Negative sampling experiment
+    run_all_exp(['neg'], ['glove', 'USE', 'USE-Large'],
+                [30000], [1], ['CNN', 'FC', 'LSTM'])
+    # mutate experiment
+    run_all_exp(['mutate'], ['glove', 'USE', 'USE-Large'],
+                [30000], [1], ['CNN', 'FC', 'LSTM'],
+                ['add', 'delete', 'replace'])
+    
 
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
 
-# if __name__ == '__main__':
-#     use_vector_main()
+    parser.add_argument('fake', choices=['neg', 'mutate'])
+    parser.add_argument('embedding', choices=['glove', 'USE',
+                                              'USE-Large', 'InferSent'])
+    parser.add_argument('arch', choices=['CNN', 'FC', 'LSTM'])
+    parser.add_argument('--extra', choices=['add', 'delete',
+                                            'replace'])
+
+    args = parser.parse_args()
+    run_exp(args.fake, args.embedding, 30000, 1, args.arch, args.extra)
+
+    # python3 main.py mutate USE CNN --extra=replace
+    # python3 main.py neg USE-Large LSTM
+

@@ -1,0 +1,905 @@
+In this setting, CNN's last Dense(128) is removed.
+
+~/github/anti-rouge $ bash runner.sh
+EXP 1
+Mon Dec 10 16:13:56 CST 2018
+python3 main.py neg glove CNN
+Using TensorFlow backend.
+Setting:  neg glove 30000 1 CNN None
+loading data ..
+loading pickle ..
+retrieving article ..
+merging data ..
+creating tokenizer ..
+padding ..
+padding articles ..
+padding summaries ..
+concatenating ..
+splitting by group ..
+shuffling ..
+splitting ..
+train:  (48000, 1146) (48000,)
+val:  (6000, 1146) (6000,)
+test:  (6000, 1146) (6000,)
+building model ..
+Indexing word vectors.
+Found 400000 word vectors.
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_1 (InputLayer)         (None, 1146)              0         
+_________________________________________________________________
+embedding_1 (Embedding)      (None, 1146, 100)         14489100  
+_________________________________________________________________
+conv1d_1 (Conv1D)            (None, 1142, 128)         64128     
+_________________________________________________________________
+max_pooling1d_1 (MaxPooling1 (None, 380, 128)          0         
+_________________________________________________________________
+global_max_pooling1d_1 (Glob (None, 128)               0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 14,553,357
+Trainable params: 64,257
+Non-trainable params: 14,489,100
+_________________________________________________________________
+training ..
+Train on 48000 samples, validate on 6000 samples
+Epoch 1/60
+2018-12-10 16:14:46.516146: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2018-12-10 16:14:46.634068: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:964] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-12-10 16:14:46.634545: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1432] Found device 0 with properties: 
+name: GeForce GTX 1060 3GB major: 6 minor: 1 memoryClockRate(GHz): 1.7085
+pciBusID: 0000:0b:00.0
+totalMemory: 2.95GiB freeMemory: 2.75GiB
+2018-12-10 16:14:46.634562: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1511] Adding visible gpu devices: 0
+2018-12-10 16:14:47.586957: I tensorflow/core/common_runtime/gpu/gpu_device.cc:982] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-12-10 16:14:47.586999: I tensorflow/core/common_runtime/gpu/gpu_device.cc:988]      0 
+2018-12-10 16:14:47.587007: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1001] 0:   N 
+2018-12-10 16:14:47.587204: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 2456 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1060 3GB, pci bus id: 0000:0b:00.0, compute capability: 6.1)
+48000/48000 [==============================] - 15s 312us/step - loss: 0.7399 - acc: 0.5101 - pearson_correlation_f: 0.0555 - val_loss: 0.6674 - val_acc: 0.5860 - val_pearson_correlation_f: 0.3074
+Epoch 2/60
+48000/48000 [==============================] - 12s 253us/step - loss: 0.6673 - acc: 0.5966 - pearson_correlation_f: 0.3188 - val_loss: 0.6108 - val_acc: 0.6682 - val_pearson_correlation_f: 0.4101
+Epoch 3/60
+48000/48000 [==============================] - 12s 253us/step - loss: 0.6291 - acc: 0.6433 - pearson_correlation_f: 0.4106 - val_loss: 0.6532 - val_acc: 0.6175 - val_pearson_correlation_f: 0.4406
+Epoch 4/60
+48000/48000 [==============================] - 12s 253us/step - loss: 0.6051 - acc: 0.6709 - pearson_correlation_f: 0.4653 - val_loss: 0.5895 - val_acc: 0.6858 - val_pearson_correlation_f: 0.4747
+Epoch 5/60
+48000/48000 [==============================] - 12s 255us/step - loss: 0.5834 - acc: 0.6879 - pearson_correlation_f: 0.5106 - val_loss: 0.6157 - val_acc: 0.6635 - val_pearson_correlation_f: 0.4863
+Epoch 6/60
+48000/48000 [==============================] - 12s 256us/step - loss: 0.5632 - acc: 0.7085 - pearson_correlation_f: 0.5489 - val_loss: 0.5920 - val_acc: 0.6778 - val_pearson_correlation_f: 0.5002
+Epoch 7/60
+48000/48000 [==============================] - 12s 256us/step - loss: 0.5451 - acc: 0.7209 - pearson_correlation_f: 0.5786 - val_loss: 0.5582 - val_acc: 0.7070 - val_pearson_correlation_f: 0.5120
+Epoch 8/60
+48000/48000 [==============================] - 13s 263us/step - loss: 0.5263 - acc: 0.7345 - pearson_correlation_f: 0.6070 - val_loss: 0.6298 - val_acc: 0.6665 - val_pearson_correlation_f: 0.5061
+Epoch 9/60
+48000/48000 [==============================] - 13s 266us/step - loss: 0.5090 - acc: 0.7468 - pearson_correlation_f: 0.6317 - val_loss: 0.5775 - val_acc: 0.7027 - val_pearson_correlation_f: 0.5177
+Epoch 10/60
+48000/48000 [==============================] - 13s 267us/step - loss: 0.4948 - acc: 0.7571 - pearson_correlation_f: 0.6539 - val_loss: 0.5462 - val_acc: 0.7197 - val_pearson_correlation_f: 0.5288
+Epoch 11/60
+48000/48000 [==============================] - 13s 267us/step - loss: 0.4786 - acc: 0.7681 - pearson_correlation_f: 0.6728 - val_loss: 0.5718 - val_acc: 0.7087 - val_pearson_correlation_f: 0.5253
+Epoch 12/60
+48000/48000 [==============================] - 13s 267us/step - loss: 0.4651 - acc: 0.7764 - pearson_correlation_f: 0.6906 - val_loss: 0.5500 - val_acc: 0.7267 - val_pearson_correlation_f: 0.5325
+Epoch 13/60
+48000/48000 [==============================] - 13s 267us/step - loss: 0.4517 - acc: 0.7854 - pearson_correlation_f: 0.7065 - val_loss: 0.5499 - val_acc: 0.7267 - val_pearson_correlation_f: 0.5346
+6000/6000 [==============================] - 1s 125us/step
+Test result:  [0.5536212293306987, 0.7223333333333334, 0.5379958313306172]
+python3 main.py neg USE CNN
+Using TensorFlow backend.
+Setting:  neg USE 30000 1 CNN None
+loading data ..
+loading pickle ..
+retrieving article ..
+merging data ..
+padding ..
+padding articles ..
+padding summaries ..
+concatenating ..
+splitting by group ..
+shuffling ..
+splitting ..
+train:  (48000, 50, 512) (48000,)
+val:  (6000, 50, 512) (6000,)
+test:  (6000, 50, 512) (6000,)
+building model ..
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_1 (InputLayer)         (None, 50, 512)           0         
+_________________________________________________________________
+conv1d_1 (Conv1D)            (None, 46, 128)           327808    
+_________________________________________________________________
+max_pooling1d_1 (MaxPooling1 (None, 15, 128)           0         
+_________________________________________________________________
+global_max_pooling1d_1 (Glob (None, 128)               0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 327,937
+Trainable params: 327,937
+Non-trainable params: 0
+_________________________________________________________________
+training ..
+Train on 48000 samples, validate on 6000 samples
+Epoch 1/60
+2018-12-10 16:19:50.413657: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2018-12-10 16:19:50.954999: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:964] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-12-10 16:19:50.955645: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1432] Found device 0 with properties: 
+name: GeForce GTX 1060 3GB major: 6 minor: 1 memoryClockRate(GHz): 1.7085
+pciBusID: 0000:0b:00.0
+totalMemory: 2.95GiB freeMemory: 2.75GiB
+2018-12-10 16:19:50.955672: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1511] Adding visible gpu devices: 0
+2018-12-10 16:20:01.963105: I tensorflow/core/common_runtime/gpu/gpu_device.cc:982] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-12-10 16:20:01.963152: I tensorflow/core/common_runtime/gpu/gpu_device.cc:988]      0 
+2018-12-10 16:20:01.963162: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1001] 0:   N 
+2018-12-10 16:20:01.965250: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 2456 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1060 3GB, pci bus id: 0000:0b:00.0, compute capability: 6.1)
+2018-12-10 16:20:07.386663: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.58GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+48000/48000 [==============================] - 22s 449us/step - loss: 0.6776 - acc: 0.5517 - pearson_correlation_f: 0.1488 - val_loss: 0.6128 - val_acc: 0.6872 - val_pearson_correlation_f: 0.4596
+Epoch 2/60
+48000/48000 [==============================] - 4s 86us/step - loss: 0.5690 - acc: 0.7146 - pearson_correlation_f: 0.5235 - val_loss: 0.5163 - val_acc: 0.7473 - val_pearson_correlation_f: 0.6118
+Epoch 3/60
+48000/48000 [==============================] - 4s 84us/step - loss: 0.4885 - acc: 0.7727 - pearson_correlation_f: 0.6316 - val_loss: 0.4463 - val_acc: 0.8038 - val_pearson_correlation_f: 0.6714
+Epoch 4/60
+48000/48000 [==============================] - 4s 84us/step - loss: 0.4385 - acc: 0.8056 - pearson_correlation_f: 0.6863 - val_loss: 0.4262 - val_acc: 0.8035 - val_pearson_correlation_f: 0.6974
+Epoch 5/60
+48000/48000 [==============================] - 4s 84us/step - loss: 0.4015 - acc: 0.8269 - pearson_correlation_f: 0.7230 - val_loss: 0.3905 - val_acc: 0.8270 - val_pearson_correlation_f: 0.7217
+Epoch 6/60
+48000/48000 [==============================] - 4s 84us/step - loss: 0.3719 - acc: 0.8445 - pearson_correlation_f: 0.7518 - val_loss: 0.4030 - val_acc: 0.8087 - val_pearson_correlation_f: 0.7220
+Epoch 7/60
+48000/48000 [==============================] - 4s 88us/step - loss: 0.3458 - acc: 0.8581 - pearson_correlation_f: 0.7754 - val_loss: 0.3592 - val_acc: 0.8452 - val_pearson_correlation_f: 0.7453
+Epoch 8/60
+48000/48000 [==============================] - 4s 84us/step - loss: 0.3247 - acc: 0.8697 - pearson_correlation_f: 0.7947 - val_loss: 0.3498 - val_acc: 0.8442 - val_pearson_correlation_f: 0.7532
+Epoch 9/60
+48000/48000 [==============================] - 4s 84us/step - loss: 0.3039 - acc: 0.8807 - pearson_correlation_f: 0.8120 - val_loss: 0.3393 - val_acc: 0.8525 - val_pearson_correlation_f: 0.7618
+Epoch 10/60
+48000/48000 [==============================] - 4s 85us/step - loss: 0.2856 - acc: 0.8895 - pearson_correlation_f: 0.8275 - val_loss: 0.3347 - val_acc: 0.8553 - val_pearson_correlation_f: 0.7655
+Epoch 11/60
+48000/48000 [==============================] - 4s 84us/step - loss: 0.2698 - acc: 0.8971 - pearson_correlation_f: 0.8396 - val_loss: 0.3325 - val_acc: 0.8580 - val_pearson_correlation_f: 0.7669
+Epoch 12/60
+48000/48000 [==============================] - 4s 85us/step - loss: 0.2541 - acc: 0.9056 - pearson_correlation_f: 0.8523 - val_loss: 0.3343 - val_acc: 0.8548 - val_pearson_correlation_f: 0.7677
+Epoch 13/60
+48000/48000 [==============================] - 4s 80us/step - loss: 0.2404 - acc: 0.9130 - pearson_correlation_f: 0.8632 - val_loss: 0.3443 - val_acc: 0.8500 - val_pearson_correlation_f: 0.7676
+Epoch 14/60
+48000/48000 [==============================] - 4s 85us/step - loss: 0.2267 - acc: 0.9197 - pearson_correlation_f: 0.8730 - val_loss: 0.3281 - val_acc: 0.8593 - val_pearson_correlation_f: 0.7740
+Epoch 15/60
+48000/48000 [==============================] - 4s 85us/step - loss: 0.2145 - acc: 0.9244 - pearson_correlation_f: 0.8818 - val_loss: 0.3488 - val_acc: 0.8497 - val_pearson_correlation_f: 0.7679
+Epoch 16/60
+48000/48000 [==============================] - 4s 85us/step - loss: 0.2032 - acc: 0.9287 - pearson_correlation_f: 0.8898 - val_loss: 0.3795 - val_acc: 0.8307 - val_pearson_correlation_f: 0.7521
+Epoch 17/60
+48000/48000 [==============================] - 4s 85us/step - loss: 0.1919 - acc: 0.9355 - pearson_correlation_f: 0.8976 - val_loss: 0.3616 - val_acc: 0.8422 - val_pearson_correlation_f: 0.7592
+2018-12-10 16:21:17.180753: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.58GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+6000/6000 [==============================] - 0s 77us/step
+Test result:  [0.3726911741097768, 0.8378333333333333, 0.7545692137082418]
+python3 main.py neg USE-Large CNN
+Using TensorFlow backend.
+Setting:  neg USE-Large 30000 1 CNN None
+loading data ..
+loading pickle ..
+retrieving article ..
+merging data ..
+padding ..
+padding articles ..
+padding summaries ..
+concatenating ..
+splitting by group ..
+shuffling ..
+splitting ..
+train:  (48000, 50, 512) (48000,)
+val:  (6000, 50, 512) (6000,)
+test:  (6000, 50, 512) (6000,)
+building model ..
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_1 (InputLayer)         (None, 50, 512)           0         
+_________________________________________________________________
+conv1d_1 (Conv1D)            (None, 46, 128)           327808    
+_________________________________________________________________
+max_pooling1d_1 (MaxPooling1 (None, 15, 128)           0         
+_________________________________________________________________
+global_max_pooling1d_1 (Glob (None, 128)               0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 327,937
+Trainable params: 327,937
+Non-trainable params: 0
+_________________________________________________________________
+training ..
+Train on 48000 samples, validate on 6000 samples
+Epoch 1/60
+2018-12-10 16:23:16.852919: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2018-12-10 16:23:17.409213: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:964] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-12-10 16:23:17.409743: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1432] Found device 0 with properties: 
+name: GeForce GTX 1060 3GB major: 6 minor: 1 memoryClockRate(GHz): 1.7085
+pciBusID: 0000:0b:00.0
+totalMemory: 2.95GiB freeMemory: 2.75GiB
+2018-12-10 16:23:17.409761: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1511] Adding visible gpu devices: 0
+2018-12-10 16:23:27.438078: I tensorflow/core/common_runtime/gpu/gpu_device.cc:982] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-12-10 16:23:27.438117: I tensorflow/core/common_runtime/gpu/gpu_device.cc:988]      0 
+2018-12-10 16:23:27.438125: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1001] 0:   N 
+2018-12-10 16:23:27.440471: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 2456 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1060 3GB, pci bus id: 0000:0b:00.0, compute capability: 6.1)
+2018-12-10 16:23:31.717496: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.58GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+48000/48000 [==============================] - 19s 397us/step - loss: 0.6658 - acc: 0.5856 - pearson_correlation_f: 0.2337 - val_loss: 0.5697 - val_acc: 0.7692 - val_pearson_correlation_f: 0.6211
+Epoch 2/60
+48000/48000 [==============================] - 4s 85us/step - loss: 0.4930 - acc: 0.8043 - pearson_correlation_f: 0.6773 - val_loss: 0.4201 - val_acc: 0.8470 - val_pearson_correlation_f: 0.7261
+Epoch 3/60
+48000/48000 [==============================] - 4s 84us/step - loss: 0.3870 - acc: 0.8534 - pearson_correlation_f: 0.7583 - val_loss: 0.3767 - val_acc: 0.8530 - val_pearson_correlation_f: 0.7674
+Epoch 4/60
+48000/48000 [==============================] - 4s 80us/step - loss: 0.3290 - acc: 0.8776 - pearson_correlation_f: 0.8024 - val_loss: 0.3357 - val_acc: 0.8687 - val_pearson_correlation_f: 0.7839
+Epoch 5/60
+48000/48000 [==============================] - 4s 80us/step - loss: 0.2887 - acc: 0.8953 - pearson_correlation_f: 0.8321 - val_loss: 0.3051 - val_acc: 0.8812 - val_pearson_correlation_f: 0.8038
+Epoch 6/60
+48000/48000 [==============================] - 4s 84us/step - loss: 0.2570 - acc: 0.9091 - pearson_correlation_f: 0.8543 - val_loss: 0.2897 - val_acc: 0.8902 - val_pearson_correlation_f: 0.8155
+Epoch 7/60
+48000/48000 [==============================] - 4s 84us/step - loss: 0.2309 - acc: 0.9219 - pearson_correlation_f: 0.8727 - val_loss: 0.2886 - val_acc: 0.8890 - val_pearson_correlation_f: 0.8194
+Epoch 8/60
+48000/48000 [==============================] - 4s 84us/step - loss: 0.2114 - acc: 0.9295 - pearson_correlation_f: 0.8865 - val_loss: 0.2764 - val_acc: 0.8940 - val_pearson_correlation_f: 0.8288
+Epoch 9/60
+48000/48000 [==============================] - 4s 84us/step - loss: 0.1923 - acc: 0.9376 - pearson_correlation_f: 0.8989 - val_loss: 0.2696 - val_acc: 0.8947 - val_pearson_correlation_f: 0.8287
+Epoch 10/60
+48000/48000 [==============================] - 4s 85us/step - loss: 0.1760 - acc: 0.9445 - pearson_correlation_f: 0.9091 - val_loss: 0.3421 - val_acc: 0.8633 - val_pearson_correlation_f: 0.7995
+Epoch 11/60
+48000/48000 [==============================] - 4s 84us/step - loss: 0.1617 - acc: 0.9498 - pearson_correlation_f: 0.9186 - val_loss: 0.2570 - val_acc: 0.9023 - val_pearson_correlation_f: 0.8389
+Epoch 12/60
+48000/48000 [==============================] - 4s 85us/step - loss: 0.1484 - acc: 0.9553 - pearson_correlation_f: 0.9266 - val_loss: 0.2524 - val_acc: 0.9048 - val_pearson_correlation_f: 0.8431
+Epoch 13/60
+48000/48000 [==============================] - 4s 84us/step - loss: 0.1371 - acc: 0.9592 - pearson_correlation_f: 0.9333 - val_loss: 0.2633 - val_acc: 0.8975 - val_pearson_correlation_f: 0.8387
+Epoch 14/60
+48000/48000 [==============================] - 4s 86us/step - loss: 0.1282 - acc: 0.9624 - pearson_correlation_f: 0.9384 - val_loss: 0.2572 - val_acc: 0.9030 - val_pearson_correlation_f: 0.8422
+Epoch 15/60
+48000/48000 [==============================] - 4s 84us/step - loss: 0.1177 - acc: 0.9665 - pearson_correlation_f: 0.9446 - val_loss: 0.2583 - val_acc: 0.9017 - val_pearson_correlation_f: 0.8429
+2018-12-10 16:24:32.867578: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.58GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+6000/6000 [==============================] - 0s 81us/step
+Test result:  [0.2481176467438539, 0.9058333333333334, 0.8521198801994324]
+
+
+
+
+
+
+Welcome to the Emacs shell
+
+~/github/anti-rouge/log $ bash runner.sh
+/bin/bash: runner.sh: No such file or directory
+~/github/anti-rouge/log $ ..
+~/github/anti-rouge $ bash runner.sh
+EXP 2
+Mon Dec 10 16:26:29 CST 2018
+python3 main.py mutate glove CNN --extra=add
+Using TensorFlow backend.
+Setting:  mutate glove 30000 1 CNN add
+loading data ..
+loading pickle ..
+retrieving article ..
+merging data ..
+creating tokenizer ..
+padding ..
+padding articles ..
+padding summaries ..
+concatenating ..
+splitting by group ..
+shuffling ..
+splitting ..
+train:  (48000, 1146) (48000,)
+val:  (6000, 1146) (6000,)
+test:  (6000, 1146) (6000,)
+building model ..
+Indexing word vectors.
+Found 400000 word vectors.
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_1 (InputLayer)         (None, 1146)              0         
+_________________________________________________________________
+embedding_1 (Embedding)      (None, 1146, 100)         14512400  
+_________________________________________________________________
+conv1d_1 (Conv1D)            (None, 1142, 128)         64128     
+_________________________________________________________________
+max_pooling1d_1 (MaxPooling1 (None, 380, 128)          0         
+_________________________________________________________________
+global_max_pooling1d_1 (Glob (None, 128)               0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 14,576,657
+Trainable params: 64,257
+Non-trainable params: 14,512,400
+_________________________________________________________________
+training ..
+Train on 48000 samples, validate on 6000 samples
+Epoch 1/60
+2018-12-10 16:27:22.735168: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2018-12-10 16:27:22.829465: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:964] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-12-10 16:27:22.829910: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1432] Found device 0 with properties: 
+name: GeForce GTX 1060 3GB major: 6 minor: 1 memoryClockRate(GHz): 1.7085
+pciBusID: 0000:0b:00.0
+totalMemory: 2.95GiB freeMemory: 2.75GiB
+2018-12-10 16:27:22.829926: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1511] Adding visible gpu devices: 0
+2018-12-10 16:27:22.990909: I tensorflow/core/common_runtime/gpu/gpu_device.cc:982] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-12-10 16:27:22.990946: I tensorflow/core/common_runtime/gpu/gpu_device.cc:988]      0 
+2018-12-10 16:27:22.990951: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1001] 0:   N 
+2018-12-10 16:27:22.991106: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 2456 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1060 3GB, pci bus id: 0000:0b:00.0, compute capability: 6.1)
+48000/48000 [==============================] - 13s 278us/step - loss: 0.3863 - mean_absolute_error: 0.5242 - mean_squared_error: 0.3863 - acc: 0.2563 - pearson_correlation_f: 0.2565 - val_loss: 0.2829 - val_mean_absolute_error: 0.4621 - val_mean_squared_error: 0.2829 - val_acc: 0.1922 - val_pearson_correlation_f: 0.4612
+Epoch 2/60
+48000/48000 [==============================] - 12s 254us/step - loss: 0.1554 - mean_absolute_error: 0.3184 - mean_squared_error: 0.1554 - acc: 0.4103 - pearson_correlation_f: 0.5661 - val_loss: 0.1241 - val_mean_absolute_error: 0.2972 - val_mean_squared_error: 0.1241 - val_acc: 0.4042 - val_pearson_correlation_f: 0.6236
+Epoch 3/60
+48000/48000 [==============================] - 12s 255us/step - loss: 0.0773 - mean_absolute_error: 0.2192 - mean_squared_error: 0.0773 - acc: 0.4800 - pearson_correlation_f: 0.6958 - val_loss: 0.0669 - val_mean_absolute_error: 0.2062 - val_mean_squared_error: 0.0669 - val_acc: 0.4737 - val_pearson_correlation_f: 0.6971
+Epoch 4/60
+48000/48000 [==============================] - 12s 257us/step - loss: 0.0529 - mean_absolute_error: 0.1781 - mean_squared_error: 0.0529 - acc: 0.4920 - pearson_correlation_f: 0.7721 - val_loss: 0.0496 - val_mean_absolute_error: 0.1686 - val_mean_squared_error: 0.0496 - val_acc: 0.4947 - val_pearson_correlation_f: 0.7314
+Epoch 5/60
+48000/48000 [==============================] - 12s 257us/step - loss: 0.0439 - mean_absolute_error: 0.1609 - mean_squared_error: 0.0439 - acc: 0.4955 - pearson_correlation_f: 0.8145 - val_loss: 0.0513 - val_mean_absolute_error: 0.1766 - val_mean_squared_error: 0.0513 - val_acc: 0.4905 - val_pearson_correlation_f: 0.7455
+Epoch 6/60
+48000/48000 [==============================] - 13s 261us/step - loss: 0.0380 - mean_absolute_error: 0.1498 - mean_squared_error: 0.0380 - acc: 0.4966 - pearson_correlation_f: 0.8425 - val_loss: 0.0583 - val_mean_absolute_error: 0.1788 - val_mean_squared_error: 0.0583 - val_acc: 0.4988 - val_pearson_correlation_f: 0.7489
+Epoch 7/60
+48000/48000 [==============================] - 13s 267us/step - loss: 0.0345 - mean_absolute_error: 0.1423 - mean_squared_error: 0.0345 - acc: 0.4977 - pearson_correlation_f: 0.8595 - val_loss: 0.0465 - val_mean_absolute_error: 0.1639 - val_mean_squared_error: 0.0465 - val_acc: 0.4938 - val_pearson_correlation_f: 0.7555
+Epoch 8/60
+48000/48000 [==============================] - 13s 266us/step - loss: 0.0316 - mean_absolute_error: 0.1361 - mean_squared_error: 0.0316 - acc: 0.4979 - pearson_correlation_f: 0.8728 - val_loss: 0.0453 - val_mean_absolute_error: 0.1589 - val_mean_squared_error: 0.0453 - val_acc: 0.4958 - val_pearson_correlation_f: 0.7594
+Epoch 9/60
+48000/48000 [==============================] - 13s 267us/step - loss: 0.0294 - mean_absolute_error: 0.1313 - mean_squared_error: 0.0294 - acc: 0.4984 - pearson_correlation_f: 0.8835 - val_loss: 0.0457 - val_mean_absolute_error: 0.1572 - val_mean_squared_error: 0.0457 - val_acc: 0.4977 - val_pearson_correlation_f: 0.7592
+Epoch 10/60
+48000/48000 [==============================] - 13s 270us/step - loss: 0.0277 - mean_absolute_error: 0.1275 - mean_squared_error: 0.0277 - acc: 0.4982 - pearson_correlation_f: 0.8919 - val_loss: 0.0474 - val_mean_absolute_error: 0.1660 - val_mean_squared_error: 0.0474 - val_acc: 0.4910 - val_pearson_correlation_f: 0.7648
+Epoch 11/60
+48000/48000 [==============================] - 13s 269us/step - loss: 0.0261 - mean_absolute_error: 0.1238 - mean_squared_error: 0.0261 - acc: 0.4985 - pearson_correlation_f: 0.8995 - val_loss: 0.0602 - val_mean_absolute_error: 0.1808 - val_mean_squared_error: 0.0602 - val_acc: 0.4995 - val_pearson_correlation_f: 0.7486
+6000/6000 [==============================] - 1s 125us/step
+Test result:  [0.06004161054889361, 0.18220105826854704, 0.06004161054889361, 0.49933333333333335, 0.7645906297365824]
+python3 main.py mutate glove CNN --extra=delete
+Using TensorFlow backend.
+Setting:  mutate glove 30000 1 CNN delete
+loading data ..
+loading pickle ..
+retrieving article ..
+merging data ..
+creating tokenizer ..
+padding ..
+padding articles ..
+padding summaries ..
+concatenating ..
+splitting by group ..
+shuffling ..
+splitting ..
+train:  (48000, 1146) (48000,)
+val:  (6000, 1146) (6000,)
+test:  (6000, 1146) (6000,)
+building model ..
+Indexing word vectors.
+Found 400000 word vectors.
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_1 (InputLayer)         (None, 1146)              0         
+_________________________________________________________________
+embedding_1 (Embedding)      (None, 1146, 100)         14458600  
+_________________________________________________________________
+conv1d_1 (Conv1D)            (None, 1142, 128)         64128     
+_________________________________________________________________
+global_max_pooling1d_1 (Glob (None, 128)               0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 14,522,857
+Trainable params: 64,257
+Non-trainable params: 14,458,600
+_________________________________________________________________
+training ..
+Train on 48000 samples, validate on 6000 samples
+Epoch 1/60
+2018-12-10 16:30:34.763768: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2018-12-10 16:30:34.860180: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:964] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-12-10 16:30:34.860631: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1432] Found device 0 with properties: 
+name: GeForce GTX 1060 3GB major: 6 minor: 1 memoryClockRate(GHz): 1.7085
+pciBusID: 0000:0b:00.0
+totalMemory: 2.95GiB freeMemory: 2.75GiB
+2018-12-10 16:30:34.860647: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1511] Adding visible gpu devices: 0
+2018-12-10 16:30:35.017995: I tensorflow/core/common_runtime/gpu/gpu_device.cc:982] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-12-10 16:30:35.018037: I tensorflow/core/common_runtime/gpu/gpu_device.cc:988]      0 
+2018-12-10 16:30:35.018043: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1001] 0:   N 
+2018-12-10 16:30:35.018198: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 2456 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1060 3GB, pci bus id: 0000:0b:00.0, compute capability: 6.1)
+48000/48000 [==============================] - 14s 282us/step - loss: 0.5133 - mean_absolute_error: 0.6011 - mean_squared_error: 0.5133 - acc: 0.2240 - pearson_correlation_f: -0.0109 - val_loss: 0.2901 - val_mean_absolute_error: 0.4158 - val_mean_squared_error: 0.2901 - val_acc: 0.4740 - val_pearson_correlation_f: -0.0059
+Epoch 2/60
+48000/48000 [==============================] - 12s 256us/step - loss: 0.2576 - mean_absolute_error: 0.4082 - mean_squared_error: 0.2576 - acc: 0.3467 - pearson_correlation_f: 0.0135 - val_loss: 0.1991 - val_mean_absolute_error: 0.3904 - val_mean_squared_error: 0.1991 - val_acc: 0.2370 - val_pearson_correlation_f: 0.0562
+Epoch 3/60
+48000/48000 [==============================] - 12s 256us/step - loss: 0.1469 - mean_absolute_error: 0.3130 - mean_squared_error: 0.1469 - acc: 0.4285 - pearson_correlation_f: 0.1081 - val_loss: 0.1142 - val_mean_absolute_error: 0.2675 - val_mean_squared_error: 0.1142 - val_acc: 0.4958 - val_pearson_correlation_f: 0.1774
+Epoch 4/60
+48000/48000 [==============================] - 12s 257us/step - loss: 0.1070 - mean_absolute_error: 0.2700 - mean_squared_error: 0.1070 - acc: 0.4750 - pearson_correlation_f: 0.2883 - val_loss: 0.0949 - val_mean_absolute_error: 0.2467 - val_mean_squared_error: 0.0949 - val_acc: 0.4957 - val_pearson_correlation_f: 0.3388
+Epoch 5/60
+48000/48000 [==============================] - 13s 267us/step - loss: 0.0907 - mean_absolute_error: 0.2476 - mean_squared_error: 0.0907 - acc: 0.4845 - pearson_correlation_f: 0.4252 - val_loss: 0.0877 - val_mean_absolute_error: 0.2384 - val_mean_squared_error: 0.0877 - val_acc: 0.4938 - val_pearson_correlation_f: 0.4106
+Epoch 6/60
+48000/48000 [==============================] - 13s 270us/step - loss: 0.0830 - mean_absolute_error: 0.2364 - mean_squared_error: 0.0830 - acc: 0.4877 - pearson_correlation_f: 0.4985 - val_loss: 0.0908 - val_mean_absolute_error: 0.2576 - val_mean_squared_error: 0.0908 - val_acc: 0.4707 - val_pearson_correlation_f: 0.4453
+Epoch 7/60
+48000/48000 [==============================] - 13s 272us/step - loss: 0.0775 - mean_absolute_error: 0.2274 - mean_squared_error: 0.0775 - acc: 0.4877 - pearson_correlation_f: 0.5445 - val_loss: 0.0852 - val_mean_absolute_error: 0.2310 - val_mean_squared_error: 0.0852 - val_acc: 0.4937 - val_pearson_correlation_f: 0.4538
+Epoch 8/60
+48000/48000 [==============================] - 13s 271us/step - loss: 0.0736 - mean_absolute_error: 0.2210 - mean_squared_error: 0.0736 - acc: 0.4874 - pearson_correlation_f: 0.5813 - val_loss: 0.0842 - val_mean_absolute_error: 0.2391 - val_mean_squared_error: 0.0842 - val_acc: 0.4810 - val_pearson_correlation_f: 0.4680
+Epoch 9/60
+48000/48000 [==============================] - 13s 272us/step - loss: 0.0697 - mean_absolute_error: 0.2144 - mean_squared_error: 0.0697 - acc: 0.4867 - pearson_correlation_f: 0.6104 - val_loss: 0.0994 - val_mean_absolute_error: 0.2663 - val_mean_squared_error: 0.0994 - val_acc: 0.4373 - val_pearson_correlation_f: 0.4674
+Epoch 10/60
+48000/48000 [==============================] - 13s 270us/step - loss: 0.0669 - mean_absolute_error: 0.2097 - mean_squared_error: 0.0669 - acc: 0.4870 - pearson_correlation_f: 0.6369 - val_loss: 0.0901 - val_mean_absolute_error: 0.2333 - val_mean_squared_error: 0.0901 - val_acc: 0.4922 - val_pearson_correlation_f: 0.4701
+Epoch 11/60
+48000/48000 [==============================] - 13s 275us/step - loss: 0.0642 - mean_absolute_error: 0.2049 - mean_squared_error: 0.0642 - acc: 0.4872 - pearson_correlation_f: 0.6548 - val_loss: 0.0987 - val_mean_absolute_error: 0.2618 - val_mean_squared_error: 0.0987 - val_acc: 0.4365 - val_pearson_correlation_f: 0.4758
+6000/6000 [==============================] - 1s 104us/step
+Test result:  [0.09942319005727768, 0.26104136975606285, 0.09942319005727768, 0.43933333333333335, 0.4640327030420303]
+python3 main.py mutate glove CNN --extra=replace
+Using TensorFlow backend.
+Setting:  mutate glove 30000 1 CNN replace
+loading data ..
+loading pickle ..
+retrieving article ..
+merging data ..
+creating tokenizer ..
+padding ..
+padding articles ..
+padding summaries ..
+concatenating ..
+splitting by group ..
+shuffling ..
+splitting ..
+train:  (48000, 1146) (48000,)
+val:  (6000, 1146) (6000,)
+test:  (6000, 1146) (6000,)
+building model ..
+Indexing word vectors.
+Found 400000 word vectors.
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_1 (InputLayer)         (None, 1146)              0         
+_________________________________________________________________
+embedding_1 (Embedding)      (None, 1146, 100)         14554300  
+_________________________________________________________________
+conv1d_1 (Conv1D)            (None, 1142, 128)         64128     
+_________________________________________________________________
+global_max_pooling1d_1 (Glob (None, 128)               0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 14,618,557
+Trainable params: 64,257
+Non-trainable params: 14,554,300
+_________________________________________________________________
+training ..
+Train on 48000 samples, validate on 6000 samples
+Epoch 1/60
+2018-12-10 16:33:49.904316: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2018-12-10 16:33:50.004436: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:964] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-12-10 16:33:50.004899: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1432] Found device 0 with properties: 
+name: GeForce GTX 1060 3GB major: 6 minor: 1 memoryClockRate(GHz): 1.7085
+pciBusID: 0000:0b:00.0
+totalMemory: 2.95GiB freeMemory: 2.75GiB
+2018-12-10 16:33:50.004916: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1511] Adding visible gpu devices: 0
+2018-12-10 16:33:50.168330: I tensorflow/core/common_runtime/gpu/gpu_device.cc:982] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-12-10 16:33:50.168367: I tensorflow/core/common_runtime/gpu/gpu_device.cc:988]      0 
+2018-12-10 16:33:50.168372: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1001] 0:   N 
+2018-12-10 16:33:50.168517: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 2456 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1060 3GB, pci bus id: 0000:0b:00.0, compute capability: 6.1)
+48000/48000 [==============================] - 13s 280us/step - loss: 0.4049 - mean_absolute_error: 0.5426 - mean_squared_error: 0.4049 - acc: 0.2383 - pearson_correlation_f: 0.3688 - val_loss: 0.2813 - val_mean_absolute_error: 0.4633 - val_mean_squared_error: 0.2813 - val_acc: 0.2040 - val_pearson_correlation_f: 0.5604
+Epoch 2/60
+48000/48000 [==============================] - 13s 261us/step - loss: 0.1516 - mean_absolute_error: 0.3172 - mean_squared_error: 0.1516 - acc: 0.4092 - pearson_correlation_f: 0.6555 - val_loss: 0.0782 - val_mean_absolute_error: 0.2242 - val_mean_squared_error: 0.0782 - val_acc: 0.4610 - val_pearson_correlation_f: 0.7143
+Epoch 3/60
+48000/48000 [==============================] - 12s 256us/step - loss: 0.0625 - mean_absolute_error: 0.1960 - mean_squared_error: 0.0625 - acc: 0.4871 - pearson_correlation_f: 0.7678 - val_loss: 0.0683 - val_mean_absolute_error: 0.2119 - val_mean_squared_error: 0.0683 - val_acc: 0.4737 - val_pearson_correlation_f: 0.7717
+Epoch 4/60
+48000/48000 [==============================] - 12s 259us/step - loss: 0.0412 - mean_absolute_error: 0.1568 - mean_squared_error: 0.0412 - acc: 0.4950 - pearson_correlation_f: 0.8343 - val_loss: 0.0415 - val_mean_absolute_error: 0.1508 - val_mean_squared_error: 0.0415 - val_acc: 0.4965 - val_pearson_correlation_f: 0.7903
+Epoch 5/60
+48000/48000 [==============================] - 13s 265us/step - loss: 0.0325 - mean_absolute_error: 0.1382 - mean_squared_error: 0.0325 - acc: 0.4974 - pearson_correlation_f: 0.8690 - val_loss: 0.0366 - val_mean_absolute_error: 0.1406 - val_mean_squared_error: 0.0366 - val_acc: 0.4975 - val_pearson_correlation_f: 0.8125
+Epoch 6/60
+48000/48000 [==============================] - 13s 269us/step - loss: 0.0279 - mean_absolute_error: 0.1276 - mean_squared_error: 0.0279 - acc: 0.4986 - pearson_correlation_f: 0.8902 - val_loss: 0.0360 - val_mean_absolute_error: 0.1419 - val_mean_squared_error: 0.0360 - val_acc: 0.4947 - val_pearson_correlation_f: 0.8210
+Epoch 7/60
+48000/48000 [==============================] - 13s 270us/step - loss: 0.0249 - mean_absolute_error: 0.1204 - mean_squared_error: 0.0249 - acc: 0.4988 - pearson_correlation_f: 0.9032 - val_loss: 0.0408 - val_mean_absolute_error: 0.1478 - val_mean_squared_error: 0.0408 - val_acc: 0.4990 - val_pearson_correlation_f: 0.8140
+Epoch 8/60
+48000/48000 [==============================] - 13s 273us/step - loss: 0.0223 - mean_absolute_error: 0.1138 - mean_squared_error: 0.0223 - acc: 0.4988 - pearson_correlation_f: 0.9136 - val_loss: 0.0356 - val_mean_absolute_error: 0.1395 - val_mean_squared_error: 0.0356 - val_acc: 0.4958 - val_pearson_correlation_f: 0.8200
+Epoch 9/60
+48000/48000 [==============================] - 13s 270us/step - loss: 0.0207 - mean_absolute_error: 0.1098 - mean_squared_error: 0.0207 - acc: 0.4992 - pearson_correlation_f: 0.9213 - val_loss: 0.0402 - val_mean_absolute_error: 0.1541 - val_mean_squared_error: 0.0402 - val_acc: 0.4932 - val_pearson_correlation_f: 0.8235
+Epoch 10/60
+48000/48000 [==============================] - 13s 272us/step - loss: 0.0195 - mean_absolute_error: 0.1066 - mean_squared_error: 0.0195 - acc: 0.4994 - pearson_correlation_f: 0.9270 - val_loss: 0.0409 - val_mean_absolute_error: 0.1536 - val_mean_squared_error: 0.0409 - val_acc: 0.4917 - val_pearson_correlation_f: 0.8246
+Epoch 11/60
+48000/48000 [==============================] - 13s 269us/step - loss: 0.0183 - mean_absolute_error: 0.1030 - mean_squared_error: 0.0183 - acc: 0.4993 - pearson_correlation_f: 0.9322 - val_loss: 0.0430 - val_mean_absolute_error: 0.1521 - val_mean_squared_error: 0.0430 - val_acc: 0.4988 - val_pearson_correlation_f: 0.8138
+6000/6000 [==============================] - 1s 105us/step
+Test result:  [0.04269181987643242, 0.1516720263560613, 0.04269181987643242, 0.49883333333333335, 0.8221949599583944]
+python3 main.py mutate USE CNN --extra=add
+Using TensorFlow backend.
+Setting:  mutate USE 30000 1 CNN add
+loading data ..
+loading pickle ..
+retrieving article ..
+merging data ..
+padding ..
+padding articles ..
+padding summaries ..
+concatenating ..
+splitting by group ..
+shuffling ..
+splitting ..
+train:  (48000, 50, 512) (48000,)
+val:  (6000, 50, 512) (6000,)
+test:  (6000, 50, 512) (6000,)
+building model ..
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_1 (InputLayer)         (None, 50, 512)           0         
+_________________________________________________________________
+conv1d_1 (Conv1D)            (None, 46, 128)           327808    
+_________________________________________________________________
+global_max_pooling1d_1 (Glob (None, 128)               0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 327,937
+Trainable params: 327,937
+Non-trainable params: 0
+_________________________________________________________________
+training ..
+Train on 48000 samples, validate on 6000 samples
+Epoch 1/60
+2018-12-10 16:38:10.054328: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2018-12-10 16:38:10.557760: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:964] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-12-10 16:38:10.558282: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1432] Found device 0 with properties: 
+name: GeForce GTX 1060 3GB major: 6 minor: 1 memoryClockRate(GHz): 1.7085
+pciBusID: 0000:0b:00.0
+totalMemory: 2.95GiB freeMemory: 2.75GiB
+2018-12-10 16:38:10.558300: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1511] Adding visible gpu devices: 0
+2018-12-10 16:38:19.496790: I tensorflow/core/common_runtime/gpu/gpu_device.cc:982] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-12-10 16:38:19.496827: I tensorflow/core/common_runtime/gpu/gpu_device.cc:988]      0 
+2018-12-10 16:38:19.496837: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1001] 0:   N 
+2018-12-10 16:38:19.497857: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 2456 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1060 3GB, pci bus id: 0000:0b:00.0, compute capability: 6.1)
+2018-12-10 16:38:25.811618: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.58GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+48000/48000 [==============================] - 20s 411us/step - loss: 0.1001 - mean_absolute_error: 0.2409 - mean_squared_error: 0.1001 - acc: 0.4476 - pearson_correlation_f: 0.4916 - val_loss: 0.0361 - val_mean_absolute_error: 0.1374 - val_mean_squared_error: 0.0361 - val_acc: 0.4995 - val_pearson_correlation_f: 0.8593
+Epoch 2/60
+48000/48000 [==============================] - 4s 80us/step - loss: 0.0299 - mean_absolute_error: 0.1298 - mean_squared_error: 0.0299 - acc: 0.4993 - pearson_correlation_f: 0.8749 - val_loss: 0.0240 - val_mean_absolute_error: 0.1103 - val_mean_squared_error: 0.0240 - val_acc: 0.4990 - val_pearson_correlation_f: 0.8781
+Epoch 3/60
+48000/48000 [==============================] - 4s 75us/step - loss: 0.0254 - mean_absolute_error: 0.1183 - mean_squared_error: 0.0254 - acc: 0.4997 - pearson_correlation_f: 0.8928 - val_loss: 0.0262 - val_mean_absolute_error: 0.1141 - val_mean_squared_error: 0.0262 - val_acc: 0.4993 - val_pearson_correlation_f: 0.8802
+Epoch 4/60
+48000/48000 [==============================] - 4s 81us/step - loss: 0.0227 - mean_absolute_error: 0.1117 - mean_squared_error: 0.0227 - acc: 0.4998 - pearson_correlation_f: 0.9033 - val_loss: 0.0226 - val_mean_absolute_error: 0.1082 - val_mean_squared_error: 0.0226 - val_acc: 0.4990 - val_pearson_correlation_f: 0.8890
+Epoch 5/60
+48000/48000 [==============================] - 4s 80us/step - loss: 0.0208 - mean_absolute_error: 0.1069 - mean_squared_error: 0.0208 - acc: 0.4998 - pearson_correlation_f: 0.9114 - val_loss: 0.0218 - val_mean_absolute_error: 0.1051 - val_mean_squared_error: 0.0218 - val_acc: 0.4993 - val_pearson_correlation_f: 0.8910
+Epoch 6/60
+48000/48000 [==============================] - 4s 80us/step - loss: 0.0193 - mean_absolute_error: 0.1033 - mean_squared_error: 0.0193 - acc: 0.4999 - pearson_correlation_f: 0.9184 - val_loss: 0.0232 - val_mean_absolute_error: 0.1116 - val_mean_squared_error: 0.0232 - val_acc: 0.4985 - val_pearson_correlation_f: 0.8898
+Epoch 7/60
+48000/48000 [==============================] - 4s 81us/step - loss: 0.0181 - mean_absolute_error: 0.1003 - mean_squared_error: 0.0181 - acc: 0.4999 - pearson_correlation_f: 0.9244 - val_loss: 0.0220 - val_mean_absolute_error: 0.1071 - val_mean_squared_error: 0.0220 - val_acc: 0.4993 - val_pearson_correlation_f: 0.8909
+Epoch 8/60
+48000/48000 [==============================] - 4s 81us/step - loss: 0.0169 - mean_absolute_error: 0.0970 - mean_squared_error: 0.0169 - acc: 0.4999 - pearson_correlation_f: 0.9288 - val_loss: 0.0255 - val_mean_absolute_error: 0.1147 - val_mean_squared_error: 0.0255 - val_acc: 0.4997 - val_pearson_correlation_f: 0.8891
+2018-12-10 16:38:57.434033: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.58GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+6000/6000 [==============================] - 0s 79us/step
+Test result:  [0.02583986886590719, 0.11486668409903844, 0.02583986886590719, 0.49983333333333335, 0.8863968510627747]
+python3 main.py mutate USE CNN --extra=delete
+Using TensorFlow backend.
+Setting:  mutate USE 30000 1 CNN delete
+loading data ..
+loading pickle ..
+retrieving article ..
+merging data ..
+padding ..
+padding articles ..
+padding summaries ..
+concatenating ..
+splitting by group ..
+shuffling ..
+splitting ..
+train:  (48000, 50, 512) (48000,)
+val:  (6000, 50, 512) (6000,)
+test:  (6000, 50, 512) (6000,)
+building model ..
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_1 (InputLayer)         (None, 50, 512)           0         
+_________________________________________________________________
+conv1d_1 (Conv1D)            (None, 46, 128)           327808    
+_________________________________________________________________
+global_max_pooling1d_1 (Glob (None, 128)               0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 327,937
+Trainable params: 327,937
+Non-trainable params: 0
+_________________________________________________________________
+training ..
+Train on 48000 samples, validate on 6000 samples
+Epoch 1/60
+2018-12-10 16:41:14.607187: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2018-12-10 16:41:15.160250: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:964] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-12-10 16:41:15.160860: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1432] Found device 0 with properties: 
+name: GeForce GTX 1060 3GB major: 6 minor: 1 memoryClockRate(GHz): 1.7085
+pciBusID: 0000:0b:00.0
+totalMemory: 2.95GiB freeMemory: 2.75GiB
+2018-12-10 16:41:15.160883: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1511] Adding visible gpu devices: 0
+2018-12-10 16:41:24.253540: I tensorflow/core/common_runtime/gpu/gpu_device.cc:982] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-12-10 16:41:24.253581: I tensorflow/core/common_runtime/gpu/gpu_device.cc:988]      0 
+2018-12-10 16:41:24.253600: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1001] 0:   N 
+2018-12-10 16:41:24.254674: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 2456 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1060 3GB, pci bus id: 0000:0b:00.0, compute capability: 6.1)
+2018-12-10 16:41:30.741608: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.58GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+48000/48000 [==============================] - 20s 420us/step - loss: 0.1239 - mean_absolute_error: 0.2829 - mean_squared_error: 0.1239 - acc: 0.4355 - pearson_correlation_f: 0.3291 - val_loss: 0.0514 - val_mean_absolute_error: 0.1822 - val_mean_squared_error: 0.0514 - val_acc: 0.4850 - val_pearson_correlation_f: 0.7125
+Epoch 2/60
+48000/48000 [==============================] - 4s 83us/step - loss: 0.0517 - mean_absolute_error: 0.1807 - mean_squared_error: 0.0517 - acc: 0.4852 - pearson_correlation_f: 0.7424 - val_loss: 0.0445 - val_mean_absolute_error: 0.1643 - val_mean_squared_error: 0.0445 - val_acc: 0.4913 - val_pearson_correlation_f: 0.7622
+Epoch 3/60
+48000/48000 [==============================] - 4s 79us/step - loss: 0.0439 - mean_absolute_error: 0.1645 - mean_squared_error: 0.0439 - acc: 0.4876 - pearson_correlation_f: 0.7878 - val_loss: 0.0428 - val_mean_absolute_error: 0.1599 - val_mean_squared_error: 0.0428 - val_acc: 0.4927 - val_pearson_correlation_f: 0.7797
+Epoch 4/60
+48000/48000 [==============================] - 4s 81us/step - loss: 0.0394 - mean_absolute_error: 0.1552 - mean_squared_error: 0.0394 - acc: 0.4895 - pearson_correlation_f: 0.8147 - val_loss: 0.0400 - val_mean_absolute_error: 0.1547 - val_mean_squared_error: 0.0400 - val_acc: 0.4913 - val_pearson_correlation_f: 0.7854
+Epoch 5/60
+48000/48000 [==============================] - 4s 83us/step - loss: 0.0359 - mean_absolute_error: 0.1478 - mean_squared_error: 0.0359 - acc: 0.4919 - pearson_correlation_f: 0.8342 - val_loss: 0.0416 - val_mean_absolute_error: 0.1600 - val_mean_squared_error: 0.0416 - val_acc: 0.4832 - val_pearson_correlation_f: 0.7974
+Epoch 6/60
+48000/48000 [==============================] - 4s 81us/step - loss: 0.0332 - mean_absolute_error: 0.1425 - mean_squared_error: 0.0332 - acc: 0.4938 - pearson_correlation_f: 0.8498 - val_loss: 0.0394 - val_mean_absolute_error: 0.1527 - val_mean_squared_error: 0.0394 - val_acc: 0.4935 - val_pearson_correlation_f: 0.8009
+Epoch 7/60
+48000/48000 [==============================] - 4s 88us/step - loss: 0.0309 - mean_absolute_error: 0.1375 - mean_squared_error: 0.0309 - acc: 0.4946 - pearson_correlation_f: 0.8625 - val_loss: 0.0520 - val_mean_absolute_error: 0.1823 - val_mean_squared_error: 0.0520 - val_acc: 0.4750 - val_pearson_correlation_f: 0.8039
+Epoch 8/60
+48000/48000 [==============================] - 4s 83us/step - loss: 0.0289 - mean_absolute_error: 0.1331 - mean_squared_error: 0.0289 - acc: 0.4961 - pearson_correlation_f: 0.8741 - val_loss: 0.0381 - val_mean_absolute_error: 0.1502 - val_mean_squared_error: 0.0381 - val_acc: 0.4928 - val_pearson_correlation_f: 0.8034
+Epoch 9/60
+48000/48000 [==============================] - 4s 87us/step - loss: 0.0271 - mean_absolute_error: 0.1289 - mean_squared_error: 0.0271 - acc: 0.4967 - pearson_correlation_f: 0.8844 - val_loss: 0.0424 - val_mean_absolute_error: 0.1601 - val_mean_squared_error: 0.0424 - val_acc: 0.4820 - val_pearson_correlation_f: 0.8052
+Epoch 10/60
+48000/48000 [==============================] - 4s 83us/step - loss: 0.0257 - mean_absolute_error: 0.1259 - mean_squared_error: 0.0257 - acc: 0.4975 - pearson_correlation_f: 0.8924 - val_loss: 0.0449 - val_mean_absolute_error: 0.1665 - val_mean_squared_error: 0.0449 - val_acc: 0.4820 - val_pearson_correlation_f: 0.8058
+Epoch 11/60
+48000/48000 [==============================] - 4s 84us/step - loss: 0.0243 - mean_absolute_error: 0.1224 - mean_squared_error: 0.0243 - acc: 0.4977 - pearson_correlation_f: 0.8995 - val_loss: 0.0582 - val_mean_absolute_error: 0.1935 - val_mean_squared_error: 0.0582 - val_acc: 0.4700 - val_pearson_correlation_f: 0.8070
+2018-12-10 16:42:15.438761: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.58GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+6000/6000 [==============================] - 0s 82us/step
+Test result:  [0.06066649881005287, 0.19780634673436484, 0.06066649881005287, 0.465, 0.801596553325653]
+python3 main.py mutate USE CNN --extra=replace
+Using TensorFlow backend.
+Setting:  mutate USE 30000 1 CNN replace
+loading data ..
+loading pickle ..
+retrieving article ..
+merging data ..
+padding ..
+padding articles ..
+padding summaries ..
+concatenating ..
+splitting by group ..
+shuffling ..
+splitting ..
+train:  (48000, 50, 512) (48000,)
+val:  (6000, 50, 512) (6000,)
+test:  (6000, 50, 512) (6000,)
+building model ..
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_1 (InputLayer)         (None, 50, 512)           0         
+_________________________________________________________________
+conv1d_1 (Conv1D)            (None, 46, 128)           327808    
+_________________________________________________________________
+global_max_pooling1d_1 (Glob (None, 128)               0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 327,937
+Trainable params: 327,937
+Non-trainable params: 0
+_________________________________________________________________
+training ..
+Train on 48000 samples, validate on 6000 samples
+Epoch 1/60
+2018-12-10 16:44:22.416555: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2018-12-10 16:44:22.935239: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:964] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-12-10 16:44:22.935765: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1432] Found device 0 with properties: 
+name: GeForce GTX 1060 3GB major: 6 minor: 1 memoryClockRate(GHz): 1.7085
+pciBusID: 0000:0b:00.0
+totalMemory: 2.95GiB freeMemory: 2.75GiB
+2018-12-10 16:44:22.935783: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1511] Adding visible gpu devices: 0
+2018-12-10 16:44:31.071470: I tensorflow/core/common_runtime/gpu/gpu_device.cc:982] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-12-10 16:44:31.071511: I tensorflow/core/common_runtime/gpu/gpu_device.cc:988]      0 
+2018-12-10 16:44:31.071520: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1001] 0:   N 
+2018-12-10 16:44:31.072426: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 2456 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1060 3GB, pci bus id: 0000:0b:00.0, compute capability: 6.1)
+2018-12-10 16:44:37.089089: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.58GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+48000/48000 [==============================] - 19s 387us/step - loss: 0.1041 - mean_absolute_error: 0.2372 - mean_squared_error: 0.1041 - acc: 0.4437 - pearson_correlation_f: 0.5392 - val_loss: 0.0219 - val_mean_absolute_error: 0.1135 - val_mean_squared_error: 0.0219 - val_acc: 0.4993 - val_pearson_correlation_f: 0.8998
+Epoch 2/60
+48000/48000 [==============================] - 4s 80us/step - loss: 0.0231 - mean_absolute_error: 0.1147 - mean_squared_error: 0.0231 - acc: 0.4994 - pearson_correlation_f: 0.9085 - val_loss: 0.0179 - val_mean_absolute_error: 0.0967 - val_mean_squared_error: 0.0179 - val_acc: 0.4993 - val_pearson_correlation_f: 0.9126
+Epoch 3/60
+48000/48000 [==============================] - 4s 80us/step - loss: 0.0192 - mean_absolute_error: 0.1032 - mean_squared_error: 0.0192 - acc: 0.4994 - pearson_correlation_f: 0.9223 - val_loss: 0.0377 - val_mean_absolute_error: 0.1547 - val_mean_squared_error: 0.0377 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9145
+Epoch 4/60
+48000/48000 [==============================] - 4s 80us/step - loss: 0.0172 - mean_absolute_error: 0.0971 - mean_squared_error: 0.0172 - acc: 0.4995 - pearson_correlation_f: 0.9301 - val_loss: 0.0227 - val_mean_absolute_error: 0.1188 - val_mean_squared_error: 0.0227 - val_acc: 0.4987 - val_pearson_correlation_f: 0.9236
+Epoch 5/60
+48000/48000 [==============================] - 4s 80us/step - loss: 0.0155 - mean_absolute_error: 0.0922 - mean_squared_error: 0.0155 - acc: 0.4998 - pearson_correlation_f: 0.9366 - val_loss: 0.0245 - val_mean_absolute_error: 0.1247 - val_mean_squared_error: 0.0245 - val_acc: 0.4990 - val_pearson_correlation_f: 0.9251
+2018-12-10 16:44:57.100628: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.58GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+6000/6000 [==============================] - 0s 81us/step
+Test result:  [0.024022521739204723, 0.12338882998625438, 0.024022521739204723, 0.49916666666666665, 0.9270493895212809]
+python3 main.py mutate USE-Large CNN --extra=add
+Using TensorFlow backend.
+Setting:  mutate USE-Large 30000 1 CNN add
+loading data ..
+loading pickle ..
+retrieving article ..
+Warning: removed invalid samples. Valid: 29801 all: 30000
+merging data ..
+padding ..
+padding articles ..
+padding summaries ..
+concatenating ..
+splitting by group ..
+shuffling ..
+splitting ..
+train:  (47682, 50, 512) (47682,)
+val:  (5960, 50, 512) (5960,)
+test:  (5960, 50, 512) (5960,)
+building model ..
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_1 (InputLayer)         (None, 50, 512)           0         
+_________________________________________________________________
+conv1d_1 (Conv1D)            (None, 46, 128)           327808    
+_________________________________________________________________
+global_max_pooling1d_1 (Glob (None, 128)               0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 327,937
+Trainable params: 327,937
+Non-trainable params: 0
+_________________________________________________________________
+training ..
+Train on 47682 samples, validate on 5960 samples
+Epoch 1/60
+2018-12-10 16:46:51.953059: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2018-12-10 16:46:52.557346: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:964] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-12-10 16:46:52.557955: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1432] Found device 0 with properties: 
+name: GeForce GTX 1060 3GB major: 6 minor: 1 memoryClockRate(GHz): 1.7085
+pciBusID: 0000:0b:00.0
+totalMemory: 2.95GiB freeMemory: 2.75GiB
+2018-12-10 16:46:52.557980: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1511] Adding visible gpu devices: 0
+2018-12-10 16:47:01.676289: I tensorflow/core/common_runtime/gpu/gpu_device.cc:982] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-12-10 16:47:01.676329: I tensorflow/core/common_runtime/gpu/gpu_device.cc:988]      0 
+2018-12-10 16:47:01.676337: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1001] 0:   N 
+2018-12-10 16:47:01.677405: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 2456 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1060 3GB, pci bus id: 0000:0b:00.0, compute capability: 6.1)
+2018-12-10 16:47:08.054444: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.58GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+47232/47682 [============================>.] - ETA: 0s - loss: 0.1120 - mean_absolute_error: 0.2358 - mean_squared_error: 0.1120 - acc: 0.4406 - pearson_correlation_f: 0.56102018-12-10 16:47:11.369470: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 3.13GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+47682/47682 [==============================] - 20s 416us/step - loss: 0.1112 - mean_absolute_error: 0.2349 - mean_squared_error: 0.1112 - acc: 0.4412 - pearson_correlation_f: 0.5644 - val_loss: 0.0181 - val_mean_absolute_error: 0.0940 - val_mean_squared_error: 0.0181 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9209
+Epoch 2/60
+47682/47682 [==============================] - 4s 76us/step - loss: 0.0176 - mean_absolute_error: 0.0981 - mean_squared_error: 0.0176 - acc: 0.4999 - pearson_correlation_f: 0.9321 - val_loss: 0.0155 - val_mean_absolute_error: 0.0883 - val_mean_squared_error: 0.0155 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9330
+Epoch 3/60
+47682/47682 [==============================] - 4s 75us/step - loss: 0.0148 - mean_absolute_error: 0.0889 - mean_squared_error: 0.0148 - acc: 0.5000 - pearson_correlation_f: 0.9425 - val_loss: 0.0124 - val_mean_absolute_error: 0.0764 - val_mean_squared_error: 0.0124 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9361
+Epoch 4/60
+47682/47682 [==============================] - 4s 75us/step - loss: 0.0131 - mean_absolute_error: 0.0830 - mean_squared_error: 0.0131 - acc: 0.5000 - pearson_correlation_f: 0.9483 - val_loss: 0.0129 - val_mean_absolute_error: 0.0816 - val_mean_squared_error: 0.0129 - val_acc: 0.4998 - val_pearson_correlation_f: 0.9388
+Epoch 5/60
+47682/47682 [==============================] - 4s 75us/step - loss: 0.0120 - mean_absolute_error: 0.0799 - mean_squared_error: 0.0120 - acc: 0.5000 - pearson_correlation_f: 0.9526 - val_loss: 0.0130 - val_mean_absolute_error: 0.0784 - val_mean_squared_error: 0.0130 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9410
+Epoch 6/60
+47682/47682 [==============================] - 4s 82us/step - loss: 0.0111 - mean_absolute_error: 0.0771 - mean_squared_error: 0.0111 - acc: 0.5000 - pearson_correlation_f: 0.9565 - val_loss: 0.0139 - val_mean_absolute_error: 0.0829 - val_mean_squared_error: 0.0139 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9416
+2018-12-10 16:47:30.784497: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.58GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+5960/5960 [==============================] - 0s 77us/step
+Test result:  [0.015102780894095065, 0.0868822298193938, 0.015102780894095065, 0.5, 0.9424769991196242]
+python3 main.py mutate USE-Large CNN --extra=delete
+Using TensorFlow backend.
+Setting:  mutate USE-Large 30000 1 CNN delete
+loading data ..
+loading pickle ..
+retrieving article ..
+Warning: removed invalid samples. Valid: 29801 all: 30000
+merging data ..
+padding ..
+padding articles ..
+padding summaries ..
+concatenating ..
+splitting by group ..
+shuffling ..
+splitting ..
+train:  (47682, 50, 512) (47682,)
+val:  (5960, 50, 512) (5960,)
+test:  (5960, 50, 512) (5960,)
+building model ..
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_1 (InputLayer)         (None, 50, 512)           0         
+_________________________________________________________________
+conv1d_1 (Conv1D)            (None, 46, 128)           327808    
+_________________________________________________________________
+global_max_pooling1d_1 (Glob (None, 128)               0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 327,937
+Trainable params: 327,937
+Non-trainable params: 0
+_________________________________________________________________
+training ..
+Train on 47682 samples, validate on 5960 samples
+Epoch 1/60
+2018-12-10 16:49:38.338019: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2018-12-10 16:49:38.909178: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:964] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-12-10 16:49:38.909798: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1432] Found device 0 with properties: 
+name: GeForce GTX 1060 3GB major: 6 minor: 1 memoryClockRate(GHz): 1.7085
+pciBusID: 0000:0b:00.0
+totalMemory: 2.95GiB freeMemory: 2.75GiB
+2018-12-10 16:49:38.909823: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1511] Adding visible gpu devices: 0
+2018-12-10 16:49:47.292350: I tensorflow/core/common_runtime/gpu/gpu_device.cc:982] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-12-10 16:49:47.292390: I tensorflow/core/common_runtime/gpu/gpu_device.cc:988]      0 
+2018-12-10 16:49:47.292398: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1001] 0:   N 
+2018-12-10 16:49:47.293386: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 2456 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1060 3GB, pci bus id: 0000:0b:00.0, compute capability: 6.1)
+2018-12-10 16:49:53.604084: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.58GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+47360/47682 [============================>.] - ETA: 0s - loss: 0.1315 - mean_absolute_error: 0.2771 - mean_squared_error: 0.1315 - acc: 0.4365 - pearson_correlation_f: 0.40732018-12-10 16:49:56.932046: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 3.13GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+47682/47682 [==============================] - 19s 399us/step - loss: 0.1308 - mean_absolute_error: 0.2762 - mean_squared_error: 0.1308 - acc: 0.4370 - pearson_correlation_f: 0.4103 - val_loss: 0.0328 - val_mean_absolute_error: 0.1394 - val_mean_squared_error: 0.0328 - val_acc: 0.4988 - val_pearson_correlation_f: 0.8385
+Epoch 2/60
+47682/47682 [==============================] - 4s 76us/step - loss: 0.0315 - mean_absolute_error: 0.1404 - mean_squared_error: 0.0315 - acc: 0.4982 - pearson_correlation_f: 0.8626 - val_loss: 0.0238 - val_mean_absolute_error: 0.1220 - val_mean_squared_error: 0.0238 - val_acc: 0.4990 - val_pearson_correlation_f: 0.8778
+Epoch 3/60
+47682/47682 [==============================] - 4s 80us/step - loss: 0.0256 - mean_absolute_error: 0.1259 - mean_squared_error: 0.0256 - acc: 0.4987 - pearson_correlation_f: 0.8916 - val_loss: 0.0226 - val_mean_absolute_error: 0.1171 - val_mean_squared_error: 0.0226 - val_acc: 0.4990 - val_pearson_correlation_f: 0.8845
+Epoch 4/60
+47682/47682 [==============================] - 4s 76us/step - loss: 0.0227 - mean_absolute_error: 0.1183 - mean_squared_error: 0.0227 - acc: 0.4991 - pearson_correlation_f: 0.9062 - val_loss: 0.0260 - val_mean_absolute_error: 0.1302 - val_mean_squared_error: 0.0260 - val_acc: 0.4982 - val_pearson_correlation_f: 0.8941
+Epoch 5/60
+47682/47682 [==============================] - 4s 75us/step - loss: 0.0204 - mean_absolute_error: 0.1120 - mean_squared_error: 0.0204 - acc: 0.4993 - pearson_correlation_f: 0.9165 - val_loss: 0.0222 - val_mean_absolute_error: 0.1149 - val_mean_squared_error: 0.0222 - val_acc: 0.4993 - val_pearson_correlation_f: 0.8951
+Epoch 6/60
+47682/47682 [==============================] - 4s 77us/step - loss: 0.0185 - mean_absolute_error: 0.1067 - mean_squared_error: 0.0185 - acc: 0.4993 - pearson_correlation_f: 0.9245 - val_loss: 0.0235 - val_mean_absolute_error: 0.1232 - val_mean_squared_error: 0.0235 - val_acc: 0.4983 - val_pearson_correlation_f: 0.8990
+Epoch 7/60
+47682/47682 [==============================] - 4s 78us/step - loss: 0.0173 - mean_absolute_error: 0.1026 - mean_squared_error: 0.0173 - acc: 0.4996 - pearson_correlation_f: 0.9309 - val_loss: 0.0255 - val_mean_absolute_error: 0.1237 - val_mean_squared_error: 0.0255 - val_acc: 0.4995 - val_pearson_correlation_f: 0.9005
+Epoch 8/60
+47682/47682 [==============================] - 4s 75us/step - loss: 0.0162 - mean_absolute_error: 0.0998 - mean_squared_error: 0.0162 - acc: 0.4995 - pearson_correlation_f: 0.9362 - val_loss: 0.0359 - val_mean_absolute_error: 0.1523 - val_mean_squared_error: 0.0359 - val_acc: 0.4998 - val_pearson_correlation_f: 0.8970
+2018-12-10 16:50:23.732498: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.58GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+5960/5960 [==============================] - 0s 73us/step
+Test result:  [0.037228750107472376, 0.15459242295098785, 0.037228750107472376, 0.499496644295302, 0.8923508596900326]
+python3 main.py mutate USE-Large CNN --extra=replace
+Using TensorFlow backend.
+Setting:  mutate USE-Large 30000 1 CNN replace
+loading data ..
+loading pickle ..
+retrieving article ..
+Warning: removed invalid samples. Valid: 29803 all: 30000
+merging data ..
+padding ..
+padding articles ..
+padding summaries ..
+concatenating ..
+splitting by group ..
+shuffling ..
+splitting ..
+train:  (47686, 50, 512) (47686,)
+val:  (5960, 50, 512) (5960,)
+test:  (5960, 50, 512) (5960,)
+building model ..
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_1 (InputLayer)         (None, 50, 512)           0         
+_________________________________________________________________
+conv1d_1 (Conv1D)            (None, 46, 128)           327808    
+_________________________________________________________________
+global_max_pooling1d_1 (Glob (None, 128)               0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 327,937
+Trainable params: 327,937
+Non-trainable params: 0
+_________________________________________________________________
+training ..
+Train on 47686 samples, validate on 5960 samples
+Epoch 1/60
+2018-12-10 16:52:33.536532: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2018-12-10 16:52:34.101865: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:964] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-12-10 16:52:34.102384: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1432] Found device 0 with properties: 
+name: GeForce GTX 1060 3GB major: 6 minor: 1 memoryClockRate(GHz): 1.7085
+pciBusID: 0000:0b:00.0
+totalMemory: 2.95GiB freeMemory: 2.75GiB
+2018-12-10 16:52:34.102405: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1511] Adding visible gpu devices: 0
+2018-12-10 16:52:43.255133: I tensorflow/core/common_runtime/gpu/gpu_device.cc:982] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-12-10 16:52:43.255174: I tensorflow/core/common_runtime/gpu/gpu_device.cc:988]      0 
+2018-12-10 16:52:43.255185: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1001] 0:   N 
+2018-12-10 16:52:43.256615: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 2456 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1060 3GB, pci bus id: 0000:0b:00.0, compute capability: 6.1)
+2018-12-10 16:52:49.810131: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.58GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+47104/47686 [============================>.] - ETA: 0s - loss: 0.0976 - mean_absolute_error: 0.2190 - mean_squared_error: 0.0976 - acc: 0.4442 - pearson_correlation_f: 0.60842018-12-10 16:52:53.322711: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 3.19GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+47686/47686 [==============================] - 20s 425us/step - loss: 0.0967 - mean_absolute_error: 0.2178 - mean_squared_error: 0.0967 - acc: 0.4446 - pearson_correlation_f: 0.6124 - val_loss: 0.0218 - val_mean_absolute_error: 0.1127 - val_mean_squared_error: 0.0218 - val_acc: 0.4998 - val_pearson_correlation_f: 0.9373
+Epoch 2/60
+47686/47686 [==============================] - 4s 80us/step - loss: 0.0146 - mean_absolute_error: 0.0908 - mean_squared_error: 0.0146 - acc: 0.4999 - pearson_correlation_f: 0.9492 - val_loss: 0.0127 - val_mean_absolute_error: 0.0797 - val_mean_squared_error: 0.0127 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9506
+Epoch 3/60
+47686/47686 [==============================] - 4s 80us/step - loss: 0.0118 - mean_absolute_error: 0.0812 - mean_squared_error: 0.0118 - acc: 0.5000 - pearson_correlation_f: 0.9574 - val_loss: 0.0099 - val_mean_absolute_error: 0.0726 - val_mean_squared_error: 0.0099 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9546
+Epoch 4/60
+47686/47686 [==============================] - 4s 79us/step - loss: 0.0103 - mean_absolute_error: 0.0749 - mean_squared_error: 0.0103 - acc: 0.5000 - pearson_correlation_f: 0.9625 - val_loss: 0.0179 - val_mean_absolute_error: 0.1046 - val_mean_squared_error: 0.0179 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9551
+Epoch 5/60
+47686/47686 [==============================] - 4s 83us/step - loss: 0.0094 - mean_absolute_error: 0.0717 - mean_squared_error: 0.0094 - acc: 0.5000 - pearson_correlation_f: 0.9658 - val_loss: 0.0103 - val_mean_absolute_error: 0.0728 - val_mean_squared_error: 0.0103 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9582
+Epoch 6/60
+47686/47686 [==============================] - 4s 79us/step - loss: 0.0086 - mean_absolute_error: 0.0683 - mean_squared_error: 0.0086 - acc: 0.5000 - pearson_correlation_f: 0.9683 - val_loss: 0.0099 - val_mean_absolute_error: 0.0732 - val_mean_squared_error: 0.0099 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9585
+Epoch 7/60
+47686/47686 [==============================] - 4s 79us/step - loss: 0.0081 - mean_absolute_error: 0.0665 - mean_squared_error: 0.0081 - acc: 0.5000 - pearson_correlation_f: 0.9707 - val_loss: 0.0124 - val_mean_absolute_error: 0.0852 - val_mean_squared_error: 0.0124 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9587
+Epoch 8/60
+47686/47686 [==============================] - 4s 80us/step - loss: 0.0075 - mean_absolute_error: 0.0638 - mean_squared_error: 0.0075 - acc: 0.5000 - pearson_correlation_f: 0.9725 - val_loss: 0.0138 - val_mean_absolute_error: 0.0868 - val_mean_squared_error: 0.0138 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9592
+Epoch 9/60
+47686/47686 [==============================] - 4s 81us/step - loss: 0.0072 - mean_absolute_error: 0.0627 - mean_squared_error: 0.0072 - acc: 0.5000 - pearson_correlation_f: 0.9741 - val_loss: 0.0096 - val_mean_absolute_error: 0.0727 - val_mean_squared_error: 0.0096 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9607
+Epoch 10/60
+47686/47686 [==============================] - 4s 80us/step - loss: 0.0067 - mean_absolute_error: 0.0608 - mean_squared_error: 0.0067 - acc: 0.5000 - pearson_correlation_f: 0.9755 - val_loss: 0.0092 - val_mean_absolute_error: 0.0664 - val_mean_squared_error: 0.0092 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9598
+Epoch 11/60
+47686/47686 [==============================] - 4s 92us/step - loss: 0.0064 - mean_absolute_error: 0.0593 - mean_squared_error: 0.0064 - acc: 0.5000 - pearson_correlation_f: 0.9768 - val_loss: 0.0081 - val_mean_absolute_error: 0.0632 - val_mean_squared_error: 0.0081 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9604
+Epoch 12/60
+47686/47686 [==============================] - 4s 80us/step - loss: 0.0061 - mean_absolute_error: 0.0579 - mean_squared_error: 0.0061 - acc: 0.5000 - pearson_correlation_f: 0.9778 - val_loss: 0.0087 - val_mean_absolute_error: 0.0662 - val_mean_squared_error: 0.0087 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9608
+Epoch 13/60
+47686/47686 [==============================] - 4s 80us/step - loss: 0.0059 - mean_absolute_error: 0.0572 - mean_squared_error: 0.0059 - acc: 0.5000 - pearson_correlation_f: 0.9791 - val_loss: 0.0107 - val_mean_absolute_error: 0.0784 - val_mean_squared_error: 0.0107 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9614
+Epoch 14/60
+47686/47686 [==============================] - 4s 80us/step - loss: 0.0056 - mean_absolute_error: 0.0557 - mean_squared_error: 0.0056 - acc: 0.5000 - pearson_correlation_f: 0.9799 - val_loss: 0.0115 - val_mean_absolute_error: 0.0799 - val_mean_squared_error: 0.0115 - val_acc: 0.5000 - val_pearson_correlation_f: 0.9592
+2018-12-10 16:53:44.792437: W tensorflow/core/common_runtime/bfc_allocator.cc:211] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.58GiB. The caller indicates that this is not a failure, but may mean that there could be performance gains if more memory were available.
+5960/5960 [==============================] - 0s 79us/step
+Test result:  [0.011404893563547791, 0.0791598416814868, 0.011404893563547791, 0.5, 0.9621096883844209]

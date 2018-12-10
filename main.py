@@ -4,6 +4,7 @@ import json
 import random
 import json
 import re
+import math
 
 import matplotlib.pyplot as plt
 
@@ -241,9 +242,10 @@ def main():
 
     run_exp('mutate', 'USE', 100, 1, 'CNN', 'replace')
     run_exp('mutate', 'USE-Large', 100, 1, 'CNN', 'delete')
-    run_exp('mutate', 'InferSent', 100, 1, 'CNN', 'replace')
-
     
+    run_exp('neg', 'InferSent', 100, 1, 'CNN')
+    run_exp('mutate', 'InferSent', 10000, 1, 'CNN', 'add')
+
     run_exp('neg', 'USE', 10000, 1, 'LSTM')
     run_exp('mutate', 'glove', 10000, 1, 'LSTM', 'add')
     
@@ -290,6 +292,182 @@ def run_all_exp(fake_methods, embedding_methods, num_samples_list,
                             print('SETTING:', f,e,ns,nf,a)
                             print('RESULT:', res)
 
+
+def load_infersent_data(fake_method, fake_extra_option):
+    # with open('InferSent-mutate-add/0.padded', 'rb') as f:
+    #     (x_train, y_train), (x_val, y_val), (x_test, y_test) = pickle.load(f)
+    assert(fake_method in ['neg', 'mutate'])
+    assert(fake_extra_option in [None, 'add', 'delete', 'replace'])
+    if fake_method == 'neg':
+        folder = 'mnt/data/InferSent-neg-None'
+    elif fake_method == 'mutate':
+        folder = 'mnt/data/InferSent-mutate-' + fake_extra_option
+    if not os.path.exists(folder):
+        print(folder, 'does not exist.')
+        raise Exception()
+    data = []
+    for i in range(30):
+        print('loading', i, '..')
+        with open(os.path.join(folder, str(i) + '.padded'), 'rb') as f:
+            p = pickle.load(f)
+            data.append(p)
+    print('concatenating ..')
+    x_train = np.concatenate([d[0][0] for d in data])
+    y_train = np.concatenate([d[0][1] for d in data])
+    x_val = np.concatenate([d[1][0] for d in data])
+    y_val = np.concatenate([d[1][1] for d in data])
+    x_test = np.concatenate([d[2][0] for d in data])
+    y_test = np.concatenate([d[2][1] for d in data])
+    return (x_train, y_train), (x_val, y_val), (x_test, y_test)
+
+
+def test():
+    (x_train, y_train), (x_val, y_val), (x_test, y_test) = load_infersent_data('neg')
+    (x_train, y_train), (x_val, y_val), (x_test, y_test) = load_infersent_data('mutate', 'add')
+
+def test():
+    create_data_pipeline_1('neg')
+    
+    create_data_pipeline_1('mutate', 'add')
+    create_data_pipeline_1('mutate', 'delete')
+    create_data_pipeline_1('mutate', 'replace')
+    
+    create_data_pipeline_2(0, 'neg')
+    create_data_pipeline_2(1, 'neg')
+    create_data_pipeline_2(11, 'neg')
+
+    for i in range(30):
+        create_data_pipeline_2(i, 'mutate', 'replace')
+        # create_data_pipeline_2(i, 'neg')
+
+    with open('InferSent-neg-None/0.raw', 'rb') as f:
+        p = pickle.load(f)
+
+def create_data_pipeline_1(fake_method, fake_extra_option=None):
+    embedding_method = 'InferSent'
+    num_samples = 30000
+    num_fake_samples = 1
+    split=1000
+    folder = '-'.join([embedding_method, fake_method,
+                       str(fake_extra_option)])
+    folder = os.path.join('mnt/data', folder)
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    print('loading data ..')
+    (articles, reference_summaries, reference_labels, fake_summaries,
+     fake_labels, keys) = load_data_helper(fake_method,
+                                           embedding_method,
+                                           num_samples,
+                                           num_fake_samples,
+                                           fake_extra_option)
+    print('merging data ..')
+    articles, summaries, labels = merge_summaries(articles,
+                                                  reference_summaries,
+                                                  reference_labels,
+                                                  fake_summaries,
+                                                  fake_labels)
+    # split into separate files
+    group = num_fake_samples + 1
+    real_split = split * group
+    print('real_split:', real_split)
+    print('len(articles):', len(articles))
+    num_splits = range(math.ceil(len(articles) / real_split))
+    print('num_splits:', num_splits)
+    for i in num_splits:
+        print('-- split', i, '..')
+        start = i * real_split
+        end = (i + 1) * real_split
+        outfile = os.path.join(folder, str(i) + '.raw')
+        if os.path.exists(outfile):
+            continue
+        res = (articles[start:end], summaries[start:end],
+               labels[start:end])
+        with open(outfile, 'wb') as f:
+            pickle.dump(res, f, protocol=4)
+            
+def create_data_pipeline_2(part_num, fake_method, fake_extra_option=None):
+    embedding_method = 'InferSent'
+    article_pad_length = ARTICLE_MAX_SENT
+    summary_pad_length = SUMMARY_MAX_SENT
+    folder = '-'.join([embedding_method, fake_method,
+                       str(fake_extra_option)])
+    folder = os.path.join('mnt/data', folder)
+    # for each file
+    group = 2
+    infile = os.path.join(folder, str(part_num) + '.raw')
+    outfile = os.path.join(folder, str(part_num) + '.padded')
+    if os.path.exists(outfile):
+        print('already exists')
+        return
+    with open(infile, 'rb') as f:
+        articles, summaries, labels = pickle.load(f)
+    data = pad_shuffle_split_data(articles, summaries, labels,
+                                  article_pad_length,
+                                  summary_pad_length, group)
+    # save the data
+    print('writing to', outfile, '..')
+    with open(outfile, 'wb') as f:
+        pickle.dump(data, f, protocol=4)
+
+def test():
+    run_infersent('neg', None, 'FC')
+    run_infersent('neg', None, 'CNN')
+    run_infersent('neg', None, 'LSTM')
+    run_infersent('mutate', 'add', 'FC')
+    run_infersent('mutate', 'add', 'CNN')
+    run_infersent('mutate', 'add', 'LSTM')
+
+
+def run_infersent(fake_method, fake_extra_option, architecture):
+    # (x_train, y_train), (x_val, y_val), (x_test, y_test) = load_infersent_data('neg')
+    # (x_train, y_train), (x_val, y_val), (x_test, y_test) = load_infersent_data('mutate', 'add')
+    print('loading data ..')
+    ((x_train, y_train),
+     (x_val, y_val),
+     (x_test, y_test)) = load_infersent_data(fake_method, fake_extra_option)
+    print('train: ', x_train.shape, y_train.shape)
+    print('val: ', x_val.shape, y_val.shape)
+    print('test: ', x_test.shape, y_test.shape)
+
+    print('building model ..')
+    # build model
+    label_dict = {'neg': 'classification',
+                  'mutate': 'regression'}
+    label_type = label_dict[fake_method]
+    # embedding_layer
+    input_shape = (ARTICLE_MAX_SENT + SUMMARY_MAX_SENT, 4096)
+    # build model
+    print('building model ..')
+    model = build_model('InferSent', label_type, None, input_shape,
+                        architecture)
+    model.summary()
+    if label_type == 'regression':
+        loss = 'mse'
+        metrics = ['mae', 'mse', 'accuracy', pearson_correlation_f]
+    elif label_type == 'classification':
+        loss = 'binary_crossentropy'
+        metrics=['accuracy', pearson_correlation_f]
+    else:
+        raise Exception()
+    num_epochs = 60
+    # optimizer=tf.train.AdamOptimizer(0.01)
+    optimizer = tf.train.RMSPropOptimizer(0.001)
+    # optimizer = keras.optimizers.SGD(lr=0.00001, clipnorm=1.)
+    model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
+    
+    print('training ..')
+    history = model.fit(x_train, y_train, epochs=num_epochs, batch_size=128,
+                        validation_data=(x_val, y_val),
+                        callbacks=[keras.callbacks.EarlyStopping(monitor='val_loss',
+                                                                 min_delta=0,
+                                                                 patience=3,
+                                                                 verbose=0,
+                                                                 mode='auto')],
+                        verbose=1)
+    result = model.evaluate(x_test, y_test)
+    print('Test result: ', result)
+    return result[1]
+    
 
 def run_exp(fake_method, embedding_method, num_samples,
             num_fake_samples, architecture, fake_extra_option=None):
@@ -430,7 +608,6 @@ def plot_history(history, filename):
     fig.savefig(filename)
     # plt.show()
     # plt.savefig(filename)
-    
 
 
 def test():
@@ -441,7 +618,6 @@ def test():
     run_all_exp(['mutate'], ['glove', 'USE', 'USE-Large'],
                 [30000], [1], ['CNN', 'FC', 'LSTM'],
                 ['add', 'delete', 'replace'])
-    
 
 if __name__ == '__main__':
     import argparse
@@ -455,8 +631,16 @@ if __name__ == '__main__':
                                             'replace'])
 
     args = parser.parse_args()
-    run_exp(args.fake, args.embedding, 30000, 1, args.arch, args.extra)
 
+    if args.embedding == 'InferSent':
+        run_infersent(args.fake, args.extra, args.arch)
+    else:
+        run_exp(args.fake, args.embedding, 30000, 1, args.arch, args.extra)
+
+    # run_infersent('neg', None, 'LSTM')
+    # run_infersent('mutate', 'add', 'LSTM')
+    # python3 main.py neg InferSent CNN --extra=replace
+    
     # python3 main.py mutate USE CNN --extra=replace
     # python3 main.py neg USE-Large LSTM
 

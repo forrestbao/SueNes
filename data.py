@@ -154,6 +154,7 @@ def shuffle_and_split(features, labels, group):
     4. (optional) shuffle again
 
     """
+    print('splitting by group ..')
     features = np.array(np.split(features, len(features) / group))
     labels = np.array(np.split(labels, len(labels) / group))
     
@@ -320,10 +321,13 @@ def pad_shuffle_split_data(articles, summaries, labels,
                            article_pad_length, summary_pad_length,
                            group):
     dtype = np.array(articles[0]).dtype
+    print('padding articles ..')
     articles = pad_sequences(articles, value=0, padding='post',
                              maxlen=article_pad_length, dtype=dtype)
+    print('padding summaries ..')
     summaries = pad_sequences(summaries, value=0, padding='post',
                               maxlen=summary_pad_length, dtype=dtype)
+    print('concatenating ..')
     data = np.concatenate((articles, summaries), axis=1)
     return shuffle_and_split(data, np.array(labels), group=group)
 

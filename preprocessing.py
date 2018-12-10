@@ -480,6 +480,31 @@ def get_num_encoded_story(embedder_name, target_name):
     previously_encoded_keys = dict_pickle_read_keys(target_folder)
     return len(previously_encoded_keys)
 
+def test():
+    story_dir = os.path.join(INFERSENT_DIR, 'story')
+    filenames = os.listdir(story_dir)
+    len(filenames)
+    # read some of the files
+    # merge
+    acc = {}
+    for filename in filenames[:200]:
+        with open(os.path.join(story_dir, filename), 'rb') as f:
+            p = pickle.load(f)
+            acc.update(p)
+    with open('test.pickle', 'wb') as f:
+        pickle.dump(acc, f)
+    with open('test.pickle', 'rb') as f:
+        p = pickle.load(f)
+    # split into several files, each contains 1000 articles
+    # how about this: put them into
+    for filename in filenames[:200]:
+        with open(os.path.join(story_dir, filename), 'rb') as f:
+            p = pickle.load(f)
+            acc.update(p)
+    
+    return
+    
+
     
 def preprocess_sentence_embed(embedder_name, target_name, num,
                               up_limit, skip=0):

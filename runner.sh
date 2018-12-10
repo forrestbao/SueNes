@@ -4,23 +4,8 @@
 #     python3 preprocessing.py USE-Large mutated 300
 # done
 
-# fake=neg
-# for arch in FC CNN LSTM; do
-#     embedding=InferSent
-#     cmd="python3 main.py $fake $embedding $arch"
-#     echo $cmd
-#     $cmd
-# done
-# fake=mutate
-# for arch in FC CNN LSTM; do
-#     for extra in add delete replace; do
-#         embedding=InferSent
-#         cmd="python3 main.py $fake $embedding $arch --extra=$extra"
-#         echo $cmd
-#         $cmd
-#     done
-# done
-
+echo "EXP 1"
+date
 
 fake=neg
 for embedding in glove USE USE-Large; do
@@ -31,7 +16,8 @@ for embedding in glove USE USE-Large; do
     done
 done
 
-echo "================"
+echo "EXP 2"
+date
 
 fake=mutate
 for embedding in glove USE USE-Large; do
@@ -44,6 +30,31 @@ for embedding in glove USE USE-Large; do
     done
 done
 
+echo "EXP 3"
+date
+fake=neg
+for arch in FC CNN LSTM; do
+    embedding=InferSent
+    cmd="python3 main.py $fake $embedding $arch"
+    echo $cmd
+    $cmd
+done
+
+echo "EXP 4"
+date
+fake=mutate
+for arch in FC CNN LSTM; do
+    for extra in add delete replace; do
+        embedding=InferSent
+        cmd="python3 main.py $fake $embedding $arch --extra=$extra"
+        echo $cmd
+        $cmd
+    done
+done
+
+date
+
+echo "DONE!!!"
     # python3 main.py mutate USE CNN --extra=replace
     # python3 main.py mutate USE CNN --extra=replace
 

@@ -112,7 +112,7 @@ def build_model(embedding_method, label_type, embedding_layer,
         # hidden_size = 128
         x= LSTM(hidden_size)(embedded_input)
         # x = keras.layers.GRU(hidden_size)(embedded_input)
-        x = Dropout(0.5)(x)
+        # x = Dropout(0.5)(x)
         # x = Dense(128, activation='relu')(x)
     elif architecture == 'FC':
         x = keras.layers.Flatten()(embedded_input)

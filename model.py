@@ -86,9 +86,9 @@ def build_model(embedding_method, label_type, embedding_layer,
     if architecture == 'CNN':
         # 1 layer CNN
         x = Conv1D(128, 5, activation='relu')(embedded_input)
-        x = MaxPooling1D(3)(x)
+        # x = MaxPooling1D(3)(x)
         x = GlobalMaxPooling1D()(x)
-        x = Dense(128, activation='relu')(x)
+        # x = Dense(128, activation='relu')(x)
     elif architecture == 'CNN-3':
         # 3 layer CNN
         x = Conv1D(128, 5, activation='relu')(embedded_input)

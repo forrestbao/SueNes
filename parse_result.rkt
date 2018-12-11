@@ -8,7 +8,9 @@
 
 (define (parse-settings filename)
   (filter (λ (line)
-            (string-prefix? line "Setting:"))
+            (string-prefix? line
+                            ;; "Setting:"
+                            "python3"))
           (file->lines filename)))
 
 (define (parse-results filename)

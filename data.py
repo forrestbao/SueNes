@@ -9,8 +9,6 @@ import random
 
 from keras.preprocessing.sequence import pad_sequences
 
-from embedding import SentenceEmbedder
-
 from utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
 from utils import read_text_file
 
@@ -259,32 +257,6 @@ def sent_embed_articles(articles, maxlen, use_embedder, batch_size=10000):
     embedding = np.array(embedding_list)
     embedding_reshaped = np.reshape(embedding, shape + (embedding.shape[-1],))
     return embedding_reshaped
-
-
-def prepare_data_using_use_old(articles, summaries, scores):
-    """Return vector of float32. The dimension of X is (?,13,512), Y is
-    (?) where ? is the number of articles.
-
-    This is deprecated, as the sentence embedding is slow, and should
-    be computed as preprocessing.
-
-    """
-    # (#num, 10, 512)
-    print('creating sentence embedder instance ..')
-    use_embedder = SentenceEmbedder()
-    print('sentence embedding articles ..')
-    article_data = sent_embed_articles(articles, ARTICLE_MAX_SENT, use_embedder)
-    # (#num, 3, 512)
-    # len(articles)
-    article_data.shape
-    # len(summaries)
-    print('sentence embedding summaries ..')
-    summary_data = sent_embed_articles(summaries, SUMMARY_MAX_SENT, use_embedder)
-    # concatenate
-    print('concatenating ..')
-    data = np.concatenate((article_data, summary_data), axis=1)
-
-    return shuffle_and_split(data, np.array(scores))
 
 def split_sent_and_pad(articles, maxlen):
     res = []

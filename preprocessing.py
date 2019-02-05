@@ -10,7 +10,7 @@ from utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
 from utils import read_text_file, sentence_split
 from utils import dict_pickle_read, dict_pickle_read_keys, dict_pickle_write
 
-from embedding import SentenceEmbedder, SentenceEmbedderLarge, InferSentEmbedder
+from embedding import UseEmbedder, InferSentEmbedder
 
 import random
 
@@ -214,15 +214,6 @@ def preprocess_word_mutated():
     with open(WORD_MUTATED_FILE, 'wb') as f:
         pickle.dump(outdata, f)
 
-def test():
-    """
-    First set of preprocessing. Quite efficient.
-    """
-    preprocess_story_pickle()
-    preprocess_word_mutated()
-    preprocess_negative_sampling()
-    preprocess_negative_shuffle()
-
 def preprocess_sent_mutated():
     """
     NOT IMPLEMENTED.
@@ -298,6 +289,15 @@ def preprocess_negative_shuffle():
         pickle.dump(outdata, f)
 
 
+def test():
+    """
+    First set of preprocessing. Quite efficient.
+    """
+    preprocess_story_pickle()
+    preprocess_word_mutated()
+    preprocess_negative_sampling()
+    preprocess_negative_shuffle()
+
 # collect into one arry
 def collect(v):
     res = []
@@ -345,11 +345,12 @@ def test():
     v = [[['hello', 'world'], ['hello', 'world', 'ok']], [['yes', 'no']]]
     encoded = USE_encode_keep_shape(v)
 
+
 def embed_keep_shape(v, embedder_name):
     if embedder_name == 'USE':
-        embedder = SentenceEmbedder()
+        embedder = UseEmbedder(encoder='dan', bsize=1024, gpu=False)
     elif embedder_name == 'USE-Large':
-        embedder = SentenceEmbedderLarge()
+        embedder = UseEmbedder(encoder='transformer', bsize=10240, gpu=True)
     elif embedder_name == 'InferSent':
         embedder = InferSentEmbedder()
     else:
@@ -571,8 +572,8 @@ def test():
 
     # stories
     preprocess_sentence_embed('USE', 'story', 1000, up_limit)
-    preprocess_sentence_embed('USE-Large', 'story', 100, up_limit)
-    preprocess_sentence_embed('InferSent', 'story', 200, up_limit)
+    preprocess_sentence_embed('USE-Large', 'story', 100, 30000)
+    preprocess_sentence_embed('InferSent', 'story', 10000, 30000)
 
     # negative and mutate
     up_limit = 10000

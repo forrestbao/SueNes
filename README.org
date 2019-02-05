@@ -1,6 +1,48 @@
 #+TITLE: Anti Rouge
 
+* Setup and running
+
+The data preprocessing is partly adapted from
+https://github.com/abisee/cnn-dailymail. Note that this repo contains
+url_lists, each can be hashed to produce the hashed story file names
+below. I might use this for a better reference.
+
+1. Get the [[https://cs.nyu.edu/~kcho/DMQA/][CNN/DM benchmark]]. Unzip
+   and you will get the =cnn= and =dm= directories containing
+   =stories= folder. Each story is =<hash>.story=, and each contains
+   the article and several "@highlight xxx" lines as summaries.
+2. Tokenize the stories. The command:
+
+#+BEGIN_EXAMPLE
+java edu.stanford.nlp.process.PTBTokenizer -ioFileList -preserveLines mapping.txt
+#+END_EXAMPLE
+
+The =mapping.txt= shall be a list of 
+
+#+BEGIN_EXAMPLE
+input-file output-file
+input-file output-file
+input-file output-file
+...
+#+END_EXAMPLE
+
+I'm going to write a script for this. But for now, use abisee's script.
+
+3. 
+
+
+
+
+
+
+
+
+
+
 * TodoList
+** Data sets with ground truth
+*** NYC annotated corpus: https://catalog.ldc.upenn.edu/LDC2008T19
+*** DUC 01/02
 ** Final
 *** TODO LSTM 50 problem
 *** TODO InferSent 30000 data

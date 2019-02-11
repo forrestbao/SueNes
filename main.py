@@ -19,8 +19,8 @@ import pickle
 
 import os, sys
 
-from model import load_embedding
 from model import build_model
+from embedding import load_glove_layer
 from utils import save_data, load_data
 from utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
 from utils import dict_pickle_read, dict_pickle_read_keys, dict_pickle_write
@@ -109,7 +109,6 @@ def load_data_helper(fake_method, embedding_method, num_samples,
     fake_summaries, fake_labels
     """
     # embedding_method = 'USE'
-    tokenizer = None
     print('loading pickle ..')
     stories, negatives = load_pickles(fake_method, embedding_method)
     story_keys = set(stories.keys())
@@ -155,21 +154,6 @@ def load_data_helper(fake_method, embedding_method, num_samples,
     return (articles, reference_summaries, reference_labels,
             fake_summaries, fake_labels, keys)
 
-def glove_summary_only_main():
-    """TODO Use only summary data for prediction. The expected results
-    should be bad.
-    """
-    data = prepare_summary_data_using_tokenizer(summaries, labels,
-                                                tokenizer, group=group)
-    model = build_glove_summary_only_model(embedding_layer)
-    return
-    
-def pearson_correlation_old(y_true, y_pred):
-    pearson_correlation = scipy.stats.pearsonr(y_true, y_pred)
-    # (Pearson’s correlation coefficient, 2-tailed p-value)
-    # return K.mean(y_pred)
-    return pearson_correlation[0]
-
 def pearson_correlation_f(y_true, y_pred):
     #being K.mean a scalar here, it will be automatically subtracted
     #from all elements in y_pred
@@ -179,6 +163,7 @@ def pearson_correlation_f(y_true, y_pred):
     devP = K.std(y_pred)
     devT = K.std(y_true)
     return K.mean(fsp*fst)/(devP*devT)
+
 def test():
     num_samples = 1000
     num_samples = 100
@@ -522,7 +507,7 @@ def run_exp(fake_method, embedding_method, num_samples,
     label_type = label_dict[fake_method]
     # embedding_layer
     if embedding_method == 'glove':
-        embedding_layer = load_embedding(tokenizer)
+        embedding_layer = load_glove_layer(tokenizer.word_index)
     else:
         embedding_layer = None
     # input_sahpe

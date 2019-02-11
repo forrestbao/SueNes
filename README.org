@@ -1,17 +1,42 @@
 #+TITLE: Anti Rouge
 
 * Setup and running
+** Datasets
+
+Get the [[https://cs.nyu.edu/~kcho/DMQA/][CNN/DM benchmark]]. Unzip
+and you will get the =cnn= and =dm= directories containing =stories=
+folder. Each story is =<hash>.story=, and each contains the article
+and several "@highlight xxx" lines as summaries.
+
+** Python packages
+Install:
+- matplotlib (tkinter)
+- numpy
+- =tensorflow-gpu=, =tensorflow-hub=
+- pytorch, torchvision
+- nltk and =nltk.download('punkt')= (used by InferSent)
+
+** Stanford CoreNLP (used for tokenization)
+http://nlp.stanford.edu/software/stanford-corenlp-full-2018-10-05.zip
+- put the jar file to =~/bin=. Set classpath 
+
+#+BEGIN_EXAMPLE
+export CLASSPATH=/home/hebi/bin/stanford-corenlp-3.9.2.jar
+#+END_EXAMPLE
+
+check whether CoreNLP install correctly:
+#+BEGIN_EXAMPLE
+echo "Please tokenize this text." | java edu.stanford.nlp.process.PTBTokenizer
+#+END_EXAMPLE
+
+** Tokenize the corpus
 
 The data preprocessing is partly adapted from
 https://github.com/abisee/cnn-dailymail. Note that this repo contains
 url_lists, each can be hashed to produce the hashed story file names
 below. I might use this for a better reference.
 
-1. Get the [[https://cs.nyu.edu/~kcho/DMQA/][CNN/DM benchmark]]. Unzip
-   and you will get the =cnn= and =dm= directories containing
-   =stories= folder. Each story is =<hash>.story=, and each contains
-   the article and several "@highlight xxx" lines as summaries.
-2. Tokenize the stories. The command:
+Tokenize the stories. The command:
 
 #+BEGIN_EXAMPLE
 java edu.stanford.nlp.process.PTBTokenizer -ioFileList -preserveLines mapping.txt
@@ -26,17 +51,30 @@ input-file output-file
 ...
 #+END_EXAMPLE
 
-I'm going to write a script for this. But for now, use abisee's script.
+Use =tokenize.py= to tokenize the corpus.
 
-3. 
+** preprocessing the data
+From now on, all the configurations, including data file paths, model
+hyperparameters are set in =config.py=. I don't like to use command
+line to pass parameters.
 
+The story files contains article and summaries. The first step is to
+split the stories into story and summaries. I'm going to use a pickle
+binary to for that instead of plain text. Use
+=preprocess_story_pickle()= in =preprocess.py= for it. This produce
+=story.pickle=.
 
+The next step is to generate negative samples. Two approaches:
+- =preprocess_word_mutated()=: this produces =word-mutated.pickle=
+- =preprocess_negative_sampling()=: this produces
+  =negative-sampling.pickle=
 
+** Embedding layer
+Word embedding is done inside the model, using an embedding layer
+loaded with pretrained matrix. It is essentially a lookup table.
 
-
-
-
-
+[[https://nlp.stanford.edu/projects/glove/][Glove website]] have the
+file at http://nlp.stanford.edu/data/glove.6B.zip.
 
 
 * TodoList

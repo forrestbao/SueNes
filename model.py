@@ -10,64 +10,12 @@ from keras.layers import Lambda, Reshape
 from keras.layers import LSTM, Dropout
 from keras import regularizers
 from keras.models import Model
-from keras.initializers import Constant
 
 import keras
 
 from keras import backend as K
 
 from config import *
-
-GLOVE_DIR = '/home/hebi/github/reading/keras/examples/data/glove.6B'
-
-def load_embedding(tokenizer):
-    """1. read glove.6B.100d embedding matrix
-    
-    2. from tokenizer, get the number of words, use it (with a MAX
-    value) as the dimension of embedding matrix.
-    
-    3. for all the words in the tokenizer, (as long as its index is
-    less than MAX value), fill the embedding matrix with its glove
-    value
-
-    4. from the matrix, create a embedding layer by pass the matrix as
-    embeddings_initializer. This layer is fixed by setting it not
-    trainable.
-
-    """
-    print('Indexing word vectors.')
-    word_index = tokenizer.word_index
-    # print('Found %s unique tokens.' % len(word_index))
-
-    embeddings_index = {}
-    with open(os.path.join(GLOVE_DIR, 'glove.6B.100d.txt')) as f:
-        for line in f:
-            values = line.split()
-            word = values[0]
-            coefs = np.asarray(values[1:], dtype='float32')
-            embeddings_index[word] = coefs
-
-    print('Found %s word vectors.' % len(embeddings_index))
-    # prepare embedding matrix
-    num_words = min(MAX_NUM_WORDS, len(word_index)) + 1
-    embedding_matrix = np.zeros((num_words, EMBEDDING_DIM))
-    for word, i in word_index.items():
-        if i > MAX_NUM_WORDS:
-            continue
-        embedding_vector = embeddings_index.get(word)
-        if embedding_vector is not None:
-            # words not found in embedding index will be all-zeros.
-            embedding_matrix[i] = embedding_vector
-
-    # load pre-trained word embeddings into an Embedding layer
-    # note that we set trainable = False so as to keep the embeddings fixed
-    embedding_layer = Embedding(num_words,
-                                EMBEDDING_DIM,
-                                embeddings_initializer=Constant(embedding_matrix),
-                                # MAX_SEQUENCE_LENGTH = 1000
-                                # input_length=MAX_SEQUENCE_LENGTH,
-                                trainable=False)
-    return embedding_layer
 
 def build_model(embedding_method, label_type, embedding_layer,
                 input_shape, architecture):

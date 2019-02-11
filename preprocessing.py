@@ -136,8 +136,8 @@ def preprocess_story_pickle():
     data = {}
     for key in stories:
         ct += 1
-        if ct % 100 == 0:
-            print ('--', ct*100)
+        if ct % 10000 == 0:
+            print ('--', ct*10000)
         story_file = os.path.join(CNN_TOKENIZED_DIR, key)
         item = {}
         article, summary = get_art_abs(story_file)
@@ -190,6 +190,10 @@ def preprocess_word_mutated():
     articles = [s['article'] for s in stories.values()]
     summaries = [s['summary'] for s in stories.values()]
     print('creating tokenizer ..')
+    # FIXME this is slow
+    #
+    # TODO I'm going to create tokenizer at once, and use that for all
+    # processing
     tokenizer = create_tokenizer_from_texts(articles + summaries)
     random_word_generator = RandomItemGenerator(list(tokenizer.word_index.keys()))
     random_word_generator.random_item()
@@ -198,8 +202,8 @@ def preprocess_word_mutated():
     print('generating mutated summary for', len(stories), 'stories ..')
     for key in stories:
         ct += 1
-        if ct % 100 == 0:
-            print ('--', ct)
+        if ct % 1000 == 0:
+            print ('--', ct * 1000)
         story = stories[key]
         summary = story['summary']
         item = {}
@@ -236,8 +240,8 @@ def preprocess_negative_sampling():
     print('generating negative sampling for', len(stories), 'stories ..')
     for key in stories:
         ct += 1
-        if ct % 100 == 0:
-            print ('--', ct)
+        if ct % 10000 == 0:
+            print ('--', ct * 100000)
         story = stories[key]
         summary = story['summary']
         article = story['article']
@@ -296,7 +300,7 @@ def test():
     preprocess_story_pickle()
     preprocess_word_mutated()
     preprocess_negative_sampling()
-    preprocess_negative_shuffle()
+    # preprocess_negative_shuffle()
 
 # collect into one arry
 def collect(v):
@@ -345,12 +349,12 @@ def test():
     v = [[['hello', 'world'], ['hello', 'world', 'ok']], [['yes', 'no']]]
     encoded = USE_encode_keep_shape(v)
 
-
 def embed_keep_shape(v, embedder_name):
     if embedder_name == 'USE':
-        embedder = UseEmbedder(encoder='dan', bsize=1024, gpu=False)
+        embedder = UseEmbedder(encoder='dan', bsize=USE_BATCH_SIZE, gpu=False)
     elif embedder_name == 'USE-Large':
-        embedder = UseEmbedder(encoder='transformer', bsize=10240, gpu=True)
+        embedder = UseEmbedder(encoder='transformer',
+                               bsize=USE_LARGE_BATCH_SIZE, gpu=True)
     elif embedder_name == 'InferSent':
         embedder = InferSentEmbedder()
     else:
@@ -571,9 +575,9 @@ def test():
     preprocess_sentence_embed('USE', 'mutated', 10000, up_limit)
 
     # stories
-    preprocess_sentence_embed('USE', 'story', 1000, up_limit)
-    preprocess_sentence_embed('USE-Large', 'story', 100, 30000)
-    preprocess_sentence_embed('InferSent', 'story', 10000, 30000)
+    preprocess_sentence_embed('USE', 'story', 10000, up_limit)
+    preprocess_sentence_embed('USE-Large', 'story', 10000, 30000)
+    preprocess_sentence_embed('InferSent', 'story', 500, 30000)
 
     # negative and mutate
     up_limit = 10000

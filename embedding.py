@@ -6,9 +6,83 @@ import tensorflow as tf
 import tensorflow_hub as hub
 import torch
 import numpy as np
+import zipfile
+import time
+
+import keras
+
+from keras.layers import Embedding
+from keras.initializers import Constant
+from keras.utils.data_utils import get_file
 
 from config import *
 
+# http://nlp.stanford.edu/data/glove.6B.zip
+
+# 50, 100, 200, 300
+GLOVE_EMBEDDING_DIM = 100
+
+def load_glove_matrix():
+    # download glove embedding, unzip
+    glove_url = 'http://nlp.stanford.edu/data/glove.6B.zip'
+    path = get_file('glove.6B.zip', glove_url)
+    # unzip
+    fname = 'glove.6B.%sd.txt' % GLOVE_EMBEDDING_DIM
+    glove_txt = os.path.join(os.path.dirname(path), fname)
+    if not os.path.exists(glove_txt):
+        zipfile.ZipFile(path).extractall(os.path.dirname(path))
+    assert(os.path.exists(glove_txt))
+    res = {}
+    with open(glove_txt) as f:
+        for line in f:
+            values = line.split()
+            word = values[0]
+            coefs = np.asarray(values[1:], dtype='float32')
+            res[word] = coefs
+    return res
+    
+# adapted with keras/examples/pretrained_word_embeddings.py
+def load_glove_layer(word_index):
+    """word_index is a dictionary from word to its index (0-x). Can be
+    tokenizer.word_index.
+
+    1. read glove.6B.100d embedding matrix
+
+    2. from tokenizer, get the number of words, use it (with a MAX
+    value) as the dimension of embedding matrix.
+    
+    3. for all the words in the tokenizer, (as long as its index is
+    less than MAX value), fill the embedding matrix with its glove
+    value
+
+    4. from the matrix, create a embedding layer by pass the matrix as
+    embeddings_initializer. This layer is fixed by setting it not
+    trainable.
+
+    """
+    glove_mat = load_glove_matrix()
+    # prepare embedding matrix
+    num_words = min(MAX_NUM_WORDS, len(word_index)) + 1
+    embedding_matrix = np.zeros((num_words, GLOVE_EMBEDDING_DIM))
+    for word, i in word_index.items():
+        if i > MAX_NUM_WORDS:
+            continue
+        embedding_vector = glove_mat.get(word)
+        if embedding_vector is not None:
+            # words not found in embedding index will be all-zeros.
+            embedding_matrix[i] = embedding_vector
+
+    # load pre-trained word embeddings into an Embedding layer
+    # note that we set trainable = False so as to keep the embeddings fixed
+    embedding_layer = Embedding(num_words,
+                                GLOVE_EMBEDDING_DIM,
+                                embeddings_initializer=Constant(embedding_matrix),
+                                # MAX_SEQUENCE_LENGTH = 1000
+                                # input_length=MAX_SEQUENCE_LENGTH,
+                                trainable=False)
+    return embedding_layer
+
+tf.logging.set_verbosity(tf.logging.WARN)
 class UseEmbedder():
     """This module is outputing:
 
@@ -17,7 +91,7 @@ class UseEmbedder():
 
     Quite annoying, so:
 
-    >>> tf.logging.set_verbosity(logging.WARN)
+    >>> tf.logging.set_verbosity(tf.logging.WARN)
     
     Or:
     # Reduce logging output.
@@ -26,6 +100,7 @@ class UseEmbedder():
     def __init__(self, encoder='transformer', bsize=128, gpu=True):
         assert(encoder in ['transformer', 'dan'])
         self.bsize = bsize
+        # FIXME multi GPU
         self.device = '/gpu:0' if gpu else '/cpu:0'
         if encoder == 'transformer':
             url = "https://tfhub.dev/google/universal-sentence-encoder-large/3"
@@ -38,28 +113,69 @@ class UseEmbedder():
         self.embed_session.run(tf.global_variables_initializer())
         self.embed_session.run(tf.tables_initializer())
     def embed(self, sentences):
-        # with tf.device('/cpu:0'):
-        # ISSUE: https://github.com/tensorflow/hub/issues/70
         res = []
-        for stidx in range(0, len(sentences), self.bsize):
+        print('embedding %s sentences, batch size: %s'
+              % (len(sentences), self.bsize))
+        rg = range(0, len(sentences), self.bsize)
+        msg = ''
+        start = time.time()
+        for idx,stidx in enumerate(rg):
+            print('\b' * len(msg), end='')
+            # print('\r')
+            if idx == 0:
+                eta = -1
+            else:
+                eta = ((time.time() - start) / idx) * (len(rg) - idx)
+            speed = self.bsize * idx / (time.time() - start)
+            msg = ('batch size: %s, batch num %s / %s, '
+                   'speed: %.0f sent/s, ETA: %.0fs'
+                   % (self.bsize,
+                      idx, len(rg),
+                      # time.time() - start,
+                      speed,
+                      eta))
+            print(msg, end='', flush=True)
             batch = sentences[stidx:stidx + self.bsize]
+            # with tf.device('/cpu:0'):
+            # ISSUE: https://github.com/tensorflow/hub/issues/70
             with tf.device(self.device):
                 embedded = self.module(batch)
                 tmp = self.embed_session.run(embedded)
                 res.append(tmp)
+        print('')
         return np.vstack(res)
     def close(self):
         self.embed_session.close()
 
-# FIXME move this to config
-sys.path.append('/home/hebi/github/reading/InferSent/')
+
+# Some note about InferSent version:
+#
+# version 1 uses infersent1.pkl, glove.840B.300d.txt, and when
+# creating InferSent model, need to pass 'version': 2 to it.
+#
+# version 2 uses infersent1.pkl and crawl-300d-2M.vec
+def get_infersent_modelpath():
+    return get_file('infersent2.pkl',
+                    'https://dl.fbaipublicfiles.com/infersent/infersent2.pkl')
+    
+def get_infersent_w2vpath():
+    path = get_file('crawl-300d-2M.vec.zip',
+                    'https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M-subword.zip')
+    # crawl-300d-2M.vec?
+    vec_file = os.path.join(os.path.dirname(path), 'crawl-300d-2M-subword.vec')
+    if not os.path.exists(vec_file):
+        zipfile.ZipFile(path).extractall(os.path.dirname(path))
+    assert(os.path.exists(vec_file))
+    return vec_file
 
 class InferSentEmbedder():
-    def __init__(self):
+    def __init__(self, extra_bsize = 256):
+        self.extra_bsize = extra_bsize
+        # HACK: https://github.com/lihebi/InferSent
+        from infersent.models import InferSent
         # Load our pre-trained model (in encoder/):
-        from models import InferSent
         # this bsize seems not used at all
-        params_model = {'bsize': 256,
+        params_model = {'bsize': 128,
                         # 'bsize': 64,
                         'word_emb_dim': 300,
                         'enc_lstm_dim': 2048, 'pool_type': 'max',
@@ -69,15 +185,16 @@ class InferSentEmbedder():
         # The first time model.cuda() throw RuntimeError: cuDNN error:
         # CUDNN_STATUS_EXECUTION_FAILED
         self.infersent = InferSent(params_model)
-        try:
-            self.infersent.cuda()
-        except RuntimeError:
-            print('Warning: RuntimeError occured when creating model.',
-                  'This is known bug. Trying one more time.')
-            self.infersent.cuda()
-        print("Is cuda? %s" % self.infersent.is_cuda())
-        self.infersent.load_state_dict(torch.load(INFERSENT_MODEL_PATH))
-        self.infersent.set_w2v_path(INFERSENT_W2V_PATH)
+        self.infersent.cuda()
+        # try:
+        #     self.infersent.cuda()
+        # except RuntimeError:
+        #     print('Warning: RuntimeError occured when creating model.',
+        #           'This is known bug. Trying one more time.')
+        #     self.infersent.cuda()
+        # print("Is cuda? %s" % self.infersent.is_cuda())
+        self.infersent.load_state_dict(torch.load(get_infersent_modelpath()))
+        self.infersent.set_w2v_path(get_infersent_w2vpath())
         # FIXME load K will probably lose some words. E.g. Vocab size : 100000
         # embedding 93882 sentences ..
         # Nb words kept : 3185922/4231554 (75.3%)
@@ -96,7 +213,8 @@ class InferSentEmbedder():
     def embed(self, sentences):
         # Encode your sentences (list of n sentences):
         # embeddings = self.infersent.encode(sentences, tokenize=True)
-        embeddings = self.infersent.encode(sentences, bsize=256,
+        print('embedding %s sentences' % len(sentences))
+        embeddings = self.infersent.encode(sentences, bsize=128,
                                            tokenize=False, verbose=True)
         # This outputs a numpy array with n vectors of dimension
         # 4096. Speed is around 1000 sentences per second with batch
@@ -132,7 +250,7 @@ def test_USE():
                  'I know exactly . ',
                  'We have plenty of space in the landfill . '] * 10000
     embedder = UseEmbedder(encoder='transformer', bsize=10240, gpu=True)
-    embedder = UseEmbedder(encoder='dan', bsize=51200, gpu=False)
+    embedder = UseEmbedder(encoder='dan', bsize=10240, gpu=False)
     embeddings = embedder.embed(sentences)
     embeddings.shape
     embeddings

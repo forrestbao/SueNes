@@ -293,14 +293,6 @@ def preprocess_negative_shuffle():
         pickle.dump(outdata, f)
 
 
-def test():
-    """
-    First set of preprocessing. Quite efficient.
-    """
-    preprocess_story_pickle()
-    preprocess_word_mutated()
-    preprocess_negative_sampling()
-    # preprocess_negative_shuffle()
 
 # collect into one arry
 def collect(v):
@@ -356,7 +348,7 @@ def embed_keep_shape(v, embedder_name):
         embedder = UseEmbedder(encoder='transformer',
                                bsize=USE_LARGE_BATCH_SIZE, gpu=True)
     elif embedder_name == 'InferSent':
-        embedder = InferSentEmbedder()
+        embedder = InferSentEmbedder(bsize=INFERSENT_BATCH_SIZE)
     else:
         print(embedder_name)
         raise Exception('Embedder not specified error.')
@@ -551,6 +543,14 @@ def dict_pickle_reshape(size):
     raise Exception('Not implemented.')
     return
 
+def test():
+    """
+    First set of preprocessing. Quite efficient.
+    """
+    preprocess_story_pickle()
+    preprocess_word_mutated()
+    preprocess_negative_sampling()
+    # preprocess_negative_shuffle()
 
 def test():
     """Using sentence embedder to preprocess."""
@@ -575,9 +575,9 @@ def test():
     preprocess_sentence_embed('USE', 'mutated', 10000, up_limit)
 
     # stories
-    preprocess_sentence_embed('USE', 'story', 10000, up_limit)
-    preprocess_sentence_embed('USE-Large', 'story', 10000, 30000)
-    preprocess_sentence_embed('InferSent', 'story', 500, 30000)
+    preprocess_sentence_embed('USE', 'story', 10000, 30000)
+    preprocess_sentence_embed('USE-Large', 'story', 30000, 30000)
+    preprocess_sentence_embed('InferSent', 'story', 10000, 30000)
 
     # negative and mutate
     up_limit = 10000

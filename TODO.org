@@ -1,0 +1,105 @@
+#+TITLE: TodoList
+* TODOs
+
+** Implement loading from hard disk using tf.data.Dataset API
+*** TODO sequential embedding data serialization
+with index file probably
+*** TODO use all CNN data
+*** TODO use DM data
+
+** NYT dataset
+*** NYC annotated corpus: https://catalog.ldc.upenn.edu/LDC2008T19
+*** TODO negative sampling with NYT
+*** TODO sentence level mutation with NYT
+
+** Compare with ground truth & ROUGE (BLUE?)
+*** DUC 01/02
+
+** Other ideas
+*** TODO sentence-level mutate
+*** TODO [#B] use the model learned from CNN data to test on DM data (transfer)
+*** TODO LSTM 50 problem
+
+
+* DONEs
+
+** Final
+*** CANCELED InferSent 30000 data
+    CLOSED: [2019-02-17 Sun 14:02]
+*** DONE early stopping vs not
+    CLOSED: [2019-02-17 Sun 14:02]
+Now, early stopping seems to give worse results. That is because when
+loss stops increasing, accuracy is still increasing. So may be I can
+try early stop on accuracy? Or both?
+*** DONE plot CNN article summary sent number
+    CLOSED: [2018-12-09 Sun 02:28]
+** Experiment
+*** DONE [#A] use fake summary and difference as loss function, instead of mutation and score
+    CLOSED: [2018-12-09 Sun 02:28]
+*** DONE [#A] use only mutated summary, without article
+    CLOSED: [2018-11-30 Fri 15:07]
+*** DONE when generating mutation, do not change sentence separator
+    CLOSED: [2018-12-09 Sun 02:28]
+*** DONE adjust hyper parameters and network architecture
+    CLOSED: [2018-12-09 Sun 02:28]
+*** DONE try LSTM and attention, MLP instead of current CNN
+    CLOSED: [2018-12-09 Sun 02:28]
+** New Experiment
+
+All with 4 settings:
+- UAE
+- UAE-Large
+- Glove
+- Glove-SO
+*** DONE FIXME word mutate avoid sepator
+    CLOSED: [2018-12-09 Sun 02:29]
+*** DONE [#A] sigmoid on regression problem
+    CLOSED: [2018-12-09 Sun 02:29]
+*** DONE [#A] classification, use hinge loss
+    CLOSED: [2018-12-09 Sun 02:29]
+*** DONE LSTM model train more epochs
+    CLOSED: [2018-12-09 Sun 02:29]
+
+*** DONE mutation with deletion only
+    CLOSED: [2018-12-09 Sun 02:31]
+good
+*** DONE negative sampling with CNN/DM
+    CLOSED: [2018-12-09 Sun 02:31]
+N/A
+
+*** DONE 2nd negative sampling
+    CLOSED: [2018-12-09 Sun 02:31]
+For reference summary, shuffle the order of words, so that the
+sentence don't make sense. Expect the word embedding (glove) based
+model to have no impact, but sentence embedding method should observe
+a major drop, since the sentence does not make sense.
+
+*** DONE softmax instead of sigmoid
+    CLOSED: [2018-12-05 Wed 12:41]
+*** DONE negative sampling difference loss function
+    CLOSED: [2018-12-09 Sun 02:27]
+*** DONE validation and test dataset
+    CLOSED: [2018-12-09 Sun 02:27]
+*** DONE regularizers (L1, L2, dropout)
+    CLOSED: [2018-12-09 Sun 02:27]
+*** DONE USE-Large
+    CLOSED: [2018-12-04 Tue 21:03]
+*** DONE CNN architecture change
+    CLOSED: [2018-12-04 Tue 21:58]
+- smaller number of CNN
+- dropout
+- conv2d
+*** DONE separate architecture
+    CLOSED: [2019-02-17 Sun 14:01]
+
+*** DONE automatic early stop keras
+    CLOSED: [2018-12-09 Sun 02:28]
+
+** DONE Paper writing
+   CLOSED: [2019-02-17 Sun 14:01]
+*** DONE write method
+    CLOSED: [2018-12-09 Sun 02:31]
+*** DONE figures
+    CLOSED: [2018-12-09 Sun 02:31]
+*** DONE plot results
+    CLOSED: [2018-12-09 Sun 02:31]

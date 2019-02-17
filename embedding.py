@@ -112,6 +112,14 @@ class UseEmbedder():
         # self.embed_session = tf.Session()
         self.embed_session.run(tf.global_variables_initializer())
         self.embed_session.run(tf.tables_initializer())
+    def embed_impl(self, batch):
+        # with tf.device('/cpu:0'):
+        # ISSUE: https://github.com/tensorflow/hub/issues/70
+        with tf.device(self.device):
+            embedded = self.module(batch)
+            tmp = self.embed_session.run(embedded)
+            return tmp
+        
     def embed(self, sentences):
         res = []
         print('embedding %s sentences, batch size: %s'
@@ -136,12 +144,8 @@ class UseEmbedder():
                       eta))
             print(msg, end='', flush=True)
             batch = sentences[stidx:stidx + self.bsize]
-            # with tf.device('/cpu:0'):
-            # ISSUE: https://github.com/tensorflow/hub/issues/70
-            with tf.device(self.device):
-                embedded = self.module(batch)
-                tmp = self.embed_session.run(embedded)
-                res.append(tmp)
+            tmp = self.embed_impl(batch)
+            res.append(tmp)
         print('')
         return np.vstack(res)
     def close(self):
@@ -169,8 +173,10 @@ def get_infersent_w2vpath():
     return vec_file
 
 class InferSentEmbedder():
-    def __init__(self, extra_bsize = 256):
-        self.extra_bsize = extra_bsize
+    def __init__(self, bsize = 256):
+        # FIXME this bsize is used only in this class by my code. This
+        # is not passed to InferSent
+        self.bsize = bsize
         # HACK: https://github.com/lihebi/InferSent
         from infersent.models import InferSent
         # Load our pre-trained model (in encoder/):
@@ -210,16 +216,50 @@ class InferSentEmbedder():
         # Just load k ..
         self.infersent.build_vocab_k_words(K=100000)
         
-    def embed(self, sentences):
+    def embed_impl(self, sentences):
         # Encode your sentences (list of n sentences):
         # embeddings = self.infersent.encode(sentences, tokenize=True)
-        print('embedding %s sentences' % len(sentences))
         embeddings = self.infersent.encode(sentences, bsize=128,
-                                           tokenize=False, verbose=True)
+                                           tokenize=False, verbose=False)
         # This outputs a numpy array with n vectors of dimension
         # 4096. Speed is around 1000 sentences per second with batch
         # size 128 on a single GPU.
         return embeddings
+    def embed(self, sentences):
+        res = []
+        print('embedding %s sentences, batch size: %s'
+              % (len(sentences), self.bsize))
+        rg = range(0, len(sentences), self.bsize)
+        msg = ''
+        start = time.time()
+        for idx,stidx in enumerate(rg):
+            # I have to set the batch size really small to avoid
+            # memory or assertion issue. Thus there will be many batch
+            # iterations. The update of python shell buffer in Emacs
+            # is very slow, thus only update this every severl
+            # iterations.
+            if idx % 30 == 0:
+                print('\b' * len(msg), end='')
+                # print('\r')
+                if idx == 0:
+                    eta = -1
+                else:
+                    eta = ((time.time() - start) / idx) * (len(rg) - idx)
+                speed = self.bsize * idx / (time.time() - start)
+                msg = ('batch size: %s, batch num %s / %s, '
+                       'speed: %.0f sent/s, ETA: %.0fs'
+                       % (self.bsize,
+                          idx, len(rg),
+                          # time.time() - start,
+                          speed,
+                          eta))
+                print(msg, end='', flush=True)
+            batch = sentences[stidx:stidx + self.bsize]
+            tmp = self.embed_impl(batch)
+            res.append(tmp)
+        print('')
+        return np.vstack(res)
+        
 
 def test_infersent():
     sentences = ['Everyone really likes the newest benefits ',
@@ -230,7 +270,7 @@ def test_infersent():
                  'We have plenty of space in the landfill . '] * 10000
 
 
-    embedder = InferSentEmbedder()
+    embedder = InferSentEmbedder(bsize=1024)
     embeddings = embedder.embed(sentences)
     embeddings
     # import pickle

@@ -54,11 +54,12 @@ INFERSENT_W2V_PATH = os.path.join('/home/hebi/github/reading/InferSent/',
 
 USE_BATCH_SIZE = 10240
 USE_LARGE_BATCH_SIZE = 2560
-
+# this should be very small, and speed is still good
+INFERSENT_BATCH_SIZE = 64
 
 # by default, it seems to use 2080ti alone, but I'd better make it
 # explicit
 #
 # os.environ["CUDA_VISIBLE_DEVICES"]="0" # 2080ti
 # os.environ["CUDA_VISIBLE_DEVICES"]="1" # 1070
-# os.environ["CUDA_LAUNCH_BLOCKING"]="1"
+os.environ["CUDA_LAUNCH_BLOCKING"]="1"

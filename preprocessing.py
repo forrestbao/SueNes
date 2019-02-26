@@ -10,9 +10,10 @@ from utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
 from utils import read_text_file, sentence_split
 from utils import dict_pickle_read, dict_pickle_read_keys, dict_pickle_write
 
-from embedding import UseEmbedder, InferSentEmbedder
+from embedding import UseEmbedder, InferSentEmbedder, sentence_embed
 
 import random
+import tensorflow as tf
 
 from config import *
 
@@ -342,20 +343,14 @@ def test():
     encoded = USE_encode_keep_shape(v)
 
 def embed_keep_shape(v, embedder_name):
-    if embedder_name == 'USE':
-        embedder = UseEmbedder(encoder='dan', bsize=USE_BATCH_SIZE, gpu=False)
-    elif embedder_name == 'USE-Large':
-        embedder = UseEmbedder(encoder='transformer',
-                               bsize=USE_LARGE_BATCH_SIZE, gpu=True)
-    elif embedder_name == 'InferSent':
-        embedder = InferSentEmbedder(bsize=INFERSENT_BATCH_SIZE)
-    else:
-        print(embedder_name)
-        raise Exception('Embedder not specified error.')
     flattened = collect(v)
     shape = get_shape(v)
+    batch_size = {'USE': USE_BATCH_SIZE,
+                  'USE-Large': USE_LARGE_BATCH_SIZE,
+                  'InferSent': INFERSENT_BATCH_SIZE}[embedder_name]
     print('embedding', len(flattened), 'sentences ..')
-    embedding_flattened = embedder.embed(flattened)
+    embedding_flattened = sentence_embed(embedder_name, flattened,
+                                         batch_size=batch_size)
     embedding, _ = restore_shape(embedding_flattened, 0, shape)
     return embedding
 
@@ -500,7 +495,7 @@ def test():
             acc.update(p)
     
     return
-    
+
 
     
 def preprocess_sentence_embed(embedder_name, target_name, num,

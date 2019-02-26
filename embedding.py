@@ -15,6 +15,9 @@ from keras.layers import Embedding
 from keras.initializers import Constant
 from keras.utils.data_utils import get_file
 
+# pip install --user git+https://github.com/lihebi/InferSent
+from infersent.models import InferSent
+
 from config import *
 
 # http://nlp.stanford.edu/data/glove.6B.zip
@@ -83,6 +86,154 @@ def load_glove_layer(word_index):
     return embedding_layer
 
 tf.logging.set_verbosity(tf.logging.WARN)
+
+_USE_small_module = None
+_USE_small_sess = None
+def _sentence_embed_USE_small(sentences):
+    global _USE_small_module
+    global _USE_small_sess
+    device = '/cpu:0'
+    url = "https://tfhub.dev/google/universal-sentence-encoder/2"
+    if not _USE_small_module:
+        _USE_small_module = hub.Module(url)
+        config = tf.ConfigProto(allow_soft_placement = True)
+        # even this does not use GPU, it will still take all GPU
+        # memories
+        _USE_small_sess = tf.Session(config = config)
+        _USE_small_sess.run(tf.global_variables_initializer())
+        _USE_small_sess.run(tf.tables_initializer())
+    with tf.device(device):
+        return _USE_small_sess.run(_USE_small_module(sentences))
+
+
+_USE_large_module = None
+_USE_large_sess = None
+def _sentence_embed_USE_large(sentences):
+    global _USE_large_module
+    global _USE_large_sess
+    device = '/gpu:0'
+    # CPU is too slow for this model
+    # device = '/cpu:0'
+    url = "https://tfhub.dev/google/universal-sentence-encoder-large/3"
+    if not _USE_large_module:
+        _USE_large_module = hub.Module(url)
+        config = tf.ConfigProto(allow_soft_placement = True)
+        # this does not seem to have any effect
+        # config.gpu_options.allow_growth = True
+        _USE_large_sess = tf.Session(config = config)
+        # _USE_large_sess = tf.Session()
+        _USE_large_sess.run(tf.global_variables_initializer())
+        _USE_large_sess.run(tf.tables_initializer())
+    with tf.device(device):
+        return _USE_large_sess.run(_USE_large_module(sentences))
+
+# Some note about InferSent version:
+#
+# version 1 uses infersent1.pkl, glove.840B.300d.txt, and when
+# creating InferSent model, need to pass 'version': 2 to it.
+#
+# version 2 uses infersent1.pkl and crawl-300d-2M.vec
+def get_infersent_modelpath():
+    return get_file('infersent2.pkl',
+                    'https://dl.fbaipublicfiles.com/infersent/infersent2.pkl')
+    
+def get_infersent_w2vpath():
+    path = get_file('crawl-300d-2M.vec.zip',
+                    'https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M-subword.zip')
+    # crawl-300d-2M.vec?
+    vec_file = os.path.join(os.path.dirname(path), 'crawl-300d-2M-subword.vec')
+    if not os.path.exists(vec_file):
+        zipfile.ZipFile(path).extractall(os.path.dirname(path))
+    assert(os.path.exists(vec_file))
+    return vec_file
+
+_InferSent_model = None
+def _sentence_embed_InferSent(sentences):
+    global _InferSent_model
+    if not _InferSent_model:
+        # Load our pre-trained model (in encoder/):
+        # this bsize seems not used at all
+        params_model = {'bsize': 128,
+                        'word_emb_dim': 300,
+                        'enc_lstm_dim': 2048, 'pool_type': 'max',
+                        'dpout_model': 0.0,
+                        # must use the v2 model in INFERSENT_MODEL_PATH
+                        'version': 2}
+        _InferSent_model = InferSent(params_model)
+        _InferSent_model.cuda()
+        _InferSent_model.load_state_dict(torch.load(get_infersent_modelpath()))
+        _InferSent_model.set_w2v_path(get_infersent_w2vpath())
+        _InferSent_model.build_vocab_k_words(K=100000)
+    embeddings = _InferSent_model.encode(sentences, bsize=128,
+                                         tokenize=False, verbose=False)
+    # This outputs a numpy array with n vectors of dimension
+    # 4096. Speed is around 1000 sentences per second with batch
+    # size 128 on a single GPU.
+    return embeddings
+
+def sentence_embed_reset():
+    global _USE_small_module
+    global _USE_small_sess
+    global _USE_large_module
+    global _USE_large_sess
+    if _USE_small_module:
+        _USE_small_module = None
+        _USE_small_sess.close()
+        _USE_small_sess = None
+    if _USE_large_module:
+        _USE_large_module = None
+        _USE_large_sess.close()
+        _USE_large_sess = None
+    
+
+def sentence_embed(embed_name, sentences, batch_size):
+    embed_func = {'USE': _sentence_embed_USE_small,
+                  'USE-Large': _sentence_embed_USE_large,
+                  'InferSent': _sentence_embed_InferSent}[embed_name]
+    res = []
+    print('embedding %s sentences, batch size: %s'
+          % (len(sentences), batch_size))
+    rg = range(0, len(sentences), batch_size)
+    msg = ''
+    start = time.time()
+    for idx,stidx in enumerate(rg):
+        # I have to set the batch size really small to avoid
+        # memory or assertion issue. Thus there will be many batch
+        # iterations. The update of python shell buffer in Emacs
+        # is very slow, thus only update this every severl
+        # iterations.
+        # print('\r')
+        if embed_name != 'InferSent' or idx % 30 == 0:
+            print('\b' * len(msg), end='')
+            total_time = time.time() - start
+            if idx == 0:
+                eta = -1
+            else:
+                eta = (total_time / idx) * (len(rg) - idx)
+            speed = batch_size * idx / total_time
+            msg = ('batch size: %s, batch num %s / %s, '
+                   'speed: %.0f sent/s, Total Time: %.0fs, ETA: %.0fs'
+                   % (batch_size, idx, len(rg), speed, total_time, eta))
+            print(msg, end='', flush=True)
+        batch = sentences[stidx:stidx + batch_size]
+        tmp = embed_func(batch)
+        res.append(tmp)
+    print('')
+    return np.vstack(res)
+
+
+def __test():
+    sentences = ['Everyone really likes the newest benefits ',
+                 'The Government Executive articles housed on the website are not able to be searched . ',
+                 'I like him for the most part , but would still enjoy seeing someone beat him . ',
+                 'My favorite restaurants are always at least a hundred miles away from my house . ',
+                 'I know exactly . ',
+                 'We have plenty of space in the landfill . ']
+
+    out = sentence_embed('USE', sentences, batch_size=1024)
+    out = sentence_embed('USE-Large', sentences, batch_size=1024)
+    out = sentence_embed('InferSent', sentences, batch_size=1024)
+
 class UseEmbedder():
     """This module is outputing:
 
@@ -130,17 +281,18 @@ class UseEmbedder():
         for idx,stidx in enumerate(rg):
             print('\b' * len(msg), end='')
             # print('\r')
+            total_time = time.time() - start
             if idx == 0:
                 eta = -1
             else:
-                eta = ((time.time() - start) / idx) * (len(rg) - idx)
-            speed = self.bsize * idx / (time.time() - start)
+                eta = (total_time / idx) * (len(rg) - idx)
+            speed = self.bsize * idx / total_time
             msg = ('batch size: %s, batch num %s / %s, '
-                   'speed: %.0f sent/s, ETA: %.0fs'
+                   'speed: %.0f sent/s, Total Time: %.0fs, ETA: %.0fs'
                    % (self.bsize,
                       idx, len(rg),
-                      # time.time() - start,
                       speed,
+                      total_time,
                       eta))
             print(msg, end='', flush=True)
             batch = sentences[stidx:stidx + self.bsize]
@@ -152,25 +304,6 @@ class UseEmbedder():
         self.embed_session.close()
 
 
-# Some note about InferSent version:
-#
-# version 1 uses infersent1.pkl, glove.840B.300d.txt, and when
-# creating InferSent model, need to pass 'version': 2 to it.
-#
-# version 2 uses infersent1.pkl and crawl-300d-2M.vec
-def get_infersent_modelpath():
-    return get_file('infersent2.pkl',
-                    'https://dl.fbaipublicfiles.com/infersent/infersent2.pkl')
-    
-def get_infersent_w2vpath():
-    path = get_file('crawl-300d-2M.vec.zip',
-                    'https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M-subword.zip')
-    # crawl-300d-2M.vec?
-    vec_file = os.path.join(os.path.dirname(path), 'crawl-300d-2M-subword.vec')
-    if not os.path.exists(vec_file):
-        zipfile.ZipFile(path).extractall(os.path.dirname(path))
-    assert(os.path.exists(vec_file))
-    return vec_file
 
 class InferSentEmbedder():
     def __init__(self, bsize = 256):
@@ -273,6 +406,7 @@ def test_infersent():
     embedder = InferSentEmbedder(bsize=1024)
     embeddings = embedder.embed(sentences)
     embeddings
+    embeddings.shape
     # import pickle
     # pickle.load(open('encoder/infersent2.pkl', 'rb'))
     # import nltk

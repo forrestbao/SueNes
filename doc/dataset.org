@@ -1,0 +1,253 @@
+#+TITLE: Dataset Design Doc
+* TODOs
+
+** TODO test tf.data.Dataset shuffle performance for tfrec data
+** TODO integrate the sentence embedding into the model?
+** TODO integrate the negative sampling into the model?
+** TODO integrate the mutation into the model?
+** TODO integrate the negative sampling into the batch generation?
+
+* TODO sequential embedding data serialization
+with index file probably
+
+The old way is to use dictionary as data structure for storing the
+data files, including stories, mutations, and sentence embedding
+results. The hash of the story (the filename) is used as the key. 
+1. It is easy for referencing the same stories
+2. Easy to track which stories are processed. This is very useful when
+   my machine cannot process everything at once.
+3. The order of the stories need not be matched among stories,
+   mutations, and different embedding schema. In case some stories
+   cannot be processed, this is very helpful.
+
+
+However, the downside is also obvious.
+1. I have to load everything to know what are the processed stories
+2. Since it is dict, I cannot really make the serialization serial.
+
+I need to use a list for this, and use TFRecord to load the
+files. Hopefully this method will read the data on-demand, and close
+it on-time so that I don't enter memory issues. The dataset is huge.
+
+Thus I need to pay special attention to the order of the stories to be
+exactly the same.
+
+** Format of TFREC
+Each file would have the following structure:
+story:
+#+BEGIN_EXAMPLE
+'key': _bytes_feature(key.encode('utf-8')),
+'article': _bytes_feature(article.encode('utf-8')),
+'summary': _bytes_feature(summary.encode('utf-8'))
+#+END_EXAMPLE
+
+where each field:
+- key: bytes string
+- article: bytes string
+- summary: bytes string
+
+sentence embedding:
+#+BEGIN_EXAMPLE
+'key': _bytes_feature(key),
+'article': _bytes_feature(pickle.dumps(article)),
+'summary': _bytes_feature(pickle.dumps(summary))
+#+END_EXAMPLE
+
+where each article and summary is:
+- article: pickle.dumps(numpy of shape (#sent, 512/4096))
+- article: pickle.dumps(numpy of shape (#sent, 512/4096))
+
+
+** Story shuffle and splitting
+
+The first step is to read the stories, shuffle them, and split them
+into training, testing, validating. It must be done first, because I
+don't want any potential overlapping impact among the training and
+testing set.
+
+#+BEGIN_EXAMPLE
+proto/story/train/1.tfrec
+proto/story/validate/1.tfrec
+proto/story/test/1.tfrec
+#+END_EXAMPLE
+
+(HEBI: TODO) I will probably need to make sure the shuffle API of
+tf.data.Dataset works for tfrec data. But this is not that important,
+as the stories can be hold in memory, and I only need to shuffle the
+stories.
+
+** Sentence Embedding
+
+File System Hierarchy. I would really want to maintain the file
+correspondence of splits. I'm testing 1,000 stories per file here, but
+eventually I will use 10,000.
+
+Note: InferSent embedding is significantly larger (10x).
+
+#+BEGIN_EXAMPLE
+proto/story/USE/train/1.tfrec
+proto/story/USE-Large/validate/1.tfrec
+proto/story/InferSent/test/1.tfrec
+#+END_EXAMPLE
+
+** negative sampling
+
+I will pre-gen all samples, instead of sampling on the fly, because:
+- This are sentences, and the memory cannot hold all of them
+- Random sampling from batches probably not general enough, I believe
+  tf.nn.nce_loss samples from only batch, as it can only see a batch
+  at a time. Changing the batches across epoch might help.
+- I'm not sure how to use tf.nn.nce_loss either.
+
+Thus, I will pre-gen the samples.  First generate a mapping file.
+#+BEGIN_EXAMPLE
+proto/negative/sample_map.txt
+#+END_EXAMPLE
+
+with the following content:
+#+BEGIN_EXAMPLE
+
+#+END_EXAMPLE
+
+
+
+The rest should just copy from the =story= folder according to
+=sample_map.txt=, to avoid the costly sentence embedding. This step is
+risky, as the
+
+#+BEGIN_EXAMPLE
+proto/negative/train/1.tfrec
+proto/negative/test/1.tfrec
+proto/negative/USE/train/1.tfrec
+proto/negative/USE-Large/test/1.tfrec
+#+END_EXAMPLE
+
+
+
+
+
+
+
+
+I should probably generate data from the story data:
+
+1. load and zip story, story_USE, story_USE_Large,
+   story_InferSent. This would be
+   - key
+   - article
+   - summary
+   - USE article
+   - USE summary
+   - ...
+2. shuffle that, and create *one* repeats
+3. generate training data:
+   - Note:
+     - also do the padding here
+     - shuffle before use
+   - glove data: (article_text, summary_text, label)
+   - USE/InferSent data: (article_embed, summary_embed, label)
+
+** TODO Mutation
+This is tricky. I would mutate the article and summary on text
+level. After that, I would need to ...
+
+
+
+mutation.pickle (I'm going to drop this because I need to perform
+separate sentence embedding for it.)
+
+| key          | add          | add label     | delete & label | replace & label |
+|--------------+--------------+---------------+----------------+-----------------|
+| 0001d1afc246 | [10] of text | [10] of float | [10]           | [10]            |
+| ...          |              |               |                |                 |
+
+negative.pickle (I probably don't need this at all.)
+
+| key | neg |
+|-----+-----|
+|     |     |
+
+
+
+* Email
+
+** Experiment Design
+
+First and foremost, I'm adding the following three comparisons:
+1. with ROUGE score as baseline
+2. with human judgement
+3. with [1], which is kind of the manual feature engineering counterpart
+of our approach
+
+We will use DUC/TAC data for it, as it has ground truth (human judgement label).
+
+However, there are two potential problems of using DUC and TAC data:
+
+1. The DUC/TA tasks are for extractive summarization, which works well
+with ROUGE. There seems to be no such human data for extractive
+summarization. Conducting human study ourselves would seem to be too
+expensive for now.
+
+2. This dataset is much smaller (thousands of samples each year), because
+the summarizations are manually assessed. This may not be sufficient for
+a deep learning based training.
+
+To handle the small data set size problem, there's actually an
+interesting transfer-learning experiment: training on CNN/DM and NYT
+dataset and fine-tune the model on DUC/TAC.
+
+Finally, in terms of other datasets, previous experiment used 30000
+stories from CNN/DM. That's 1/10 of the total data. I can use all of
+them. I also have New York time corpus in hand, thus adding that as
+well.
+
+I would prioritize the experiments as follows, with descending importance:
+1. comparison with ROUGE, Human Judgement, and [1]
+2. transfer-learning experiment
+3. All CNN/DM data and NYT corpus
+4. human survey for collecting abstractive summarization assessment data
+
+Let me know if you have any suggestions.
+
+
+[1] Louis, Annie, and Ani Nenkova. "Automatically assessing machine
+summary content without a gold standard." Computational Linguistics 39.2
+(2013): 267-300.
+
+** Directly use embedding coverage
+
+I think the reviewers' comments and your suggestion of improvements
+makes a lot of sense to me.
+
+But at another direction, I am also very interested in if we can also
+use some unsupervised method to measure the summary quality. Say, the
+goal of a summary is to preserve the semantic information from a
+document. Can we use the sentence embedding from document and sentence
+embeddings from abstract, to measure the semantic coverage. (PS. ROUGE
+is basiclly a word coverage)
+
+If we can propose two approaches, one supervised method and one
+unsupervised, I think the story is complete. what do you think?
+
+On Sat, Feb 23, 2019 at 2:25 AM yinfei yang <yangyin7@gmail.com> wrote: 
+
+ Can we use the sentence embedding from document and sentence
+ embeddings from abstract, to measure the semantic
+ coverage. (PS. ROUGE is basiclly a word coverage)
+
+Isn't this what we are doing in the paper now? And to measure the
+quality (in terms of semantic coverage) of the summary, we use the
+ratio of mutation and negative sampling.
+
+I meant to use the unsupervised approach, without any training. 
+
+I remember our current approach includes a training procedure, do we ?
+I may have a wrong memory.
+
+Yes, we do have a training procedure. Current approach basically uses
+sentence embedding as pretraining, and train a discriminative model on
+top.
+
+That's a good idea. I'll do an unsupervised coverage test on the
+embedding directly.
+

@@ -3,7 +3,7 @@
 
 ** Implement loading from hard disk using tf.data.Dataset API
 *** TODO sequential embedding data serialization
-with index file probably
+*** TODO lementization
 *** TODO use all CNN data
 *** TODO use DM data
 

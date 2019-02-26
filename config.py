@@ -42,6 +42,8 @@ SENT_MUTATED_FILE = os.path.join(DATA_DIR, 'sent-mutated.pickle')
 NEGATIVE_SAMPLING_FILE = os.path.join(DATA_DIR, 'negative-sampling.pickle')
 NEGATIVE_SHUFFLE_FILE = os.path.join(DATA_DIR, 'negative-shuffle.pickle')
 
+PROTO_DIR = os.path.join(DATA_DIR, 'proto')
+
 USE_DAN_DIR = os.path.join(DATA_DIR, 'USE-DAN')
 USE_TRANSFORMER_DIR = os.path.join(DATA_DIR, 'USE-Transformer')
 
@@ -53,9 +55,10 @@ INFERSENT_W2V_PATH = os.path.join('/home/hebi/github/reading/InferSent/',
                                   'dataset/fastText/crawl-300d-2M.vec')
 
 USE_BATCH_SIZE = 10240
-USE_LARGE_BATCH_SIZE = 2560
+USE_LARGE_BATCH_SIZE = 2048
 # this should be very small, and speed is still good
-INFERSENT_BATCH_SIZE = 64
+# INFERSENT_BATCH_SIZE = 64
+INFERSENT_BATCH_SIZE = 32
 
 # by default, it seems to use 2080ti alone, but I'd better make it
 # explicit
@@ -63,3 +66,6 @@ INFERSENT_BATCH_SIZE = 64
 # os.environ["CUDA_VISIBLE_DEVICES"]="0" # 2080ti
 # os.environ["CUDA_VISIBLE_DEVICES"]="1" # 1070
 os.environ["CUDA_LAUNCH_BLOCKING"]="1"
+
+# will chunk data tfrec file every 10000 stories
+DATA_BATCH_SIZE = 10000

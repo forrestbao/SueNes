@@ -56,6 +56,8 @@ def load_data(filename):
 def sentence_split(s):
     # KEEP THE SEPERATOR
     # res = re.split(r'\.|!|\?', s)
+    if type(s) is bytes:
+        s = s.decode('utf-8')
     tokens = s.split(' ')
     res = []
 

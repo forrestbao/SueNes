@@ -18,7 +18,7 @@ from keras.utils.data_utils import get_file
 # pip install --user git+https://github.com/lihebi/InferSent
 from infersent.models import InferSent
 
-from config import *
+from antirouge.config import *
 
 # http://nlp.stanford.edu/data/glove.6B.zip
 

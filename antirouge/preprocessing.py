@@ -6,16 +6,16 @@ import shutil
 
 import numpy as np
 
-from utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
-from utils import read_text_file, sentence_split
-from utils import dict_pickle_read, dict_pickle_read_keys, dict_pickle_write
+from antirouge.utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
+from antirouge.utils import read_text_file, sentence_split
+from antirouge.utils import dict_pickle_read, dict_pickle_read_keys, dict_pickle_write
 
-from embedding import UseEmbedder, InferSentEmbedder, sentence_embed
+from antirouge.embedding import UseEmbedder, InferSentEmbedder, sentence_embed
 
 import random
 import tensorflow as tf
 
-from config import *
+from antirouge.config import *
 
 
 def get_art_abs(story_file):

@@ -9,10 +9,10 @@ import random
 
 from keras.preprocessing.sequence import pad_sequences
 
-from utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
-from utils import read_text_file
+from antirouge.utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
+from antirouge.utils import read_text_file
 
-from config import *
+from antirouge.config import *
 
 def prepare_data_using_USE():
     """Return vector of float32. The dimension of X is (?,13,512), Y is

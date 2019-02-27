@@ -15,7 +15,7 @@ import keras
 
 from keras import backend as K
 
-from config import *
+from antirouge.config import *
 
 def build_model(embedding_method, label_type, embedding_layer,
                 input_shape, architecture):
@@ -130,3 +130,17 @@ def build_glove_summary_only_model(embedding_layer):
 
     model = Model(sequence_input, preds)
     return model
+
+def __test_nce_loss():
+    """Create a model to test NCE loss.
+
+    1. is the labels always 1?
+
+    The plan: y = 1 if 0<x<100 else 0
+    
+    """
+    # generate data
+    # how about using mnist data?
+    
+    pass
+

@@ -85,67 +85,28 @@ eventually I will use 10,000.
 Note: InferSent embedding is significantly larger (10x).
 
 #+BEGIN_EXAMPLE
-proto/story/USE/train/1.tfrec
-proto/story/USE-Large/validate/1.tfrec
-proto/story/InferSent/test/1.tfrec
+proto/USE/train/1.tfrec
+proto/USE-Large/validate/1.tfrec
+proto/InferSent/test/1.tfrec
 #+END_EXAMPLE
 
 ** negative sampling
 
-I will pre-gen all samples, instead of sampling on the fly, because:
-- This are sentences, and the memory cannot hold all of them
-- Random sampling from batches probably not general enough, I believe
-  tf.nn.nce_loss samples from only batch, as it can only see a batch
-  at a time. Changing the batches across epoch might help.
-- I'm not sure how to use tf.nn.nce_loss either.
-
-Thus, I will pre-gen the samples.  First generate a mapping file.
-#+BEGIN_EXAMPLE
-proto/negative/sample_map.txt
-#+END_EXAMPLE
-
-with the following content:
-#+BEGIN_EXAMPLE
-
-#+END_EXAMPLE
-
-
-
-The rest should just copy from the =story= folder according to
-=sample_map.txt=, to avoid the costly sentence embedding. This step is
-risky, as the
-
-#+BEGIN_EXAMPLE
-proto/negative/train/1.tfrec
-proto/negative/test/1.tfrec
-proto/negative/USE/train/1.tfrec
-proto/negative/USE-Large/test/1.tfrec
-#+END_EXAMPLE
-
-
-
-
-
-
-
-
-I should probably generate data from the story data:
-
-1. load and zip story, story_USE, story_USE_Large,
-   story_InferSent. This would be
-   - key
-   - article
-   - summary
-   - USE article
-   - USE summary
-   - ...
-2. shuffle that, and create *one* repeats
-3. generate training data:
-   - Note:
-     - also do the padding here
-     - shuffle before use
-   - glove data: (article_text, summary_text, label)
-   - USE/InferSent data: (article_embed, summary_embed, label)
+I basically have three approaches to generate negative samples:
+1. pre-generate all negative samples. This is also the previous
+   approach. However this approach has significant drawbacks:
+   - It is not scalable.
+   - The negative samples are fixed across epochs. This is not
+     general enough.
+2. generate negative samples when providing the batch. This is easy to
+   implement, and if the entire dataset is shuffled every epochs, it
+   can achieve pretty good generalization.
+3. In the model, or in the loss function. This is what
+   =tf.nn.nce_loss= is doing for word2vec.  However, =tf.nn.nce_loss=
+   is not suitable either, it is special for processing word. As far
+   as I can see, it expects the words to be indexed, and a vocabulary
+   size (say 50000) is give, and sampling is done in the range of
+   [0,50000]. This cannot be used for sentence.
 
 ** TODO Mutation
 This is tricky. I would mutate the article and summary on text
@@ -166,6 +127,23 @@ negative.pickle (I probably don't need this at all.)
 | key | neg |
 |-----+-----|
 |     |     |
+
+** Data Consuming
+
+1. load data depending on the task
+   - story (100,000)
+   - USE/Large embedding
+   - InferSent embedding
+   Each contains three fields:
+   - key
+   - article
+   - summary
+2. shuffle the entire dataset for each epoch (HEBI: test the performance)
+2. fetch 10 batches (100 each):
+   - pair each batch with other 9 batches as negative samples (10x9)
+   - plus each batch, we got (10x9+10) batch size data
+   - concatenate together as one batch
+3. train on batch, and continue
 
 
 

@@ -19,22 +19,22 @@ import pickle
 
 import os, sys
 
-from model import build_model
-from embedding import load_glove_layer
-from utils import save_data, load_data
-from utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
-from utils import dict_pickle_read, dict_pickle_read_keys, dict_pickle_write
+from antirouge.model import build_model
+from antirouge.embedding import load_glove_layer
+from antirouge.utils import save_data, load_data
+from antirouge.utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
+from antirouge.utils import dict_pickle_read, dict_pickle_read_keys, dict_pickle_write
 
-from data import pad_shuffle_split_data
-from data import prepare_data_using_USE
-from data import prepare_data_with_USE, prepare_data_with_INFER
-from data import prepare_data_using_tokenizer, prepare_summary_data_using_tokenizer
-from data import load_word_mutated_data
-from data import load_story_keys, create_tokenizer_by_key
+from antirouge.data import pad_shuffle_split_data
+from antirouge.data import prepare_data_using_USE
+from antirouge.data import prepare_data_with_USE, prepare_data_with_INFER
+from antirouge.data import prepare_data_using_tokenizer, prepare_summary_data_using_tokenizer
+from antirouge.data import load_word_mutated_data
+from antirouge.data import load_story_keys, create_tokenizer_by_key
 
 from keras.preprocessing.sequence import pad_sequences
 
-from config import *
+from antirouge.config import *
 
 def load_article_and_summary_string(keys):
     """Return (articles, summaries)"""
@@ -175,6 +175,7 @@ def test():
     embedding_method = 'USE'
     architecture = 'CNN'
     fake_extra_option = 'delete'
+
     
 def main():
     # setting parameters
@@ -453,6 +454,10 @@ def run_infersent(fake_method, fake_extra_option, architecture):
     print('Test result: ', result)
     return result[1]
     
+def __test():
+    # test the new negative sampling function
+    # I'll just use USE models for simplicity
+    os.path.join(PROTO_DIR, 'USE')
 
 def run_exp(fake_method, embedding_method, num_samples,
             num_fake_samples, architecture, fake_extra_option=None):

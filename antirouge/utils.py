@@ -9,7 +9,7 @@ from keras.preprocessing.sequence import pad_sequences
 # why keras.preprocessing is not exporting tokenizer_from_json ??
 from keras_preprocessing.text import tokenizer_from_json
 
-from config import *
+from antirouge.config import *
 
 def create_tokenizer_from_texts(texts):
     """Tokenizer needs to fit on the given text. Then, we can use it to

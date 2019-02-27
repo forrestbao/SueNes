@@ -5,18 +5,18 @@ import shutil
 import numpy as np
 import glob
 
-from utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
-from utils import read_text_file, sentence_split
-from utils import dict_pickle_read, dict_pickle_read_keys, dict_pickle_write
+from antirouge.utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
+from antirouge.utils import read_text_file, sentence_split
+from antirouge.utils import dict_pickle_read, dict_pickle_read_keys, dict_pickle_write
 
-from embedding import sentence_embed, sentence_embed_reset
+from antirouge.embedding import sentence_embed, sentence_embed_reset
 
 import random
 import tensorflow as tf
 
-from preprocessing import get_art_abs, embed_keep_shape
+from antirouge.preprocessing import get_art_abs, embed_keep_shape
 
-from config import *
+from antirouge.config import *
 
 # FIXME the rest files may not need eager execution, thus this file
 # should be stand-alone
@@ -25,16 +25,15 @@ from config import *
 # if not tf.executing_eagerly():
 #     tf.enable_eager_execution()
 
-
 def _bytes_feature(value):
-  """Returns a bytes_list from a string / byte."""
-  return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
+    """Returns a bytes_list from a string / byte."""
+    return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 def _float_feature(value):
-  """Returns a float_list from a float / double."""
-  return tf.train.Feature(float_list=tf.train.FloatList(value=[value]))
+    """Returns a float_list from a float / double."""
+    return tf.train.Feature(float_list=tf.train.FloatList(value=[value]))
 def _int64_feature(value):
-  """Returns an int64_list from a bool / enum / int / uint."""
-  return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
+    """Returns an int64_list from a bool / enum / int / uint."""
+    return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 def proto_encode_story(key, article, summary):
     feature = {
         'key': _bytes_feature(key.encode('utf-8')),
@@ -82,7 +81,7 @@ def proto_process_story():
             writer.write(exp.SerializeToString())
     _trunk_story_tfrec(story_tfrec_fname)
 
-def load_story_ds():
+def proto_load_story_ds():
     # TODO load not only stories
     # Load story from tfrec file
     folder = os.path.join(PROTO_DIR, 'story')
@@ -102,8 +101,88 @@ def load_story_ds():
 
 
 def glob_sorted(pattern):
+    """Sort according to the number in the filename."""
     return sorted(glob.glob(pattern), key=lambda f:
                   int(''.join(filter(str.isdigit, f))))
+
+def proto_load_embed_ds(folder):
+    raw_ds = tf.data.TFRecordDataset(glob_sorted(folder + '/*'))
+    feature_description = {
+        'key': tf.FixedLenFeature([], tf.string, default_value=''),
+        'article': tf.FixedLenFeature([], tf.string, default_value=''),
+        'summary': tf.FixedLenFeature([], tf.string, default_value='')
+    }
+    def _my_parse_function(pto):
+        # Parse the input tf.Example proto using the dictionary above.
+        d = tf.parse_single_example(pto, feature_description)
+        # I cannot use pickle here, as they are tensors. Thus, I must
+        # remember to load the pickle
+        #
+        # d['summary'] = pickle.loads(d['summary'])
+        # d['article'] = pickle.loads(d['article'])
+        return d
+    return raw_ds.map(_my_parse_function)
+
+def __test():
+    folder = os.path.join(PROTO_DIR, 'USE')
+    ds = tf.data.TFRecordDataset([folder])
+    ds = ds.map(_my_parse_function)
+    sess = tf.Session()
+    iterator = ds.make_one_shot_iterator()
+    next_element = iterator.get_next()
+    elem = sess.run(next_element)
+    type(elem)
+    len(elem)
+    elem
+    elem.keys()
+    type(elem['summary'])
+    ss = pickle.loads(elem['summary'])
+    type(ss)
+    ss
+
+def __test():
+    folder = os.path.join(PROTO_DIR, 'USE')
+    ds = proto_load_embed_ds(folder)
+    ct=0
+    iterator = ds.make_one_shot_iterator()
+    next_element = iterator.get_next()
+    with tf.Session() as sess:
+        d = sess.run(next_element)
+        article = pickle.loads(d['article'])
+        summary = pickle.loads(d['summary'])
+        print('--- key\n', d['key'])
+        print('--- article\n', article.shape)
+        print('--- summary\n', summary)
+        
+    for d in ds.take(10):
+        ct+=1
+        x=d
+    ct
+    x
+
+def __test_shuffle_performance():
+    folder = os.path.join(PROTO_DIR, 'InferSent')
+    # folder = os.path.join(PROTO_DIR, 'USE')
+    ds = proto_load_embed_ds(folder)
+    ds = ds.shuffle(30000)
+    ds = ds.batch(100)
+    ct=0
+    iterator = ds.make_one_shot_iterator()
+    next_element = iterator.get_next()
+    with tf.Session() as sess:
+        while True:
+            ct+=1
+            d = sess.run(next_element)
+            if ct % 10 == 0:
+                print(ct)
+                # print(ct, d['key'])
+            # if ct % 10000 == 0:
+            #     break
+            # article = pickle.loads(d['article'])
+            # summary = pickle.loads(d['summary'])
+            # print('--- key\n', d['key'])
+            # print('--- article\n', article.shape)
+            # print('--- summary\n', summary)
     
 
 def proto_story_embed(embedder, limit=None):
@@ -120,7 +199,7 @@ def proto_story_embed(embedder, limit=None):
         os.makedirs(folder)
 
     with tf.device('/cpu:0'):
-        ds = load_story_ds()
+        ds = proto_load_story_ds()
         ds = ds.batch(1000)
         iterator = ds.make_one_shot_iterator()
         next_element = iterator.get_next()
@@ -185,12 +264,12 @@ def __test():
     proto_story_embed('InferSent')
 
 
-    ds = load_story_ds()
+    ds = proto_load_story_ds()
     print(ct)
 
 
 def __test():
-    ds = load_story_ds()
+    ds = proto_load_story_ds()
     ct=0
     tf.nn.nce_loss
     for d in ds.take(10):

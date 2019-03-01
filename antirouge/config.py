@@ -43,6 +43,7 @@ NEGATIVE_SAMPLING_FILE = os.path.join(DATA_DIR, 'negative-sampling.pickle')
 NEGATIVE_SHUFFLE_FILE = os.path.join(DATA_DIR, 'negative-shuffle.pickle')
 
 PROTO_DIR = os.path.join(DATA_DIR, 'proto')
+SERIAL_DIR = os.path.join(DATA_DIR, 'serial')
 
 USE_DAN_DIR = os.path.join(DATA_DIR, 'USE-DAN')
 USE_TRANSFORMER_DIR = os.path.join(DATA_DIR, 'USE-Transformer')
@@ -54,7 +55,7 @@ INFERSENT_MODEL_PATH = os.path.join('/home/hebi/github/reading/InferSent/',
 INFERSENT_W2V_PATH = os.path.join('/home/hebi/github/reading/InferSent/',
                                   'dataset/fastText/crawl-300d-2M.vec')
 
-USE_BATCH_SIZE = 10240
+USE_BATCH_SIZE = 4096
 USE_LARGE_BATCH_SIZE = 2048
 # this should be very small, and speed is still good
 # INFERSENT_BATCH_SIZE = 64

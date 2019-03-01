@@ -6,3 +6,7 @@ __pycache__
 *.png
 *.tar.gz
 datasets
+
+*.h5
+*.ckpt
+*.tfrecords

@@ -57,6 +57,28 @@ where each article and summary is:
 - article: pickle.dumps(numpy of shape (#sent, 512/4096))
 - article: pickle.dumps(numpy of shape (#sent, 512/4096))
 
+(HEBI: UPDATE) I'm not going to use tf.data.TFRecordDateset because:
+1. Tf 2.0 removed iterator, thus force the user of dataset API to use
+   eager evaluation. I'm against it.
+2. The dataset API can only serialize bytes, int, float. It cannot
+   serialize numpy array directly. To serialize it, I have to use
+   pickle to dump to a string, convert to byte string, and embed into
+   the tfrec data. That is not the worst part. The worst is, when
+   reading it back, I have to get the byte string (which incur an
+   evaluation of the tensor), and then load back using pickle. I
+   cannot simply do a mapping of the dataset. This loses pretty much
+   all the attractions of it.
+3. Although the TFRecord dataset can be read from hard disk quite
+   nicely, the full dataset shuffle still takes up all memory and
+   freeze the machine.
+4. I cannot get any information about the dataset, including its length.
+
+In a word, the encoding and decoding of protobuffer is really painful,
+and it does not work well with numpy array. Thus I would just use
+pickle and manipulate it as needed.
+
+(OR: Can I reshape it?)
+
 
 ** Story shuffle and splitting
 
@@ -144,6 +166,28 @@ negative.pickle (I probably don't need this at all.)
    - plus each batch, we got (10x9+10) batch size data
    - concatenate together as one batch
 3. train on batch, and continue
+
+** NEW data consuming from pickle files
+Create the model first.
+
+1. load all data files
+2. divide into training, testing, validating
+3. For each epoch:
+   1. shuffle training data files
+   2. read file_batch_size number of files, concatenate data together
+   3. shuffle the data
+   4. loop through each of them, and create 5 negative samples for
+      each data point
+   5. feed into the model
+
+** TODO Experiments
+1. different neg_size
+2. fixed negative sampling (by setting random seed for each epoch)
+3. word embedding vs. sentence embedding
+4. DUC/TAC
+5. NYC
+6. Transfer
+7. Compare with "[1]"
 
 
 

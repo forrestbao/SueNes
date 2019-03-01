@@ -454,10 +454,6 @@ def run_infersent(fake_method, fake_extra_option, architecture):
     print('Test result: ', result)
     return result[1]
     
-def __test():
-    # test the new negative sampling function
-    # I'll just use USE models for simplicity
-    os.path.join(PROTO_DIR, 'USE')
 
 def run_exp(fake_method, embedding_method, num_samples,
             num_fake_samples, architecture, fake_extra_option=None):

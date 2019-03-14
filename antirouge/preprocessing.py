@@ -7,7 +7,7 @@ import shutil
 import numpy as np
 
 from antirouge.utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
-from antirouge.utils import read_text_file, sentence_split
+from antirouge.utils import read_lines, sentence_split
 from antirouge.utils import dict_pickle_read, dict_pickle_read_keys, dict_pickle_write
 
 from antirouge.embedding import UseEmbedder, InferSentEmbedder, sentence_embed
@@ -19,7 +19,7 @@ from antirouge.config import *
 
 
 def get_art_abs(story_file):
-    lines = read_text_file(story_file)
+    lines = read_lines(story_file)
     lines = [line.lower() for line in lines]
     # lines = [fix_missing_period(line) for line in lines]
     article_lines = []
@@ -296,54 +296,43 @@ def preprocess_negative_shuffle():
 
 
 # collect into one arry
-def collect(v):
+def flatten(v):
+    """
+    [[],[]] to []
+    """
     res = []
     for vi in v:
-        if type(vi) == list:
-            res.extend(collect(vi))
-        else:
-            res.append(vi)
+        res.extend(vi)
     return res
 
 def get_shape(v):
     """
-    [[[1,2], [3,4,5]], [[6,7], [8,9,10]]]
-    [[2,3], [2,3]]
+    [[],[]] to [4,2]
     """
     assert(type(v) is list)
     res = []
-    if not v:
-        return 1
-    if type(v[0]) is not list:
-        return len(v)
     for vi in v:
-        res.append(get_shape(vi))
+        res.append(len(vi))
     return res
 
-def restore_shape(v, index, shape):
+def restore_shape(v, shape):
     """v is flat
     """
     res = []
-    if type(shape) is not list:
-        return v[index:index+shape], index+shape
-    for s in shape:
-        sub, index = restore_shape(v, index, s)
-        res.append(sub)
-    return res, index
+    idx = 0
+    for l in shape:
+        res.append(v[idx:idx+l])
+        idx = idx+l
+    return res
 
-def test():
-    array = [[[1,2], [3,4,5]], [[6,7], [8,9,10]]]
-    shape = get_shape(array)
-    flat = collect(array)
-    restored, index = restore_shape(flat, 0, shape)
-    assert(array == restored)
-    assert(index == len(flat))
 
-    v = [[['hello', 'world'], ['hello', 'world', 'ok']], [['yes', 'no']]]
-    encoded = USE_encode_keep_shape(v)
+def __test():
+    v = [[1,2,3], [4,5], [6,7,8,9]]
+    assert(flatten(v) == [1,2,3,4,5,6,7,8,9])
+    assert(restore_shape(flatten(v), get_shape(v)) == v)
 
 def embed_keep_shape(v, embedder_name):
-    flattened = collect(v)
+    flattened = flatten(v)
     shape = get_shape(v)
     batch_size = {'USE': USE_BATCH_SIZE,
                   'USE-Large': USE_LARGE_BATCH_SIZE,
@@ -351,7 +340,7 @@ def embed_keep_shape(v, embedder_name):
     print('embedding', len(flattened), 'sentences ..')
     embedding_flattened = sentence_embed(embedder_name, flattened,
                                          batch_size=batch_size)
-    embedding, _ = restore_shape(embedding_flattened, 0, shape)
+    embedding = restore_shape(embedding_flattened, shape)
     return embedding
 
 def load_to_encode(target_name, previously_encoded_keys, num, skip=0):

@@ -12,17 +12,20 @@ MAX_NUM_WORDS = 200000
 # np.percentile(sents, 80)      # 47
 # np.percentile(sum_sents, 80)  # 1
 
-# MAX_ARTICLE_LENGTH = 512
-# MAX_SUMMARY_LENGTH = 128
+ARTICLE_MAX_WORD = 1091
+SUMMARY_MAX_WORD = 55
 
-# ARTICLE_MAX_SENT = 10
+# CNN/DM
+# ARTICLE_MAX_SENT = 47
 # SUMMARY_MAX_SENT = 3
 
-MAX_ARTICLE_LENGTH = 1091
-MAX_SUMMARY_LENGTH = 55
+# DUC
+# config.ARTICLE_MAX_SENT = 39
+# config.SUMMARY_MAX_SENT = 5
 
-ARTICLE_MAX_SENT = 47
-SUMMARY_MAX_SENT = 3
+ARTICLE_MAX_SENT = 50
+SUMMARY_MAX_SENT = 5
+
 
 # DEPRECATED
 EMBEDDING_DIM = 100
@@ -43,7 +46,12 @@ NEGATIVE_SAMPLING_FILE = os.path.join(DATA_DIR, 'negative-sampling.pickle')
 NEGATIVE_SHUFFLE_FILE = os.path.join(DATA_DIR, 'negative-shuffle.pickle')
 
 PROTO_DIR = os.path.join(DATA_DIR, 'proto')
+# DEPRECATED
 SERIAL_DIR = os.path.join(DATA_DIR, 'serial')
+CNN_SERIAL_DIR = os.path.join(DATA_DIR, 'serial_cnn')
+DM_SERIAL_DIR = os.path.join(DATA_DIR, 'serial_dm')
+
+NEG_SIZE = 5
 
 USE_DAN_DIR = os.path.join(DATA_DIR, 'USE-DAN')
 USE_TRANSFORMER_DIR = os.path.join(DATA_DIR, 'USE-Transformer')
@@ -70,3 +78,6 @@ os.environ["CUDA_LAUNCH_BLOCKING"]="1"
 
 # will chunk data tfrec file every 10000 stories
 DATA_BATCH_SIZE = 10000
+
+DUC_2002_RAW_DIR = os.path.join(DATA_DIR, 'DUC2002')
+DUC_2002_DIR = os.path.join(DATA_DIR, 'DUC2002_OUT')

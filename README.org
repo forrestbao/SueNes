@@ -10,11 +10,12 @@ and several "@highlight xxx" lines as summaries.
 
 ** Python packages
 Install:
-- matplotlib (tkinter)
-- numpy
+- =matplotlib= (=tkinter=)
+- =numpy=
 - =tensorflow-gpu=, =tensorflow-hub=
-- pytorch, torchvision
-- nltk and =nltk.download('punkt')= (used by InferSent)
+- =pytorch=, =torchvision=
+- =nltk= and =nltk.download('punkt')= (used by InferSent)
+- =beautifulsoup4=
 
 ** Stanford CoreNLP (used for tokenization)
 http://nlp.stanford.edu/software/stanford-corenlp-full-2018-10-05.zip

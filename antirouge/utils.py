@@ -26,18 +26,20 @@ def create_tokenizer_from_texts(texts):
     tokenizer = Tokenizer(num_words=MAX_NUM_WORDS)
     tokenizer.fit_on_texts(texts)
     return tokenizer
-def save_tokenizer(tokenizer):
+def save_tokenizer(tokenizer, fname):
+    """'tokenizer.json'"""
     # save tokenizer
     j_str = tokenizer.to_json()
-    with open('tokenizer.json', 'w') as f:
+    with open(fname, 'w') as f:
         f.write(j_str)
-def load_tokenizer():
+def load_tokenizer(fname):
+    """'tokenizer.json'"""
     # load
-    with open('tokenizer.json') as f:
+    with open(fname) as f:
         j_str = f.read()
         tokenizer = tokenizer_from_json(j_str)
         return tokenizer
-def read_text_file(text_file):
+def read_lines(text_file):
     lines = []
     with open(text_file, "r") as f:
         for line in f:

@@ -25,6 +25,7 @@ from antirouge.config import *
 # 50, 100, 200, 300
 GLOVE_EMBEDDING_DIM = 100
 
+
 def load_glove_matrix():
     # download glove embedding, unzip
     glove_url = 'http://nlp.stanford.edu/data/glove.6B.zip'

@@ -6,7 +6,7 @@ import numpy as np
 import glob
 
 from antirouge.utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
-from antirouge.utils import read_text_file, sentence_split
+from antirouge.utils import sentence_split
 from antirouge.utils import dict_pickle_read, dict_pickle_read_keys, dict_pickle_write
 
 from antirouge.embedding import sentence_embed, sentence_embed_reset

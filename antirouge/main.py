@@ -26,10 +26,6 @@ from antirouge.utils import create_tokenizer_from_texts, save_tokenizer, load_to
 from antirouge.utils import dict_pickle_read, dict_pickle_read_keys, dict_pickle_write
 
 from antirouge.data import pad_shuffle_split_data
-from antirouge.data import prepare_data_using_USE
-from antirouge.data import prepare_data_with_USE, prepare_data_with_INFER
-from antirouge.data import prepare_data_using_tokenizer, prepare_summary_data_using_tokenizer
-from antirouge.data import load_word_mutated_data
 from antirouge.data import load_story_keys, create_tokenizer_by_key
 
 from keras.preprocessing.sequence import pad_sequences
@@ -484,8 +480,8 @@ def run_exp(fake_method, embedding_method, num_samples,
         articles = tokenizer.texts_to_sequences(articles)
         summaries = tokenizer.texts_to_sequences(summaries)
     if embedding_method == 'glove':
-        article_pad_length = MAX_ARTICLE_LENGTH
-        summary_pad_length = MAX_SUMMARY_LENGTH
+        article_pad_length = ARTICLE_MAX_WORD
+        summary_pad_length = SUMMARY_MAX_WORD
     else:
         article_pad_length = ARTICLE_MAX_SENT
         summary_pad_length = SUMMARY_MAX_SENT
@@ -513,7 +509,7 @@ def run_exp(fake_method, embedding_method, num_samples,
         embedding_layer = None
     # input_sahpe
     if embedding_method == 'glove':
-        input_shape = (MAX_ARTICLE_LENGTH + MAX_SUMMARY_LENGTH,)
+        input_shape = (ARTICLE_MAX_WORD + SUMMARY_MAX_WORD,)
     elif embedding_method == 'USE' or embedding_method == 'USE-Large':
         input_shape = (ARTICLE_MAX_SENT + SUMMARY_MAX_SENT, 512)
     else:

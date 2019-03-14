@@ -79,45 +79,9 @@ def build_model(embedding_method, label_type, embedding_layer,
     model = Model(sequence_input, preds)
     return model
 
-def build_separate_model(embedding_layer):
-    sequence_input = Input(shape=(MAX_ARTICLE_LENGTH + MAX_SUMMARY_LENGTH,),
-                           dtype='int32')
-    # article_input = Input(shape=(MAX_ARTICLE_LENGTH,), dtype='int32')
-    # summary_input = Input(shape=(MAX_SUMMARY_LENGTH,), dtype='int32')
-    sequence_input
-    # This is not layer
-    # article_input = sequence_input[:, :MAX_ARTICLE_LENGTH]
-    # summary_input = sequence_input[:, MAX_ARTICLE_LENGTH:]
-    article_input = Lambda(lambda x: x[:,:MAX_ARTICLE_LENGTH])(sequence_input)
-    summary_input = Lambda(lambda x: x[:,MAX_ARTICLE_LENGTH:])(sequence_input)
-    article_input
-    summary_input
-    embedded_article = embedding_layer(article_input)
-    embedded_summary = embedding_layer(summary_input)
-    embedded_article
-    embedded_summary
-
-    # TODO add CNN to speed up LSTM training
-
-    # x1 = keras.layers.LSTM(EMBEDDING_DIM, return_sequences=True)(embedded_article)
-    x1 = keras.layers.LSTM(EMBEDDING_DIM)(embedded_article)
-    # x2 = keras.layers.LSTM(EMBEDDING_DIM, return_sequences=True)(embedded_summary)
-    x2 = keras.layers.LSTM(EMBEDDING_DIM)(embedded_summary)
-
-    x1
-    x2
-
-    x = keras.layers.Concatenate()([x1, x2])
-    x
-    x = Dense(128, activation='relu')(x)
-    preds = Dense(1, activation='sigmoid')(x)
-    
-    model = Model(sequence_input, preds)
-    return model
-
 def build_glove_summary_only_model(embedding_layer):
     # train a 1D convnet with global maxpooling
-    sequence_input = Input(shape=(MAX_SUMMARY_LENGTH,), dtype='int32')
+    sequence_input = Input(shape=(SUMMARY_MAX_WORD,), dtype='int32')
     embedded_sequences = embedding_layer(sequence_input)
     x = Conv1D(128, 3, activation='relu')(embedded_sequences)
     x = MaxPooling1D(5)(x)

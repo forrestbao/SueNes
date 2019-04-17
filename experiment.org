@@ -1,0 +1,96 @@
+#+TITLE: Experiment Design
+
+* Evaluation Metrics
+
+** Dataset
+- NYC
+- CNN/DM
+- TAC09
+- DUC01/02
+
+Text similarity benchmarks:
+- STSbenchmark cite:2017-Preprint-Cer-Semeval http://ixa2.si.ehu.es/stswiki/index.php/STSbenchmark
+- cite:2013-Unknown-Agirre-SEM
+
+** Evaluation Metrics
+
+In TAC09, there are two human scores, responsiveness and pyramid
+score. The evaluation metrics are the correlations to these two
+scores. All the experiments should report these scores.
+
+|           | responsiveness score | pyramid score |
+|-----------+----------------------+---------------|
+| Pearson   |                      |               |
+| Spearsman |                      |               |
+| Kendall   |                      |               |
+
+
+* Experiments
+** Test baselines (ROUGE and SIMetrix)
+
+Get baseline ROUGE and SIMetrix correlation scores, and see if this
+agrees with previous results (as shown in SIMetrix paper
+cite:2013-CL-Louis-Automatically).
+
+** Unsupervised approach
+Use sentence embedding of input document and candidate summary, and
+directly compare their similarity.
+
+1. obtain sentence embeddings for both input document and candidate summary
+2. run PCA and get the first k principle components
+3. optional: average these components
+4. compute dot product of input document PCA and summary PCA, use as score
+
+This approach needs to compare with similar approaches that compare
+document and summary, in particular those distribution distance based
+methods.
+- cite:2008-Unknown-He-ROUGE ROUGE-C: A Fully Automated Evaluation
+  Method for Multi-document Summarization
+- cite:2010-Journal-Torres-Summary Summary Evaluation with and without
+  References
+- cite:2013-CL-Louis-Automatically Automatically Assessing Machine
+  Summary Content Without a Gold Standard
+
+** Supervised approach
+
+|                      | train/test on TAC | traing on CNN/DM/NYC, fine tune on TAC |
+|----------------------+-------------------+----------------------------------------|
+| negative sampling    |                   |                                        |
+| existing summarizers |                   |                                        |
+| random mutation      |                   |                                        |
+
+*** Different sentence embedding
+Word embeddings and element-wise averaging
+- glove
+- fasttext
+- GPT / GPT2
+- BERT
+
+Sentence embeddings:
+- Skip-Thought Vectors
+- InferSent
+- USE (DAN/Transformer)
+
+*** different data augmentation methods
+- negative sampling
+- use existing summarizers + their DUC/TAC performance as oracle
+- random mutation
+
+*** different training scheme
+- [ ] Directly train on TAC
+- [ ] train on CNN/DM and NYC, and fine tune on TAC
+
+** Evaluate abstractive summarizers
+
+The sale point of this approach is about semantic, thus we should
+perform evaluation for recent abstractive summarizers. Also collect
+examples to use in paper.
+
+Candidates:
+- cite:2017-ACL-See-Get Get To The Point: Summarization with Pointer-Generator Networks
+- cite:2018-ACL-Hsu-Unified A Unified Model for Extractive and Abstractive Summarization using Inconsistency Loss
+- cite:2017-ACL-Tan-Abstractive Abstractive Document Summarization with a Graph-Based Attentional Neural Model
+- cite:2018-NAACL-Li-Guiding Guiding Generation for Abstractive Text Summarization Based on Key    Information Guide Network
+- cite:2018-ACL-Chen-Fast Fast Abstractive Summarization with Reinforce-Selected Sentence Rewriting
+- cite:2018-ACL-Cao-Retrieve Retrieve, Rerank and Rewrite: Soft Template Based Neural Summarization
+

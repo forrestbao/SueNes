@@ -1,4 +1,48 @@
 #+TITLE: TodoList
+
+* Experiments
+** Get baseline ROUGE scores correlation on TAC09
+
+And see if this agrees with previous result (SIMetrix
+cite:2013-CL-Louis-Automatically)
+
+|           | responsiveness score | pyramid score |
+|-----------+----------------------+---------------|
+| Pearson   |                      |               |
+| Spearsman |                      |               |
+| Kendall   |                      |               |
+
+
+** Unsupervised approach
+- obtain sentence embedding for input document and candidate summary
+- compute SVD decomposition 
+- cosine similarity
+- compare with word embedding approaches
+
+|           | responsiveness score | pyramid score |
+|-----------+----------------------+---------------|
+| Pearson   |                      |               |
+| Spearsman |                      |               |
+| Kendall   |                      |               |
+
+** Supervised approach
+
+|                      | train/test on TAC | traing on CNN/DM/NYC, fine tune on TAC |
+|----------------------+-------------------+----------------------------------------|
+| negative sampling    |                   |                                        |
+| random mutation      |                   |                                        |
+| existing summarizers |                   |                                        |
+
+*** different data augmentation methods
+- negative sampling
+- random mutation
+- use existing summarizers:
+  - survey a list of summarizers
+*** different training scheme
+- [ ] Directly train on TAC
+- [ ] train on CNN/DM and NYC, and fine tune on TAC
+
+
 * TODOs
 
 ** Implement loading from hard disk using tf.data.Dataset API

@@ -80,7 +80,8 @@ Sentence embeddings:
 - [ ] Directly train on TAC
 - [ ] train on CNN/DM and NYC, and fine tune on TAC
 
-** Evaluate abstractive summarizers
+** Constructing abstractive data
+*** Evaluate abstractive summarizers
 
 The sale point of this approach is about semantic, thus we should
 perform evaluation for recent abstractive summarizers. Also collect
@@ -94,3 +95,8 @@ Candidates:
 - cite:2018-ACL-Chen-Fast Fast Abstractive Summarization with Reinforce-Selected Sentence Rewriting
 - cite:2018-ACL-Cao-Retrieve Retrieve, Rerank and Rewrite: Soft Template Based Neural Summarization
 
+*** construct semantic-equivalent summaries
+Given a summary, we can possibly use some generative model to generate
+a new semantic equivalent summary. We can then evaluate this summary
+by our model and ROUGE, and this should clearly show that ROUGE is
+defected, while our model gives similar score.

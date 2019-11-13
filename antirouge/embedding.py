@@ -86,6 +86,9 @@ def load_glove_layer(word_index):
                                 trainable=False)
     return embedding_layer
 
+# for tf version 2
+if tf.__version__ == '2.0.0':
+    tf.logging = tf.compat.v1.logging
 tf.logging.set_verbosity(tf.logging.WARN)
 
 _USE_small_module = None

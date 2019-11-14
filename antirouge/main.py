@@ -1,4 +1,4 @@
-import tensorflow as tf
+from antirouge.tf2 import *
 import numpy as np
 import json
 import random
@@ -111,9 +111,11 @@ def load_data_helper(fake_method, embedding_method, num_samples,
     negative_keys = set(negatives.keys())
     keys = story_keys.intersection(negative_keys)
     keys = set(random.sample(keys, num_samples))
+    
     print('retrieving article ..')
     articles = np.array([stories[key]['article'] for key in keys])
     reference_summaries = np.array([stories[key]['summary'] for key in keys])
+    
     if fake_method == 'neg' or fake_method == 'shuffle':
         fake_summaries = np.array([negatives[key] for key in keys])
         fake_summaries = fake_summaries[:,:num_fake_samples]
@@ -568,8 +570,12 @@ def plot_history(history, filename):
     fig, axe = plt.subplots(nrows=1, ncols=2)
     # plt.figure()
     ax = axe[0]
-    ax.plot(history.history['acc'])
-    ax.plot(history.history['val_acc'])
+    if 'acc' in history.history and 'val_acc' in history.history:
+        ax.plot(history.history['acc'])
+        ax.plot(history.history['val_acc'])
+    else:
+        ax.plot(history.history['accuracy'])
+        ax.plot(history.history['val_accuracy'])
     ax.set_title('Model accuracy')
     ax.set_ylabel('Accuracy')
     ax.set_xlabel('Epoch')

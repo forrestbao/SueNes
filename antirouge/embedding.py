@@ -2,8 +2,9 @@
 
 import sys
 
-import tensorflow as tf
-import tensorflow_hub as hub
+from antirouge.tf2 import *
+#import tensorflow as tf
+#import tensorflow_hub as hub
 import torch
 import numpy as np
 import zipfile
@@ -14,6 +15,7 @@ import keras
 from keras.layers import Embedding
 from keras.initializers import Constant
 from keras.utils.data_utils import get_file
+
 
 # pip install --user git+https://github.com/lihebi/InferSent
 from infersent.models import InferSent
@@ -86,14 +88,11 @@ def load_glove_layer(word_index):
                                 trainable=False)
     return embedding_layer
 
-# for tf version 2
-if tf.__version__ == '2.0.0':
-    tf.logging = tf.compat.v1.logging
 tf.logging.set_verbosity(tf.logging.WARN)
 
 _USE_small_module = None
 _USE_small_sess = None
-def _sentence_embed_USE_small(sentences):
+def _sentence_embed_USE_small_tf1(sentences):
     global _USE_small_module
     global _USE_small_sess
     device = '/cpu:0'
@@ -109,6 +108,15 @@ def _sentence_embed_USE_small(sentences):
     with tf.device(device):
         return _USE_small_sess.run(_USE_small_module(sentences))
 
+def _sentence_embed_USE_small_tf2(sentences):
+    global _USE_small_module
+    global _USE_small_sess
+    url = "https://tfhub.dev/google/universal-sentence-encoder/3"
+    if not _USE_small_module:
+        _USE_small_module = hub.load(url)
+    return _USE_small_module(sentences)['outputs']
+
+_sentence_embed_USE_small = _sentence_embed_USE_small_tf2 if tf.__version__ == '2.0.0' else _sentence_embed_USE_small_tf1
 
 _USE_large_module = None
 _USE_large_sess = None

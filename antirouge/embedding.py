@@ -214,7 +214,7 @@ def sentence_embed(embed_name, sentences, batch_size):
                 eta = -1
             else:
                 eta = (total_time / idx) * (len(rg) - idx)
-            speed = batch_size * idx / total_time
+            speed = 0 if total_time == 0 else batch_size * idx / total_time
             msg = ('batch size: %s, batch num %s / %s, '
                    'speed: %.0f sent/s, Total Time: %.0fs, ETA: %.0fs'
                    % (batch_size, idx, len(rg), speed, total_time, eta))

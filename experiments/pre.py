@@ -2,7 +2,8 @@ import sys
 sys.path.append("..")
 
 from antirouge import preprocessing as pre
-from antirouge import main
+from antirouge import main2
+import tensorflow as tf
 
 def tokenize():
     pre.preprocess_story_pickle()
@@ -15,4 +16,12 @@ def embed():
     pre.preprocess_sentence_embed('USE', 'mutated', 10000, 40000)
 if __name__ == '__main__':
     # embed()
-    main.run_exp('neg', 'USE', 10000, 1, 'CNN')
+    main2.run_exp('neg', 'USE', 10000, 1, 'CNN')
+    '''
+    article_input = tf.keras.Input(shape=(None, 512), dtype='float32')
+    summary_input = tf.keras.Input(shape=(None, 512), dtype='float32')
+    x = tf.keras.layers.LSTM(128)(article_input)
+    y = tf.keras.layers.LSTM(128)(summary_input)
+    z = tf.keras.layers.Dense(1, activation='sigmoid')(tf.keras.layers.concatenate([x, y]))
+    tf.keras.Model([article_input, summary_input], z)
+    '''

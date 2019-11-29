@@ -2,7 +2,7 @@ import sys
 sys.path.append("..")
 
 from antirouge import preprocessing as pre
-from antirouge import main2
+from antirouge import main
 import tensorflow as tf
 
 def tokenize():
@@ -16,7 +16,7 @@ def embed():
     pre.preprocess_sentence_embed('USE', 'mutated', 10000, 40000)
 if __name__ == '__main__':
     # embed()
-    main2.run_exp('neg', 'USE', 10000, 1, 'CNN')
+    main.run_exp('neg', 'USE', 10000, 1, '2-LSTM')
     '''
     article_input = tf.keras.Input(shape=(None, 512), dtype='float32')
     summary_input = tf.keras.Input(shape=(None, 512), dtype='float32')

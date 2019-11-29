@@ -457,7 +457,7 @@ def run_exp(fake_method, embedding_method, num_samples,
             num_fake_samples, architecture, fake_extra_option=None):
     assert(fake_method in ['neg', 'shuffle', 'mutate'])
     assert(embedding_method in ['glove', 'USE', 'USE-Large', 'InferSent'])
-    assert(architecture in ['CNN', 'FC', 'LSTM'])
+    assert(architecture in ['CNN', 'FC', 'LSTM', '2-LSTM'])
 
     print('Setting: ', fake_method, embedding_method, num_samples,
           num_fake_samples, architecture, fake_extra_option)
@@ -516,6 +516,19 @@ def run_exp(fake_method, embedding_method, num_samples,
         input_shape = (ARTICLE_MAX_SENT + SUMMARY_MAX_SENT, 512)
     else:
         input_shape = (ARTICLE_MAX_SENT + SUMMARY_MAX_SENT, 4096)
+    
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    if gpus:
+        try:
+            # Currently, memory growth needs to be the same across GPUs
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+                logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+                print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+        except RuntimeError as e:
+            # Memory growth must be set before GPUs have been initialized
+            print(e)
+    
     # build model
     model = build_model(embedding_method, label_type, embedding_layer,
                         input_shape, architecture)
@@ -544,7 +557,7 @@ def run_exp(fake_method, embedding_method, num_samples,
                         validation_data=(x_val, y_val),
                         callbacks=[keras.callbacks.EarlyStopping(monitor='val_loss',
                                                                  min_delta=0,
-                                                                 patience=3,
+                                                                 patience=num_epochs,
                                                                  verbose=0,
                                                                  mode='auto')],
                         verbose=1)

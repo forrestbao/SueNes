@@ -7,7 +7,7 @@ import numpy as np
 from keras.layers import Dense, Input, GlobalMaxPooling1D, GlobalMaxPooling2D
 from keras.layers import Conv1D, MaxPooling1D, Embedding, Conv2D, MaxPooling2D
 from keras.layers import Lambda, Reshape
-from keras.layers import LSTM, Dropout
+from keras.layers import LSTM, Dropout, Masking, concatenate
 from keras import regularizers
 from keras.models import Model
 
@@ -19,6 +19,7 @@ from antirouge.config import *
 
 def build_model(embedding_method, label_type, embedding_layer,
                 input_shape, architecture):
+    embedded_input, sequence_input, x, preds = None, None, None, None
     # Embedding layer
     if embedding_method == 'glove':
         sequence_input = Input(shape=input_shape, dtype='int32')
@@ -65,6 +66,19 @@ def build_model(embedding_method, label_type, embedding_layer,
     elif architecture == 'FC':
         x = keras.layers.Flatten()(embedded_input)
         x = Dense(128, activation='relu')(x)
+    elif architecture == '2-LSTM':
+        lstm1, lstm2 = None, None
+        if embedding_method == 'glove':
+            article = Lambda(lambda x: x[:, :ARTICLE_MAX_WORD, :])(embedded_input)
+            summary = Lambda(lambda x: x[:, ARTICLE_MAX_WORD:ARTICLE_MAX_WORD + SUMMARY_MAX_WORD, :])(embedded_input)
+            lstm1 = LSTM(25)(Masking(mask_value=0)(article))
+            lstm2 = LSTM(25)(Masking(mask_value=0)(summary))
+        else:
+            article = Lambda(lambda x: x[:, :ARTICLE_MAX_SENT, :])(embedded_input)
+            summary = Lambda(lambda x: x[:, ARTICLE_MAX_SENT:ARTICLE_MAX_SENT + SUMMARY_MAX_SENT, :])(embedded_input)
+            lstm1 = LSTM(128)(Masking(mask_value=0.0)(article))
+            lstm2 = LSTM(128)(Masking(mask_value=0.0)(summary))
+        x = concatenate([lstm1, lstm2])
     else:
         raise Exception()
 

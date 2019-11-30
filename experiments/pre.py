@@ -16,7 +16,7 @@ def embed():
     pre.preprocess_sentence_embed('USE', 'mutated', 10000, 40000)
 if __name__ == '__main__':
     # embed()
-    main.run_exp('neg', 'USE', 10000, 1, '2-LSTM')
+    main.run_exp('neg', 'InferSent', 5000, 1, '2-LSTM')
     '''
     article_input = tf.keras.Input(shape=(None, 512), dtype='float32')
     summary_input = tf.keras.Input(shape=(None, 512), dtype='float32')

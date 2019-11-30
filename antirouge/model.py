@@ -76,9 +76,10 @@ def build_model(embedding_method, label_type, embedding_layer,
         else:
             article = Lambda(lambda x: x[:, :ARTICLE_MAX_SENT, :])(embedded_input)
             summary = Lambda(lambda x: x[:, ARTICLE_MAX_SENT:ARTICLE_MAX_SENT + SUMMARY_MAX_SENT, :])(embedded_input)
-            lstm1 = LSTM(128)(Masking(mask_value=0.0)(article))
-            lstm2 = LSTM(128)(Masking(mask_value=0.0)(summary))
+            lstm1 = LSTM(128)(Masking(mask_value=0.)(article))
+            lstm2 = LSTM(128)(Masking(mask_value=0.)(summary))
         x = concatenate([lstm1, lstm2])
+        x = Dense(128, activation='relu')(x)
     else:
         raise Exception()
 

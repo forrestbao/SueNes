@@ -110,6 +110,7 @@ def load_data_helper(fake_method, embedding_method, num_samples,
     story_keys = set(stories.keys())
     negative_keys = set(negatives.keys())
     keys = story_keys.intersection(negative_keys)
+    print((">>>", len(keys)))
     keys = set(random.sample(keys, num_samples))
     
     print('retrieving article ..')
@@ -573,6 +574,179 @@ def run_exp(fake_method, embedding_method, num_samples,
     # accuracy
     return result[1]
 
+def run_exp2(fake_method, embedding_method, num_samples,
+            num_fake_samples, architecture, fake_extra_option=None):
+    assert(fake_method in ['neg', 'shuffle', 'mutate'])
+    assert(embedding_method in ['glove', 'USE', 'USE-Large', 'InferSent'])
+    assert(architecture in ['CNN', 'FC', 'LSTM', '2-LSTM'])
+
+    print('Setting: ', fake_method, embedding_method, num_samples,
+          num_fake_samples, architecture, fake_extra_option)
+    
+    print('loading data ..')
+    (articles, reference_summaries, reference_labels, fake_summaries,
+     fake_labels, keys) = load_data_helper(fake_method,
+                                           embedding_method,
+                                           num_samples,
+                                           num_fake_samples,
+                                           fake_extra_option)
+    print('merging data ..')
+    articles, summaries, labels = merge_summaries(articles,
+                                                  reference_summaries,
+                                                  reference_labels,
+                                                  fake_summaries,
+                                                  fake_labels)
+    if embedding_method == 'glove':
+        # convert from string to sequence
+        print('creating tokenizer ..')
+        tokenizer = create_tokenizer_by_key(keys)
+        articles = tokenizer.texts_to_sequences(articles)
+        summaries = tokenizer.texts_to_sequences(summaries)
+    if embedding_method == 'glove':
+        article_pad_length = ARTICLE_MAX_WORD
+        summary_pad_length = SUMMARY_MAX_WORD
+    else:
+        article_pad_length = ARTICLE_MAX_SENT
+        summary_pad_length = SUMMARY_MAX_SENT
+    print('padding ..')
+    group = num_fake_samples + 1
+
+
+    articles = np.array(np.split(articles, len(articles) / group))
+    summaries = np.array(np.split(summaries, len(summaries) / group))
+    labels = np.array(np.split(labels, len(labels) / group))
+
+    indices = np.arange(articles.shape[0])
+    np.random.shuffle(indices)
+    num_validation_samples = int(0.1 * articles.shape[0])
+    train = indices[:-num_validation_samples*2]
+    val = indices[-num_validation_samples*2:-num_validation_samples]
+    test = indices[-num_validation_samples:]
+
+    def data_generator(shuffle, batch_size):
+        # batch counts group
+        batch_size /= group
+        i = 0
+        dtype = articles[0][0].dtype
+        while 1:
+            j = 0
+            x, y = [], []
+            while i + j < shuffle.shape[0] and j < batch_size:
+                index = shuffle[int(i+j)]
+                article = pad_sequences(articles[index], value=0, padding='post',
+                             maxlen=article_pad_length, dtype=dtype)
+                summary = pad_sequences(summaries[index], value=0, padding='post',
+                              maxlen=summary_pad_length, dtype=dtype)
+                x.append(np.concatenate((article, summary), axis=1))
+                y.append(labels[index])
+                j += 1
+            x = np.concatenate(x)
+            y = np.concatenate(y)
+            yield (x, y)
+            i += batch_size
+            if i + j >= shuffle.shape[0]:
+                i = 0
+            
+    '''
+    data = pad_shuffle_split_data(articles, summaries, labels,
+                                  article_pad_length,
+                                  summary_pad_length, group)
+    (x_train, y_train), (x_val, y_val), (x_test, y_test) = data
+    '''
+    print('train: ', train.shape)
+    print('val: ', val.shape)
+    print('test: ', test.shape)
+    
+    print('building model ..')
+    # build model
+    label_dict = {'neg': 'classification',
+                  'shuffle': 'classification',
+                  'mutate': 'regression'}
+    label_type = label_dict[fake_method]
+    # embedding_layer
+    if embedding_method == 'glove':
+        embedding_layer = load_glove_layer(tokenizer.word_index)
+    else:
+        embedding_layer = None
+    # input_sahpe
+    if embedding_method == 'glove':
+        input_shape = (ARTICLE_MAX_WORD + SUMMARY_MAX_WORD,)
+    elif embedding_method == 'USE' or embedding_method == 'USE-Large':
+        input_shape = (ARTICLE_MAX_SENT + SUMMARY_MAX_SENT, 512)
+    else:
+        input_shape = (ARTICLE_MAX_SENT + SUMMARY_MAX_SENT, 4096)
+    
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    if gpus:
+        try:
+            # Currently, memory growth needs to be the same across GPUs
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+                logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+                print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+        except RuntimeError as e:
+            # Memory growth must be set before GPUs have been initialized
+            print(e)
+    
+    # build model
+    model = build_model(embedding_method, label_type, embedding_layer,
+                        input_shape, architecture)
+
+    model.summary()
+    # plot_model(model, to_file='model.png', show_shapes=True)
+
+    if label_type == 'regression':
+        loss = 'mse'
+        metrics = ['mae', 'mse', 'accuracy', pearson_correlation_f]
+    elif label_type == 'classification':
+        loss = 'binary_crossentropy'
+        # loss = 'hinge'
+        # loss = 'categorical_hinge'
+        metrics=['accuracy', pearson_correlation_f]
+    else:
+        raise Exception()
+    num_epochs = 60
+    # optimizer=tf.train.AdamOptimizer(0.01)
+    optimizer = tf.train.RMSPropOptimizer(0.001)
+    # optimizer = keras.optimizers.SGD(lr=0.00001, clipnorm=1.)
+    model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
+    
+    print('training ..')
+    '''
+    history = model.fit(x_train, y_train, epochs=num_epochs, batch_size=128,
+                        validation_data=(x_val, y_val),
+                        callbacks=[keras.callbacks.EarlyStopping(monitor='val_loss',
+                                                                 min_delta=0,
+                                                                 patience=3,
+                                                                 verbose=0,
+                                                                 mode='auto')],
+                        verbose=1)
+    '''
+    batch_size = 128
+    history = model.fit_generator(data_generator(train, batch_size=batch_size), 
+                    epochs=num_epochs,
+                    steps_per_epoch = math.ceil(train.shape[0] / float(batch_size)),
+                    validation_data=data_generator(val, batch_size=batch_size),
+                    validation_steps=math.ceil(val.shape[0] / float(batch_size)),
+                    callbacks=[keras.callbacks.EarlyStopping(monitor='val_loss',
+                                                                min_delta=0,
+                                                                patience=3,
+                                                                verbose=0,
+                                                                mode='auto')],
+                    verbose=1)
+    # plot history
+    filename = '-'.join([fake_method, embedding_method,
+                         str(num_samples), str(num_fake_samples),
+                         architecture]) + '.png'
+    plot_history(history, filename)
+    # print out test results
+    # result = model.evaluate(x_test, y_test)
+    result = model.evaluate_generator(data_generator(test, batch_size=batch_size),
+        steps=math.ceil(test.shape[0] / float(batch_size)))
+    print('Test result: ', result)
+    # return history, result
+    # accuracy
+    return result[1]
 
 def plot_history(history, filename):
     """

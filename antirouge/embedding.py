@@ -186,9 +186,9 @@ def get_infersent_modelpath():
     
 def get_infersent_w2vpath():
     path = get_file('crawl-300d-2M.vec.zip',
-                    'https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M-subword.zip')
+                    'https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip')
     # crawl-300d-2M.vec?
-    vec_file = os.path.join(os.path.dirname(path), 'crawl-300d-2M-subword.vec')
+    vec_file = os.path.join(os.path.dirname(path), 'crawl-300d-2M.vec')
     if not os.path.exists(vec_file):
         zipfile.ZipFile(path).extractall(os.path.dirname(path))
     assert(os.path.exists(vec_file))
@@ -264,7 +264,6 @@ def sentence_embed(embed_name, sentences, batch_size):
             print(msg, end='', flush=True)
         batch = sentences[stidx:stidx + batch_size]
         tmp = embed_func(batch)
-        print(tmp)
         res.append(tmp)
     print('')
     return np.vstack(res)

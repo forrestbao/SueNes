@@ -743,7 +743,7 @@ def run_exp2(fake_method, embedding_method, num_samples,
                     validation_steps=math.ceil(val.shape[0] / float(batch_size)),
                     callbacks=[keras.callbacks.EarlyStopping(monitor='val_loss',
                                                                 min_delta=0,
-                                                                patience=30,
+                                                                patience=3,
                                                                 verbose=0,
                                                                 mode='auto')],
                     verbose=1)

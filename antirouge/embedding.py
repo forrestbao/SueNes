@@ -39,7 +39,7 @@ def load_glove_matrix():
         zipfile.ZipFile(path).extractall(os.path.dirname(path))
     assert(os.path.exists(glove_txt))
     res = {}
-    with open(glove_txt) as f:
+    with open(glove_txt, encoding='UTF-8') as f:
         for line in f:
             values = line.split()
             word = values[0]
@@ -110,17 +110,16 @@ def _sentence_embed_USE_small_tf1(sentences):
 
 def _sentence_embed_USE_small_tf2(sentences):
     global _USE_small_module
-    global _USE_small_sess
     url = "https://tfhub.dev/google/universal-sentence-encoder/3"
     if not _USE_small_module:
         _USE_small_module = hub.load(url)
     return _USE_small_module(sentences)['outputs']
 
-_sentence_embed_USE_small = _sentence_embed_USE_small_tf2 if tf.__version__ == '2.0.0' else _sentence_embed_USE_small_tf1
+_sentence_embed_USE_small = _sentence_embed_USE_small_tf2 if tf.__version__.startswith('2') else _sentence_embed_USE_small_tf1
 
 _USE_large_module = None
 _USE_large_sess = None
-def _sentence_embed_USE_large(sentences):
+def _sentence_embed_USE_large_tf1(sentences):
     global _USE_large_module
     global _USE_large_sess
     device = '/gpu:0'
@@ -138,6 +137,42 @@ def _sentence_embed_USE_large(sentences):
         _USE_large_sess.run(tf.tables_initializer())
     with tf.device(device):
         return _USE_large_sess.run(_USE_large_module(sentences))
+
+from multiprocessing import Process, Queue
+
+limit = 31
+def subprocess(Pin, Pout):
+    url = "https://tfhub.dev/google/universal-sentence-encoder-large/4"
+    _USE_large_module = hub.KerasLayer(url)
+    while True:
+        leak, sentences = Pin.get()
+        Pout.put(_USE_large_module(sentences)['outputs'])
+        if leak == limit:
+            break
+
+leak = 0
+Pin = None
+Pout= None
+def _sentence_embed_USE_large_tf2(sentences):
+    global _USE_large_sess
+    global Pin
+    global Pout
+    global leak
+    if not _USE_large_sess:
+        Pin, Pout = Queue(1), Queue(1)
+        _USE_large_sess = Process(target=subprocess, args=(Pin, Pout, ))
+        _USE_large_sess.start()
+    leak += 1
+    Pin.put((leak, sentences))
+    embed = Pout.get().numpy()
+    if leak == limit:
+        leak = 0
+        _USE_large_sess.join()
+        _USE_large_sess = Process(target=subprocess, args=(Pin, Pout, ))
+        _USE_large_sess.start()
+    return embed
+
+_sentence_embed_USE_large = _sentence_embed_USE_large_tf2 if tf.__version__.startswith('2') else _sentence_embed_USE_large_tf1
 
 # Some note about InferSent version:
 #
@@ -229,6 +264,7 @@ def sentence_embed(embed_name, sentences, batch_size):
             print(msg, end='', flush=True)
         batch = sentences[stidx:stidx + batch_size]
         tmp = embed_func(batch)
+        print(tmp)
         res.append(tmp)
     print('')
     return np.vstack(res)

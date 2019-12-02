@@ -600,8 +600,8 @@ def run_exp2(fake_method, embedding_method, num_samples,
         # convert from string to sequence
         print('creating tokenizer ..')
         tokenizer = create_tokenizer_by_key(keys)
-        articles = tokenizer.texts_to_sequences(articles)
-        summaries = tokenizer.texts_to_sequences(summaries)
+        articles = np.array(tokenizer.texts_to_sequences(articles))
+        summaries = np.array(tokenizer.texts_to_sequences(summaries))
     if embedding_method == 'glove':
         article_pad_length = ARTICLE_MAX_WORD
         summary_pad_length = SUMMARY_MAX_WORD
@@ -625,14 +625,15 @@ def run_exp2(fake_method, embedding_method, num_samples,
 
     def data_generator(shuffle, batch_size):
         # batch counts group
-        batch_size /= group
+        batch_size = int(math.ceil(batch_size / group))
         i = 0
-        dtype = articles[0][0].dtype
+        dtype = 'int32' if type(articles[0][0]) == ([]) else 'float32'
         while 1:
             j = 0
             x, y = [], []
+            # '''
             while i + j < shuffle.shape[0] and j < batch_size:
-                index = shuffle[int(i+j)]
+                index = shuffle[i+j]
                 article = pad_sequences(articles[index], value=0, padding='post',
                              maxlen=article_pad_length, dtype=dtype)
                 summary = pad_sequences(summaries[index], value=0, padding='post',
@@ -640,11 +641,23 @@ def run_exp2(fake_method, embedding_method, num_samples,
                 x.append(np.concatenate((article, summary), axis=1))
                 y.append(labels[index])
                 j += 1
+            # '''
+            '''
+            article = np.concatenate(articles[shuffle[i:max(shuffle.shape[0], i+batch_size)]])
+            summary = np.concatenate(summaries[shuffle[i:max(shuffle.shape[0], i+batch_size)]])
+            label = np.concatenate(labels[shuffle[i:max(shuffle.shape[0], i+batch_size)]])
+            x1 = pad_sequences(article, value=0, padding='post',
+                             maxlen=article_pad_length, dtype=dtype)
+            x2 = pad_sequences(summary, value=0, padding='post',
+                             maxlen=summary_pad_length, dtype=dtype)
+            x = np.concatenate((x1, x2), axis=1)
+            '''
             x = np.concatenate(x)
             y = np.concatenate(y)
             yield (x, y)
+            # yield (x, label)
             i += batch_size
-            if i + j >= shuffle.shape[0]:
+            if i >= shuffle.shape[0]:
                 i = 0
             
     '''
@@ -730,7 +743,7 @@ def run_exp2(fake_method, embedding_method, num_samples,
                     validation_steps=math.ceil(val.shape[0] / float(batch_size)),
                     callbacks=[keras.callbacks.EarlyStopping(monitor='val_loss',
                                                                 min_delta=0,
-                                                                patience=3,
+                                                                patience=30,
                                                                 verbose=0,
                                                                 mode='auto')],
                     verbose=1)

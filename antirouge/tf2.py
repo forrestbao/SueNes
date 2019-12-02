@@ -1,9 +1,9 @@
 import tensorflow as tf
 import tensorflow_hub as hub
 
-## for tensorflow 2.0.0
+## for tensorflow 2
 
-if tf.__version__ == '2.0.0':
+if tf.__version__.startswith('2'):
     hub.Module = hub.load
     tf.logging = tf.compat.v1.logging
     tf.ConfigProto = tf.compat.v1.ConfigProto

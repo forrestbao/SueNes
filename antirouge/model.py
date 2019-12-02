@@ -55,11 +55,11 @@ def build_model(embedding_method, label_type, embedding_layer,
         x = Dense(128, activation='relu')(x)
     elif architecture == 'LSTM':
         # DEBUG
-        hidden_size = round(K.int_shape(embedded_input)[1] / 2)
-        if hidden_size > 128:
-            hidden_size = 128
-        # hidden_size = 128
-        x= LSTM(hidden_size)(embedded_input)
+        # hidden_size = round(K.int_shape(embedded_input)[1] / 2)
+        hidden_size = 128
+        if embedding_method == 'glove':
+            hidden_size = 25
+        x = LSTM(hidden_size)(embedded_input)
         # x = keras.layers.GRU(hidden_size)(embedded_input)
         # x = Dropout(0.5)(x)
         # x = Dense(128, activation='relu')(x)

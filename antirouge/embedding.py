@@ -110,10 +110,10 @@ def _sentence_embed_USE_small_tf1(sentences):
 
 def _sentence_embed_USE_small_tf2(sentences):
     global _USE_small_module
-    url = "https://tfhub.dev/google/universal-sentence-encoder/3"
+    url = "https://tfhub.dev/google/universal-sentence-encoder/4"
     if not _USE_small_module:
         _USE_small_module = hub.load(url)
-    return _USE_small_module(sentences)['outputs']
+    return _USE_small_module(sentences)
 
 _sentence_embed_USE_small = _sentence_embed_USE_small_tf2 if tf.__version__.startswith('2') else _sentence_embed_USE_small_tf1
 
@@ -138,39 +138,13 @@ def _sentence_embed_USE_large_tf1(sentences):
     with tf.device(device):
         return _USE_large_sess.run(_USE_large_module(sentences))
 
-from multiprocessing import Process, Queue
-
-limit = 31
-def subprocess(Pin, Pout):
-    url = "https://tfhub.dev/google/universal-sentence-encoder-large/4"
-    _USE_large_module = hub.KerasLayer(url)
-    while True:
-        leak, sentences = Pin.get()
-        Pout.put(_USE_large_module(sentences)['outputs'])
-        if leak == limit:
-            break
-
-leak = 0
-Pin = None
-Pout= None
 def _sentence_embed_USE_large_tf2(sentences):
-    global _USE_large_sess
-    global Pin
-    global Pout
-    global leak
-    if not _USE_large_sess:
-        Pin, Pout = Queue(1), Queue(1)
-        _USE_large_sess = Process(target=subprocess, args=(Pin, Pout, ))
-        _USE_large_sess.start()
-    leak += 1
-    Pin.put((leak, sentences))
-    embed = Pout.get().numpy()
-    if leak == limit:
-        leak = 0
-        _USE_large_sess.join()
-        _USE_large_sess = Process(target=subprocess, args=(Pin, Pout, ))
-        _USE_large_sess.start()
-    return embed
+    # Memory leak for unknown reason?
+    global _USE_large_module
+    url = "https://tfhub.dev/google/universal-sentence-encoder-large/5"
+    if not _USE_large_module:
+        _USE_large_module = hub.load(url)
+    return _USE_large_module(sentences)
 
 _sentence_embed_USE_large = _sentence_embed_USE_large_tf2 if tf.__version__.startswith('2') else _sentence_embed_USE_large_tf1
 
@@ -237,6 +211,19 @@ def sentence_embed(embed_name, sentences, batch_size):
     embed_func = {'USE': _sentence_embed_USE_small,
                   'USE-Large': _sentence_embed_USE_large,
                   'InferSent': _sentence_embed_InferSent}[embed_name]
+
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    if gpus:
+        try:
+            # Currently, memory growth needs to be the same across GPUs
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+                logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+                print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+        except RuntimeError as e:
+            # Memory growth must be set before GPUs have been initialized
+            print(e)
+
     res = []
     print('embedding %s sentences, batch size: %s'
           % (len(sentences), batch_size))

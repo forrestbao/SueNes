@@ -32,7 +32,7 @@ EMBEDDING_DIM = 100
 
 # VALIDATION_SPLIT = 0.2
 
-DATA_DIR = "/home/hebi/mnt/data/nlp/"
+DATA_DIR = "F:\\Dataset\\CNN_DM"
 # CNN_DIR = os.path.join(DATA_DIR, 'cnn/stroies')
 # DM_DIR = os.path.join(DATA_DIR, 'dailymail/stories')
 CNN_TOKENIZED_DIR = os.path.join(DATA_DIR, 'cnn_tokenized_stories')
@@ -64,7 +64,7 @@ INFERSENT_W2V_PATH = os.path.join('/home/hebi/github/reading/InferSent/',
                                   'dataset/fastText/crawl-300d-2M.vec')
 
 USE_BATCH_SIZE = 4096
-USE_LARGE_BATCH_SIZE = 2048
+USE_LARGE_BATCH_SIZE = 64
 # this should be very small, and speed is still good
 # INFERSENT_BATCH_SIZE = 64
 INFERSENT_BATCH_SIZE = 32

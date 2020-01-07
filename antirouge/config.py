@@ -38,6 +38,8 @@ DATA_DIR = "F:\\Dataset\\CNN_DM"
 CNN_TOKENIZED_DIR = os.path.join(DATA_DIR, 'cnn_tokenized_stories')
 DM_TOKENIZED_DIR = os.path.join(DATA_DIR, 'dailymail_tokenized_stories')
 
+KEYS_FILE = os.path.join(DATA_DIR, 'keys.pickle')
+SHUFFLE_FILE = os.path.join(DATA_DIR, 'shuffle.pickle')
 
 STORY_PICKLE_FILE = os.path.join(DATA_DIR, 'story.pickle')
 WORD_MUTATED_FILE = os.path.join(DATA_DIR, 'word-mutated.pickle')

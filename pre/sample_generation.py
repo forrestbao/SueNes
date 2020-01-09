@@ -1,4 +1,16 @@
+# GNU GPL 3.0 
+# Forrest Sheng Bao 2020
+
+# this module contains two functions for generating labeled samples 
+# cross_pair and mutate 
+# and functions that they call
+
+# functions with examples have been tested
+
+
 import tensorflow_datasets as tfds 
+
+#===== lexical processing
 
 def replace_special_character(s, L):
     """replaces all special characters in _L_ within _s_ by spaces
@@ -7,6 +19,8 @@ def replace_special_character(s, L):
         s= s.replace(l, " ")
     return s
 
+
+#====== data loading
 
 def load_pairs(dataset_name, split, take_percent, features, special_chars ):
     """Load pairs of documents and their summaries
@@ -40,6 +54,8 @@ def load_pairs(dataset_name, split, take_percent, features, special_chars ):
              for piece in dataset]
 
     return pairs 
+
+#========== crosspairing and associated functions 
 
 def cross_pair(data_pairs, dump_to=None, in_memory=False ):
     """Create positive and negative samples using cross pairing 
@@ -95,7 +111,7 @@ def cross_pair(data_pairs, dump_to=None, in_memory=False ):
         f.close()
     return samples
 
-### functions related to mutation 
+### mutation and associated functions 
 
 def get_vocab(data_pairs):
     """generate a set of all vocabularies, tokenized by spaces, from pairs of documents and summaries  
@@ -226,33 +242,30 @@ def mutate(data_pairs, ratio, method, sent_end, dump_to=None, in_memory=False ):
 
     return mutated 
 
-### functions at highest levels
+### put everything together 懶人包
 
-def lazy_mutated():
-    import data_conf as cfg
+def sample_generation():
+    import sample_conf as cfg
     dataset_name = cfg.dataset_name 
     for split in cfg.splits:
         pairs = load_pairs(cfg.dataset_name, split, cfg.take_percent, cfg.features, cfg.special_characters_to_clean)
-        for method in cfg.mutate_method: 
-            for ratio in cfg.mutate_ratios:
-                samples = mutate(pairs, ratio, method, cfg.sent_end, dump_to=eval(cfg.dump_to), in_memory = cfg.in_memory)
-
+        for method in cfg.methods: 
+            if method in ["add", "delete", "replace"]:
+                # NOTE: vocabulary generation is repeated here
+                for ratio in cfg.mutate_ratios:
+                    print ("generating samples using {} with mutate ratio {} from dataset {}'s {} set"\
+                          .format(method, ratio, dataset_name, split))
+                    samples = mutate(pairs, ratio, method, cfg.sent_end, dump_to=eval(cfg.dump_to), in_memory = cfg.in_memory)
+            elif method in ["cross"]:
+                    print ("generating samples using {} from dataset {}'s {} set"\
+                          .format(method, dataset_name, split))
+                    samples = cross_pair(pairs, dump_to=eval(cfg.dump_to), in_memory=cfg.in_memory)
 
     return samples # only the last one 
 
 
-def lan_ren_bao():
-    import data_conf
-    method = data_conf.cross_method[0] 
-
-    for split in data_conf.splits:
-        pairs = load_pairs(data_conf.dataset_name, split, data_conf.take_percent, data_conf.features, data_conf.special_characters_to_clean)
-        samples = cross_pair(pairs, dump_to=eval(data_conf.dump_to), in_memory=data_conf.in_memory)
-
-    return samples # only the last one
-
 if __name__ == "__main__":
 #    samples = lan_ren_bao()
-    lazy_mutated()
+    sample_generation()
 
 

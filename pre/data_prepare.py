@@ -113,13 +113,16 @@ def mutate_add(words, vocab, ratio):
 
     words: list of strings, e.g., ["I", "am", "lucky"]
     vocab: list of strings, 
-    ratio: int, 0 to 100. 
+    ratio: float, 0 to 1. 
+
+    example: 
+        >>> mutate_add("i am a happy guy now".split(' '), ["hhhhh","jjjjj"], 0.2)
+        'i am a happy jjjjj guy now'
 
     """
-    ratio /= 100. 
+    import random
     length = len(words)
-    indices = set([random.randint(0, length)
-                   for _ in range(int((1 - ratio) * length))])
+    indices = random.sample(range(length), int(ratio * length))
     res = []
     for i in range(length):
         if i in indices:
@@ -132,15 +135,20 @@ def mutate_delete(words, ratio, sent_end):
     while preserving sentence separators
 
     words: list of strings, e.g., ["I", "am", "lucky"]
-    ratio: int, 0 to 100. 
-    sent_end: list of strings 
+    ratio: float, 0 to 1 
+    sent_end: list of strings
+
+    example: 
+        >>> mutate_delete("i am a happy guy now".split(' '), 0.2, ["."])
+        'am a guy now'
+
+
     """
-    ratio /= 100.
+    import random
     length = len(words)
-    indices = set(random.sample(range(length),
-                                int((1 - ratio) * length)))
-    return ' '.join([words[i] for i in range(length)
-                     if i not in indices or words[i] in sent_end])
+    indices = random.sample(range(length), int( (1 - ratio) * length))
+
+    return ' '.join([words[i] for i in range(length) if i in indices and words[i] not in sent_end])
 
 def mutate_replace(words, vocab, ratio, sent_end):
     """replace _ratio_% of words in random locations of _words_, 
@@ -148,23 +156,25 @@ def mutate_replace(words, vocab, ratio, sent_end):
 
     words: list of strings, e.g., ["I", "am", "lucky"]
     vocab: list of strings, 
-    ratio: int, 0 to 100. 
-    sent_end: list of strings 
+    ratio: float, 0 to 1  
+    sent_end: list of strings
+
+
+    example:
+        >>> mutate_replace("i am a happy guy now".split(' '), ["hhhhh", "jjjjjjj"], 0.2, ["."]
+    ...: )
+        'i am a jjjjjjj guy now'
+
     """
-
-    ratio /= 100. 
+    import random
     length = len(words)
-    indices = set([random.randint(0, length)
-                   for _ in range(int((1 - ratio) * length))])
-    res = []
-    for i in range(length):
-        if i in indices and words[i] not in sent_end:
-            res.append(vocab[random.randrange(len(vocab))] )
-        else:
-            res.append(words[i])
-    return ' '.join(res)
+    indices = random.sample(range(length), int(ratio * length))
+    for i in indices: 
+        if words[i] not in sent_end:
+            words[i] =vocab[random.randrange(len(vocab))]
+    return ' '.join(words)
 
-def mutate(data_pairs, ratio, method,  dump_to=None, in_memory=False ):
+def mutate(data_pairs, ratio, method, sent_end, dump_to=None, in_memory=False ):
     """Create positive and negative samples using cross pairing 
 
     input:
@@ -173,6 +183,8 @@ def mutate(data_pairs, ratio, method,  dump_to=None, in_memory=False ):
         ratio: int, 0 to 100. The percentage of mutation. 
 
         method: str, one of ["add", "delete", "replace"]
+
+        sent_end: list of strings
 
         dump_to: str, file path to dump the labeled doc-sum pair
                 default none. 
@@ -184,7 +196,7 @@ def mutate(data_pairs, ratio, method,  dump_to=None, in_memory=False ):
          
     """
     import random 
-    all_vocab = get_vocab(data_pairs)
+    all_vocab = list(get_vocab(data_pairs))
     mutated = []
 
     if dump_to != None: 
@@ -198,13 +210,13 @@ def mutate(data_pairs, ratio, method,  dump_to=None, in_memory=False ):
         elif  method == "delete":
             mutated_tmp = mutate_delete(splitted_summary, ratio, sent_end)
         elif  method == "replace":
-            mutated_tmp = mutate_add(splitted_summary, all_vocab, ratio, sent_end)
+            mutated_tmp = mutate_replace(splitted_summary, all_vocab, ratio, sent_end)
         else: 
             print ("wrong method of mutation")
             exit()
 
         if dump_to != None:
-            f.write("\t".join([_doc, _sum, str(ratio)]))
+            f.write("\t".join([_doc, mutated_tmp, str(ratio)]))
             
         if in_memory: 
             mutated.append(mutated_tmp)
@@ -216,12 +228,14 @@ def mutate(data_pairs, ratio, method,  dump_to=None, in_memory=False ):
 
 ### functions at highest levels
 
-def lazy_mutated(methods):
-    import data_conf
-    for split in data_conf.splits:
-        pairs = load_pairs(data_conf.dataset_name, split, data_conf.take_percent, data_conf.features, data_conf.special_characters_to_clean)
-        for method in data_conf.methods: 
-            samples = mutate(pairs, data_conf.ratio, method, dump_to=eval(data_conf.dump_to), in_memory = data_conf.in_memory)
+def lazy_mutated():
+    import data_conf as cfg
+    dataset_name = cfg.dataset_name 
+    for split in cfg.splits:
+        pairs = load_pairs(cfg.dataset_name, split, cfg.take_percent, cfg.features, cfg.special_characters_to_clean)
+        for method in cfg.mutate_method: 
+            for ratio in cfg.mutate_ratios:
+                samples = mutate(pairs, ratio, method, cfg.sent_end, dump_to=eval(cfg.dump_to), in_memory = cfg.in_memory)
 
 
     return samples # only the last one 
@@ -238,6 +252,7 @@ def lan_ren_bao():
     return samples # only the last one
 
 if __name__ == "__main__":
-    samples = lan_ren_bao()
+#    samples = lan_ren_bao()
+    lazy_mutated()
 
 

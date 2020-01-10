@@ -28,6 +28,9 @@ sent_end = [".","!","?"]  # symbols that represent the end of a sentence
 
 #========= negative sampling parameters 
 
+# ratio between negative and positive samples; for cross-pairing only 
+neg_pos_ratio = 5 
+
 # methods used to generate negative samples 
 methods = ["cross", "add", "delete", "replace"] 
 

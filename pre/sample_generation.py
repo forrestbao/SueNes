@@ -48,7 +48,6 @@ def load_pairs(dataset_name, split, take_percent, features, special_chars ):
 
 #    plain_pairs = [(piece[features[0]], piece[features[1]]) for piece in dataset]
 
-
     pairs = [(replace_special_character(piece[features[0]].numpy().decode("utf-8"), special_chars), 
               replace_special_character(piece[features[1]].numpy().decode("utf-8"), special_chars) )
              for piece in dataset]
@@ -57,11 +56,14 @@ def load_pairs(dataset_name, split, take_percent, features, special_chars ):
 
 #========== crosspairing and associated functions 
 
-def cross_pair(data_pairs, dump_to=None, in_memory=False ):
+def cross_pair(data_pairs, neg_pos_ratio, dump_to=None, in_memory=False ):
     """Create positive and negative samples using cross pairing 
 
     input:
         data_pairs: list of 2-tuples of strings (a document, its summary)
+
+        neg_pos_ratio: int, ratio of negative sampels vs positive samples 
+                       should be >= 1  
 
         dump_to: str, file path to dump the labeled doc-sum pair
                 default none. 
@@ -73,42 +75,57 @@ def cross_pair(data_pairs, dump_to=None, in_memory=False ):
             0 if sum and doc do not match. 1 if so. 
 
     example: 
-        >>> cross_pair([("1", "2"),("3", "4")], in_memory=True)
-        [('1', '2', 1), ('3', '4', 1), ('1', '4', 0), ('3','2', 0)]
+        >>> sample_generation.cross_pair([("A", "1"),("B", "2"), ("C", "3")], 1, in_memory=True)
+            [('A', '1', 1),
+             ('B', '2', 1),
+             ('C', '3', 1),
+             ('A', '2', 0),
+             ('B', '1', 0),
+             ('C', '1', 0)]
 
-        >>> cross_pair([("1", "2"),("3", "4"), ("5", "6")], in_memory=True)
-        [('1', '2', 1),
-         ('1', '4', 0),
-         ('1', '6', 0),
-         ('3', '2', 0),
-         ('3', '4', 1),
-         ('3', '6', 0),
-         ('5', '2', 0),
-         ('5', '4', 0),
-         ('5', '6', 1)]
+        >>> sample_generation.cross_pair([("A", "1"),("B", "2"), ("C", "3")], 20, in_memory=True)
+            [('A', '1', 1),
+             ('B', '2', 1),
+             ('C', '3', 1),
+             ('A', '3', 0),
+             ('A', '2', 0),
+             ('B', '3', 0),
+             ('B', '1', 0),
+             ('C', '2', 0),
+             ('C', '1', 0)]
 
     """
+    import random 
 
     samples = []
 
+    # positive samples 
     if dump_to != None:
         f = open(dump_to, 'w')
+        for (_doc, _sum) in data_pairs: 
+            f.write("\t".join([_doc, _sum, "1\n"]))
 
-    for doc_index in range(len(data_pairs)):
-        _doc = data_pairs[doc_index][0]
-        for sum_index in range(len(data_pairs)):
-            _sum = data_pairs[sum_index][1] 
-            if doc_index == sum_index: 
-                label = 1 
-            else: 
-                label = 0 
+    if in_memory:
+        samples = [(_doc, _sum, 1) for (_doc,_sum) in data_pairs]
+
+    # negative samples
+    num_pair = len(data_pairs)
+
+    for i in range(num_pair):
+        doc_index = i
+        legit_indexes = list(range(num_pair))
+        legit_indexes.remove(i)
+        sum_indexes = random.sample(legit_indexes, min(num_pair-1, neg_pos_ratio))
+        for sum_index in sum_indexes:
+            _doc, _sum = data_pairs[doc_index][0], data_pairs[sum_index][1]
             if dump_to != None:
-                f.write("\t".join([_doc, _sum, str(label)+"\n"]))
-            if in_memory :
-                samples.append((_doc,_sum, label ))
+                f.write("\t".join([_doc, _sum, "0\n"]))
+            if in_memory:
+                samples.append((_doc,_sum, 0))
 
     if dump_to != None:
         f.close()
+    
     return samples
 
 ### mutation and associated functions 
@@ -118,10 +135,11 @@ def get_vocab(data_pairs):
     """
     long_doc, long_sum = "", "" 
     for (_doc, _sum) in data_pairs:
-        long_doc += _doc
-        long_sum += _sum 
+        long_doc += _doc + " "
+        long_sum += _sum + " "
     all_sent = long_doc + long_sum 
     vocab = set(all_sent.split(' '))
+    vocab.remove("")
     return vocab 
 
 def mutate_add(words, vocab, ratio):
@@ -190,13 +208,13 @@ def mutate_replace(words, vocab, ratio, sent_end):
             words[i] =vocab[random.randrange(len(vocab))]
     return ' '.join(words)
 
-def mutate(data_pairs, ratio, method, sent_end, dump_to=None, in_memory=False ):
+def mutate(data_pairs, ratios, method, sent_end, dump_to=None, in_memory=False ):
     """Create positive and negative samples using cross pairing 
 
     input:
         data_pairs: list of 2-tuples of strings (a document, its summary) 
 
-        ratio: int, 0 to 100. The percentage of mutation. 
+        ratios: list of floats, each of which is 0 to 1. The ratio of mutation. 
 
         method: str, one of ["add", "delete", "replace"]
 
@@ -210,32 +228,47 @@ def mutate(data_pairs, ratio, method, sent_end, dump_to=None, in_memory=False ):
 
     return: list of triplets, [doc, mutated sum, ratio]
          
+    example: 
+         >>> mutate([("A B", "1 2"), ("C D", "3 4")], [0.5], 'replace', ['.'], in_memory= True )
+            [('A B', '1 D', 0.5), ('C D', '1 4', 0.5)]
+
+        >>> mutate([("A B", "1 2"), ("C D", "3 4")], [0.5], 'add', ['.'], in_memory= True )
+            [('A B', '1 A 2', 0.5), ('C D', '3 A 4', 0.5)]
+
+        >>> mutate([("A B", "1 2"), ("C D", "3 4")], [0.5], 'delete', ['.'], in_memory= True )
+            [('A B', '1', 0.5), ('C D', '4', 0.5)]
+
     """
     import random 
     all_vocab = list(get_vocab(data_pairs))
     mutated = []
 
-    if dump_to != None: 
+    if dump_to != None:
         f= open(dump_to, 'w') 
 
     for (_doc, _sum) in data_pairs:
         # split the words and then feed to mutator 
         splitted_summary = _sum.split(' ')
-        if method == "add":
-            mutated_tmp = mutate_add(splitted_summary, all_vocab, ratio)
-        elif  method == "delete":
-            mutated_tmp = mutate_delete(splitted_summary, ratio, sent_end)
-        elif  method == "replace":
-            mutated_tmp = mutate_replace(splitted_summary, all_vocab, ratio, sent_end)
-        else: 
-            print ("wrong method of mutation")
-            exit()
 
-        if dump_to != None:
-            f.write("\t".join([_doc, mutated_tmp, str(ratio)]))
-            
-        if in_memory: 
-            mutated.append(mutated_tmp)
+#        print ("generating samples using {} from dataset {}'s {} set"\
+#              .format(method, "", split))
+
+        for ratio in ratios:
+            if method == "add":
+                mutated_tmp = mutate_add(splitted_summary, all_vocab, ratio)
+            elif  method == "delete":
+                mutated_tmp = mutate_delete(splitted_summary, ratio, sent_end)
+            elif  method == "replace":
+                mutated_tmp = mutate_replace(splitted_summary, all_vocab, ratio, sent_end)
+            else: 
+                print ("wrong method of mutation")
+                exit()
+
+            if dump_to != None:
+                f.write("\t".join([_doc, mutated_tmp, str(ratio)]))
+                f.write("\n")
+            if in_memory: 
+                mutated.append((_doc, mutated_tmp, ratio))
 
     if dump_to != None:
         f.close()
@@ -245,27 +278,30 @@ def mutate(data_pairs, ratio, method, sent_end, dump_to=None, in_memory=False ):
 ### put everything together 懶人包
 
 def sample_generation():
+    """
+
+    2020-1-9: tested using pairs injected
+    """
+
     import sample_conf as cfg
+    import os
     dataset_name = cfg.dataset_name 
     for split in cfg.splits:
         pairs = load_pairs(cfg.dataset_name, split, cfg.take_percent, cfg.features, cfg.special_characters_to_clean)
+#        pairs = [("A B", "1 2"), ("C D", "3 4")] # for testing
         for method in cfg.methods: 
             if method in ["add", "delete", "replace"]:
                 # NOTE: vocabulary generation is repeated here
-                for ratio in cfg.mutate_ratios:
-                    print ("generating samples using {} with mutate ratio {} from dataset {}'s {} set"\
-                          .format(method, ratio, dataset_name, split))
-                    samples = mutate(pairs, ratio, method, cfg.sent_end, dump_to=eval(cfg.dump_to), in_memory = cfg.in_memory)
+                samples = mutate(pairs, cfg.mutate_ratios, method, cfg.sent_end, dump_to=eval(cfg.dump_to), in_memory = cfg.in_memory)
             elif method in ["cross"]:
-                    print ("generating samples using {} from dataset {}'s {} set"\
-                          .format(method, dataset_name, split))
-                    samples = cross_pair(pairs, dump_to=eval(cfg.dump_to), in_memory=cfg.in_memory)
+                print ("generating samples using {} from dataset {}'s {} set"\
+                      .format(method, dataset_name, split))
+                samples = cross_pair(pairs, cfg.neg_pos_ratio, dump_to=eval(cfg.dump_to), in_memory=cfg.in_memory)
 
     return samples # only the last one 
 
 
 if __name__ == "__main__":
-#    samples = lan_ren_bao()
     sample_generation()
 
 

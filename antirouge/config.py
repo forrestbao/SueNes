@@ -32,12 +32,15 @@ EMBEDDING_DIM = 100
 
 # VALIDATION_SPLIT = 0.2
 
-DATA_DIR = "F:\\Dataset\\CNN_DM"
+DATA_DIR = "F:\\Dataset\\newsroom"
 # CNN_DIR = os.path.join(DATA_DIR, 'cnn/stroies')
 # DM_DIR = os.path.join(DATA_DIR, 'dailymail/stories')
-CNN_TOKENIZED_DIR = os.path.join(DATA_DIR, 'cnn_tokenized_stories')
-DM_TOKENIZED_DIR = os.path.join(DATA_DIR, 'dailymail_tokenized_stories')
+CNN_TOKENIZED_DIR = os.path.join(DATA_DIR, 'tokenized_stories')
+# CNN_TOKENIZED_DIR = os.path.join(DATA_DIR, 'cnn_tokenized_stories')
+# DM_TOKENIZED_DIR = os.path.join(DATA_DIR, 'dailymail_tokenized_stories')
 
+KEYS_FILE = os.path.join(DATA_DIR, 'keys.pickle')
+SHUFFLE_FILE = os.path.join(DATA_DIR, 'shuffle.pickle')
 
 STORY_PICKLE_FILE = os.path.join(DATA_DIR, 'story.pickle')
 WORD_MUTATED_FILE = os.path.join(DATA_DIR, 'word-mutated.pickle')
@@ -64,10 +67,10 @@ INFERSENT_W2V_PATH = os.path.join('/home/hebi/github/reading/InferSent/',
                                   'dataset/fastText/crawl-300d-2M.vec')
 
 USE_BATCH_SIZE = 4096
-USE_LARGE_BATCH_SIZE = 64
+USE_LARGE_BATCH_SIZE = 8
 # this should be very small, and speed is still good
 # INFERSENT_BATCH_SIZE = 64
-INFERSENT_BATCH_SIZE = 32
+INFERSENT_BATCH_SIZE = 4
 
 # by default, it seems to use 2080ti alone, but I'd better make it
 # explicit

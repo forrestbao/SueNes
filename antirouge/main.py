@@ -110,8 +110,18 @@ def load_data_helper(fake_method, embedding_method, num_samples,
     story_keys = set(stories.keys())
     negative_keys = set(negatives.keys())
     keys = story_keys.intersection(negative_keys)
-    print((">>>", len(keys)))
-    keys = set(random.sample(keys, num_samples))
+    if os.path.exists(KEYS_FILE):
+        with open(KEYS_FILE, "rb") as f:
+            saved_keys = pickle.load(f)
+            assert(saved_keys.issubset(keys))
+            keys = saved_keys
+            print("Load saved keys.")
+    else:
+        keys = set(random.sample(keys, num_samples))
+        with open(KEYS_FILE, "wb") as f:
+            pickle.dump(keys, f)
+            print("Saving sample keys.")
+    print(("Number of sample: ", len(keys)))
     
     print('retrieving article ..')
     articles = np.array([stories[key]['article'] for key in keys])
@@ -616,8 +626,19 @@ def run_exp2(fake_method, embedding_method, num_samples,
     summaries = np.array(np.split(summaries, len(summaries) / group))
     labels = np.array(np.split(labels, len(labels) / group))
 
-    indices = np.arange(articles.shape[0])
-    np.random.shuffle(indices)
+    indices = None
+    if os.path.exists(SHUFFLE_FILE):
+        with open(SHUFFLE_FILE, "rb") as f:
+            indices = pickle.load(f)
+            assert(indices.shape[0] == articles.shape[0])
+            print("Load saved shuffled index.")
+    else:
+        indices = np.arange(articles.shape[0])
+        np.random.shuffle(indices)
+        with open(SHUFFLE_FILE, "wb") as f:
+            pickle.dump(indices, f)
+            print("Saving shuffled index.")
+    
     num_validation_samples = int(0.1 * articles.shape[0])
     train = indices[:-num_validation_samples*2]
     val = indices[-num_validation_samples*2:-num_validation_samples]

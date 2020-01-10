@@ -1,9 +1,12 @@
 import sys
 sys.path.append("..")
+import tensorflow as tf
+
 
 from antirouge import preprocessing as pre
 from antirouge import main
-import tensorflow as tf
+from antirouge import embedding
+
 
 def tokenize():
     pre.preprocess_story_pickle()
@@ -11,12 +14,22 @@ def tokenize():
     pre.preprocess_negative_sampling()
 
 def embed():
-    pre.preprocess_sentence_embed('InferSent', 'story', 10000, 30000)
-    pre.preprocess_sentence_embed('InferSent', 'negative', 10000, 30000)
-    pre.preprocess_sentence_embed('InferSent', 'mutated', 10000, 30000)
+    #pre.preprocess_sentence_embed('USE', 'story', 30000, 30000)
+    #pre.preprocess_sentence_embed('USE', 'negative', 30000, 30000)
+    #pre.preprocess_sentence_embed('USE', 'mutated', 30000, 30000)
+    #pre.preprocess_sentence_embed('USE-Large', 'story', 30000, 30000)
+    #pre.preprocess_sentence_embed('USE-Large', 'negative', 30000, 30000)
+    #pre.preprocess_sentence_embed('USE-Large', 'mutated', 30000, 30000)
+    #pre.preprocess_sentence_embed('InferSent', 'story', 30000, 30000)
+    #pre.preprocess_sentence_embed('InferSent', 'negative', 30000, 30000)
+    pre.preprocess_sentence_embed('InferSent', 'mutated', 15000, 30000)
+    pre.preprocess_sentence_embed('InferSent', 'mutated', 15000, 30000)
+    
+
 if __name__ == '__main__':
-    # embed()
-    main.run_exp2('neg', 'InferSent', 30000, 1, '2-LSTM')
+    # tokenize()
+    embed()
+    # main.run_exp2('neg', 'USE', 30000, 1, 'FC')
     '''
     article_input = tf.keras.Input(shape=(None, 512), dtype='float32')
     summary_input = tf.keras.Input(shape=(None, 512), dtype='float32')

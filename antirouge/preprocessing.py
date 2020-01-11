@@ -126,19 +126,34 @@ def mutate_summary_replace(summary, random_word_generator):
         res['label'].append(r)
     return res
 
-def preprocess_story_pickle():
+def preprocess_story_pickle(num = None):
     """Read text, parse article and summary text file into pickle
     {'article': 'xxxxx', 'summary': 'xxxxxxx'}
 
     """
     # 92,579 stories
     stories = os.listdir(CNN_TOKENIZED_DIR)
+    print(len(stories))
+    keys = stories
+    if num != None:
+        if os.path.exists(KEYS_FILE):
+            with open(KEYS_FILE, "rb") as f:
+                saved_keys = pickle.load(f)
+                assert(saved_keys.issubset(keys))
+                keys = saved_keys
+                print("Load saved keys.")
+        else:
+            keys = set(random.sample(stories, num))
+            with open(KEYS_FILE, "wb") as f:
+                pickle.dump(keys, f)
+                print("Saving sample keys.")
+    
     ct = 0
     data = {}
-    for key in stories:
+    for key in keys:
         ct += 1
         if ct % 10000 == 0:
-            print ('--', ct*10000)
+            print ('--', ct)
         story_file = os.path.join(CNN_TOKENIZED_DIR, key)
         item = {}
         article, summary = get_art_abs(story_file)

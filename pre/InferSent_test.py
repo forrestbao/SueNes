@@ -63,4 +63,6 @@ sentences = ([
 infersent.build_vocab(sentences, tokenize=True)
 embeddings = infersent.encode(sentences, tokenize=True)
 
+print ("using InferSent v2 to encode sentences..")
+print (embeddings)
 

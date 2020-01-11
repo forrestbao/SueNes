@@ -27,7 +27,20 @@ By default, samples are dumped into TSV files of the naming convention
 
 
 ## Step 2: Sentence embedding
- To do . 
+### Dependencies 
+* tensorflow
+* tensorflow\_hub
+* pytorch 
+
+### Step 2.1: Test whether Google USE and Facebook InferSent can run with your CPU and/or GPU on your system 
+Run the two scripts separately: 
+
+```sh
+python3 google_USE_test.py
+python3 InferSent_test.py
+```
+If you see a vector after every encoding task, then it runs correctly. 
+Otherwise, email Forrest with all print-outs. 
 
 ## Next: Train the model. See model folder 
 To do. 

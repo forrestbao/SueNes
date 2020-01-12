@@ -9,10 +9,21 @@ sentences = [
     "I am a sentence for which I would like to get its embedding"]
 
 # google encoders 
-google_USE_large = hub.Module("https://tfhub.dev/google/universal-sentence-encoder-large/5")
-google_USE_dan = hub.Module("https://tfhub.dev/google/universal-sentence-encoder/4")
 
-def embed_sents(sent, encoder):
+
+TF_Version = 1 # or 2 
+
+
+
+if TF_Version == 1:
+    google_USE_large = hub.Module("https://tfhub.dev/google/universal-sentence-encoder-large/3")
+    google_USE_dan = hub.Module("https://tfhub.dev/google/universal-sentence-encoder/2")
+
+elif TF_Version == 2: 
+    google_USE_large = hub.Module("https://tfhub.dev/google/universal-sentence-encoder-large/5")
+    google_USE_dan = hub.Module("https://tfhub.dev/google/universal-sentence-encoder/4")
+
+def embed_sents(sents, encoder):
   """Given a list of sentences, get their embeddings
   """
   with tf.Session() as session:      
@@ -20,7 +31,6 @@ def embed_sents(sent, encoder):
     embeddings = session.run(encoder(sents))  # numpy array
     print (embeddings)
     
-embed_one_sent(["Can I use these with Window 8/8.1?"], Google_USE)
 
 from tensorflow.python.client import device_lib
 for dev in device_lib.list_local_devices():

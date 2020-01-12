@@ -11,7 +11,7 @@ sentences = [
 # google encoders 
 
 
-TF_Version = 1 # or 2 
+TF_Version = 2 # 1 or 2 
 
 
 
@@ -20,8 +20,8 @@ if TF_Version == 1:
     google_USE_dan = hub.Module("https://tfhub.dev/google/universal-sentence-encoder/2")
 
 elif TF_Version == 2: 
-    google_USE_large = hub.Module("https://tfhub.dev/google/universal-sentence-encoder-large/5")
-    google_USE_dan = hub.Module("https://tfhub.dev/google/universal-sentence-encoder/4")
+    google_USE_large = hub.load("https://tfhub.dev/google/universal-sentence-encoder-large/5")
+    google_USE_dan = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
 
 def embed_sents(sents, encoder):
   """Given a list of sentences, get their embeddings

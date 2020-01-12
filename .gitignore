@@ -10,4 +10,4 @@ datasets
 *.h5
 *.ckpt
 *.tfrecords
-result.xlsx
+*.xlsx

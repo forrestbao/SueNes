@@ -1,6 +1,7 @@
 import sys
 sys.path.append("..")
 import tensorflow as tf
+import pickle
 
 
 from antirouge import preprocessing as pre
@@ -9,7 +10,7 @@ from antirouge import embedding
 
 
 def tokenize():
-    pre.preprocess_story_pickle()
+    #pre.preprocess_story_pickle(30000)
     pre.preprocess_word_mutated()
     pre.preprocess_negative_sampling()
 
@@ -28,8 +29,22 @@ def embed():
 
 if __name__ == '__main__':
     # tokenize()
-    embed()
+    # embed()
     # main.run_exp2('neg', 'USE', 30000, 1, 'FC')
+    
+    answer = {}
+    for embedding_method in ['USE', 'USE-Large', 'InferSent', 'glove']:
+        answer[embedding_method] = {}
+        for arch in ['CNN', 'FC', 'LSTM', '2-LSTM']:
+            answer[embedding_method][arch] = main.run_exp2('neg', embedding_method, 30000, 1, arch)
+            print((embedding_method, arch, answer[embedding_method][arch]))
+    
+    print(answer)
+
+    with open("result.pickle", 'wb') as f:
+        pickle.dump(answer, f)
+    
+
     '''
     article_input = tf.keras.Input(shape=(None, 512), dtype='float32')
     summary_input = tf.keras.Input(shape=(None, 512), dtype='float32')

@@ -3,6 +3,8 @@
 
 import tensorflow as tf 
 import tensorflow_hub as hub
+import time
+import numpy as np
 
 class UseEmbedder():
     """This module is outputing:
@@ -36,7 +38,7 @@ class UseEmbedder():
     def embed_impl(self, batch):
         # with tf.device('/cpu:0'):
         # ISSUE: https://github.com/tensorflow/hub/issues/70
-        with tf.device(self.device):
+#        with tf.device(self.device):
             embedded = self.module(batch)
             tmp = self.embed_session.run(embedded)
             return tmp
@@ -85,7 +87,7 @@ def sent_embed(datapairs, sentence_encoder):
 
     """
    
-   pass
+    pass
 
 
 
@@ -101,9 +103,12 @@ def test_USE():
                  'I like him for the most part , but would still enjoy seeing someone beat him . ',
                  'My favorite restaurants are always at least a hundred miles away from my house . ',
                  'I know exactly . ',
-                 'We have plenty of space in the landfill . '] * 10
-    embedder = UseEmbedder(encoder='transformer', bsize=1024, gpu=True)
+                 'We have plenty of space in the landfill . '] * 100000
+    embedder = UseEmbedder(encoder='transformer', bsize=int(1024*(2**5)*1.5), gpu=True)
 #    embedder = UseEmbedder(encoder='dan', bsize=1024, gpu=False)
     embeddings = embedder.embed(sentences)
     embeddings.shape
     embeddings
+
+if __name__ == "__main__":
+	test_USE()

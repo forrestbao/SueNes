@@ -227,9 +227,46 @@ def sentence_embed(embed_name, sentences, batch_size):
     res = []
     print('embedding %s sentences, batch size: %s'
           % (len(sentences), batch_size))
-    rg = range(0, len(sentences), batch_size)
+    # rg = range(0, len(sentences), batch_size)
+
+    # sort by length in descending order to avoid OOM
+    length = np.array([-len(sentence) for sentence in sentences])
+    index = np.argsort(length)
+
     msg = ''
     start = time.time()
+    limit = 10000
+    batch = []
+    enum = range(len(index))
+    for i in enum:
+        batch.append(sentences[index[i]])
+        if -length[index[i]] >= limit or len(batch) == batch_size or i == len(index)-1:
+            print('\b' * len(msg), end='')
+            total_time = time.time() - start
+            if i == 0:
+                eta = -1
+            else:
+                eta = (total_time / i) * (len(index) - i)
+            speed = 0 if total_time == 0 else i / total_time
+            msg = ('batch size: %s, iteration num %s / %s, '
+                'speed: %.0f sent/s, Total Time: %.0fs, ETA: %.0fs'
+                % (batch_size, i, len(index), speed, total_time, eta))
+            print(msg, end='', flush=True)
+
+            tmp = np.array(embed_func(batch))
+            res.append(tmp)
+            batch = []
+    
+    print('')
+    # reorder
+    tmp = np.vstack(res)
+    result = [None] * len(index)
+    for i in enum:
+        result[index[i]] = tmp[i]
+    
+    return np.array(result)
+
+    '''
     for idx,stidx in enumerate(rg):
         # I have to set the batch size really small to avoid
         # memory or assertion issue. Thus there will be many batch
@@ -254,6 +291,7 @@ def sentence_embed(embed_name, sentences, batch_size):
         res.append(tmp)
     print('')
     return np.vstack(res)
+    '''
 
 
 def __test():

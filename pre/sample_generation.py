@@ -8,7 +8,6 @@
 # functions with examples have been tested
 
 
-import tensorflow_datasets as tfds 
 
 #===== lexical processing
 
@@ -49,6 +48,7 @@ def load_pairs(dataset_name, split, take_percent, features, special_chars, load_
 
     if load_from == "tfds":
 
+        import tensorflow_datasets as tfds 
         print ("Loading data. If the data not available locally, download first.")
 
         dataset = tfds.load(name=dataset_name, split=

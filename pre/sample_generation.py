@@ -19,10 +19,9 @@ def replace_special_character(s, L):
         s= s.replace(l, " ")
     return s
 
-
 #====== data loading
 
-def load_pairs(dataset_name, split, take_percent, features, special_chars ):
+def load_pairs(dataset_name, split, take_percent, features, special_chars, load_from, save_tsv):
     """Load pairs of documents and their summaries
 
     dataset_name: str, a unique name to ref to it in tfds 
@@ -33,24 +32,47 @@ def load_pairs(dataset_name, split, take_percent, features, special_chars ):
 
     take_percent: int, 0 to 100, ratio of data to take from the dataset or data split. 100 means use all data 
 
-    features: [str, str], names of the document and the summary in TFDS, e.g., ['article', 'highlights']
+    features: [str, str], names of the document and the summary in TFDS, 
+              e.g., ['article', 'highlights'] in CNN_DailyMail
 
     special_chars: list of strings, special characters to be replaces by spaces, 
                    e.g., ['\t', '\n']
 
+    load_from: str, load data from tfds or tsv. Default TFDS. 
+    
+    save_tsv: bool, whether to save doc-sum pairs into a TSV file 
+                    for computers without TF2 or TFDS. 
+
     """
 
-    print ("Loading data. If the data not available locally, download first.")
+    tsv_filename = "./" + dataset_name + "_" +split + "_" + str(take_percent) + ".tsv"
 
-    dataset = tfds.load(name=dataset_name, split=
-            split+ '[{}%:{}%]'.format(0, take_percent)
-            )
+    if load_from == "tfds":
 
-#    plain_pairs = [(piece[features[0]], piece[features[1]]) for piece in dataset]
+        print ("Loading data. If the data not available locally, download first.")
 
-    pairs = [(replace_special_character(piece[features[0]].numpy().decode("utf-8"), special_chars), 
-              replace_special_character(piece[features[1]].numpy().decode("utf-8"), special_chars) )
-             for piece in dataset]
+        dataset = tfds.load(name=dataset_name, split=
+                split+ '[{}%:{}%]'.format(0, take_percent)
+                )
+
+    #    plain_pairs = [(piece[features[0]], piece[features[1]]) for piece in dataset]
+
+        pairs = [(replace_special_character(piece[features[0]].numpy().decode("utf-8"), special_chars), 
+                  replace_special_character(piece[features[1]].numpy().decode("utf-8"), special_chars) )
+                 for piece in dataset]
+
+        if save_tsv and load_from == "tfds":
+            with open(tsv_filename, 'w') as f:
+                for (_doc, _sum) in pairs:
+                    f.write("\t".join([_doc, _sum]))
+                    f.write("\n")
+                                   
+    elif load_from == "tsv":
+        pairs = []
+        with open(tsv_filename, 'r') as f:
+            for line in f:
+                [_doc, _sum] = line[:-1].split("\t")
+                pairs.append((_doc, _sum))
 
     return pairs 
 
@@ -287,16 +309,18 @@ def sample_generation():
     import os
     dataset_name = cfg.dataset_name 
     for split in cfg.splits:
-        pairs = load_pairs(cfg.dataset_name, split, cfg.take_percent, cfg.features, cfg.special_characters_to_clean)
+        pairs = load_pairs(cfg.dataset_name, split, cfg.take_percent, cfg.features, cfg.special_characters_to_clean, cfg.load_from, cfg.save_tsv)
 #        pairs = [("A B", "1 2"), ("C D", "3 4")] # for testing
         for method in cfg.methods: 
+            print ("generating samples using {} from dataset {}'s {} set"\
+                      .format(method, dataset_name, split))
             if method in ["add", "delete", "replace"]:
                 # NOTE: vocabulary generation is repeated here
-                samples = mutate(pairs, cfg.mutate_ratios, method, cfg.sent_end, dump_to=eval(cfg.dump_to), in_memory = cfg.in_memory)
+                samples = mutate(pairs, cfg.mutate_ratios, method, cfg.sent_end, 
+                        dump_to=eval(cfg.dump_to), in_memory = cfg.in_memory)
             elif method in ["cross"]:
-                print ("generating samples using {} from dataset {}'s {} set"\
-                      .format(method, dataset_name, split))
-                samples = cross_pair(pairs, cfg.neg_pos_ratio, dump_to=eval(cfg.dump_to), in_memory=cfg.in_memory)
+                samples = cross_pair(pairs, cfg.neg_pos_ratio, 
+                        dump_to=eval(cfg.dump_to), in_memory=cfg.in_memory)
 
     return samples # only the last one 
 

@@ -1,5 +1,11 @@
 #======== data loading parameters 
 
+load_from = "tsv" # "tfds" or "tsv"
+
+# Whether save the data loaded in TFDS to TSV. 
+# If load_from is tsv, no effect  
+save_tsv = True
+
 # Must match their names in TFDS 
 dataset_name = "cnn_dailymail"
 splits = ['train', 'validation', 'test']
@@ -13,6 +19,7 @@ take_percent =  1  # range from 0 to 100; 100 means all;0 means none.
 # filename nomenclature to save dumped data with labels 
 # e.g., ./cnn_dailymail_cross_test.tsv means test data, 
 # generated using crosspairing on cnn_dailymail dataset
+#dump_to="'./'+dataset_name+'_'+method+'_'+split+'_'+take_percent+'.tsv'" 
 dump_to="'./'+dataset_name+'_'+method+'_'+split+'.tsv'" 
 
 # whether to save samples as variables in the memory 
@@ -32,6 +39,7 @@ sent_end = [".","!","?"]  # symbols that represent the end of a sentence
 neg_pos_ratio = 5 
 
 # methods used to generate negative samples 
-methods = ["cross", "add", "delete", "replace"] 
+methods = ["cross","add", "delete", "replace"] 
+#methods = ["delete"]
 
 mutate_ratios = [0, 0.1, 0.2, 0.3, 0.5, 0.6, 0.7, 0.8, 0.9, 1] # 0 to 1 

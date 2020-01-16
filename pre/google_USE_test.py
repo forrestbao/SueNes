@@ -3,17 +3,17 @@
 
 import tensorflow_hub as hub
 import tensorflow as tf
-
-tf.logging.set_verbosity(tf.logging.ERROR)
+import time
 
 sentences = [
     "The quick brown fox jumps over the lazy dog.",
-    "I am a sentence for which I would like to get its embedding"]
+    "I am a sentence for which I would like to get its embedding"]* int(1*2**15)
+DAN_scale_factor=4
 
-# google encoders 
 
 print (tf.__version__)
 TF_Version = int(tf.__version__[0])
+#tf.debugging.set_log_device_placement(True)
 
 if TF_Version == 1:
     google_USE_large = hub.Module("https://tfhub.dev/google/universal-sentence-encoder-large/3")
@@ -32,22 +32,28 @@ elif TF_Version == 2:
     google_USE_large = hub.load("https://tfhub.dev/google/universal-sentence-encoder-large/5")
     google_USE_dan = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
 
-from tensorflow.python.client import device_lib
-for dev in device_lib.list_local_devices():
-    if dev.device_type in ["GPU"]:
-        with tf.device(dev.name):
-            print ("testing Google USE Transformer/Large on {}".format([dev.name]))
-            if TF_Version == 1:
-                embeddings = embed_sents(sentences, google_USE_large)
-            elif TF_Version == 2: 
-                embeddings = google_USE_large(sentences)
-            print (embeddings) 
+#from tensorflow.python.client import device_lib
+#for dev in device_lib.list_local_devices():
+#    if dev.device_type in ["CPU", "GPU"]:
+#        with tf.device(dev.name):
+#print ("testing Google USE Transformer/Large on {}".format([dev.name]))
 
-            print ("testing Google USE DAN/small on {}".format([dev.name]))
-            if TF_Version == 1:
-                embeddings = embed_sents(sentences, google_USE_dan)
-            elif TF_Version == 2: 
-                embeddings = google_USE_dan(sentences)
-            print (embeddings) 
 
+t=time.time()
+print ("testing Google USE Transformer/Large")
+if TF_Version == 1:
+    embeddings = embed_sents(sentences, google_USE_large)
+elif TF_Version == 2: 
+    embeddings = google_USE_large(sentences)
+print (embeddings) 
+print ("elapsed seconds {}".format(time.time()-t))
+
+t=time.time()
+print ("testing Google USE DAN/small on")
+if TF_Version == 1:
+    embeddings = embed_sents(sentences*DAN_scale_factor, google_USE_dan)
+elif TF_Version == 2: 
+    embeddings = google_USE_dan(sentences*DAN_scale_factor)
+print (embeddings) 
+print ("elapsed seconds {}".format(time.time()-t))
 

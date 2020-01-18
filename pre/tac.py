@@ -120,6 +120,7 @@ def get_summaries(dataset_path, setIDs, sentence_delimiter, summary_types):
         each set consisting of 10 news articles
 
     sentence_delimiter: str, e.g., " ---- " or "\n\n"
+    NOT IN USE
 
     return:
         dict, keys as document set (str, e.g., "D1001-B"), 
@@ -148,12 +149,14 @@ def get_summaries(dataset_path, setIDs, sentence_delimiter, summary_types):
     for summary_type in summary_types:
         for summary_file in glob.glob(os.path.join(dataset_path,summary_type, "*")):
                     print (summary_file)
-                    [docset_name, _, _, _, summarizer] = summary_file.split(".")
+                    [docset_name, _, _, _, summarizer] = summary_file.split("/")[-1].split(".")
                     if docset_name not in summaries:
                         summaries[docset_name] = {}
-                    with open(os.path.join(dataset_path, summary_type, summary_file), 'r') as f:
+                    with open(os.path.join(dataset_path, summary_type, summary_file), 
+                            encoding="utf8", errors='ignore') as f:
                         summary = f.read()
-                        print (summary)
+#                        summary = summary.decode('utf-8')
+#                        print (summary)
                     summaries[docset_name].setdefault(summarizer, []).append(summary)
     return summaries 
     
@@ -170,3 +173,4 @@ if __name__ == "__main__":
 #    print (get_statistics(articles))
 
     summaries = get_summaries(summary_set_path, ["A"], sentence_delimiter, summary_types)
+                                                # sentence_delimiter,  NOT IN USE 

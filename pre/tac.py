@@ -24,14 +24,16 @@
 import os, statistics, glob
 import bs4 # beautifulsoup
 import numpy as np
+import json
 
 # Human summarizer ID
 
 def parse_tac_article(filename, sentence_delimiter):
-    """Return a string where sentences are separated with _sentence_delimiter_
-
-    In the source format, each <p> tag is one sentence. 
+    """Turn one TAC article in HTML as a list of string
     
+    In the source format, each <p> tag is one sentence. 
+
+    The strings may contain special characters such as end-of-line. 
     
     TODO: 
     Forrest: Roger, please verify that is one sentence per <p> tag. 
@@ -40,7 +42,6 @@ def parse_tac_article(filename, sentence_delimiter):
 #    print (filename)
     with open(filename) as f:
         s = bs4.BeautifulSoup(f, "html.parser")
-        article = sentence_delimiter.join([p.get_text() for p in s.find_all("p")])
 #        article = sentence_delimiter.join([p.get_text() for p in s.find_all("p")])
         article = [p.get_text() for p in s.find_all("p")]
 
@@ -59,9 +60,25 @@ def get_articles(dataset_path, setIDs, sentence_delimiter):
         each set consisting of 10 news articles
 
     sentence_delimiter: str, e.g.,"\n\n"
+    NOT IN USE
+
 
     return:
-        dict, keys as document set (10 articles), values as list of 10 strings
+        dict, keys as document set (10 articles), values as list of 10 lists of strings 
+
+    {"docset1": [[sent1, sent2, ...], # 1st article
+                [sent1, sent2, ...], # 2nd article
+                ...
+                [sent1, sent2, ...]]# 10th article , 
+    "docset2": [[sent1, sent2, ...], # 1st article
+                [sent1, sent2, ...], # 2nd article
+                ...
+                [sent1, sent2, ...]]# 10th article,
+    ...
+    "docset n": ...
+    }
+
+
 
     File structure: TAC20{08,09,10}_Summarization_Documents{.tgz}
                     |___> GuidedSumm{}_test_docs_files{.tar.gz}  (==dataset_path)
@@ -80,8 +97,9 @@ def get_articles(dataset_path, setIDs, sentence_delimiter):
     articles = {} 
     for docset in os.listdir(dataset_path):
         for set_suffix in setIDs:
-            docset_name = docset+"-"+set_suffix
-            docset_path = os.path.join(dataset_path, docset, docset_name)
+            docset_folder = docset + "-" + set_suffix
+            docset_name = docset[:-1] + "-" + set_suffix  # drop the human picker's name, e.g., D1001A -> D1001 
+            docset_path = os.path.join(dataset_path, docset, docset_folder)
             for doc in os.listdir(docset_path):
                 article = parse_tac_article(os.path.join(docset_path, doc), sentence_delimiter)
                 articles.setdefault(docset_name, []).append(article)
@@ -90,22 +108,29 @@ def get_articles(dataset_path, setIDs, sentence_delimiter):
 def get_statistics(articles):
     """
 
-    articles: dict, keys as document set (10 articles), values as list of 10 strings
+    articles: dict, keys as document set (10 articles form one docset), 
+                    values as list of strings, or
+                              list of lists of strings 
 
     """
     c, w, s = [], [], [] # number of characters, words, and sentences
-    for docset, _10_docs in articles.items():
-        for doc in _10_docs:
-            c.append(len(doc)) 
-            w.append(len(doc.split(" ")))
-            s.append(len(doc.split(". ")))
+    for docset, docs in articles.items():
+        for doc in docs:
+            if type(doc) == str: # each doc is a length string
+                c.append(len(doc)) 
+                w.append(len(doc.split(" ")))
+                s.append(len(doc.split(". ")))
+            elif type(doc) == list: #each doc is a list of strings
+                c.append(sum(map(len, doc))) 
+                w.append(sum([len(sent.split(" ")) for sent in doc]))
+                s.append(len(doc))
 
+            
 #    dist = [round(q, 1) for q in statistics.quantiles(lengths, n=10)] # need python3.8
     
-    print ([int(np.percentile(c, x)) for x in range(1, 101, 10)])
-    print ([int(np.percentile(w, x)) for x in range(1, 101, 10)])
-    print ([int(np.percentile(s, x)) for x in range(1, 101, 10)])
-    return None
+    for name, quantity in zip(["char", "word", "sent"], [c,w,s]):
+        print (name, " quantile:",[int(np.percentile(quantity, x)) for x in range(1, 101, 10)])
+    return c,w,s
 
 def get_summaries(dataset_path, setIDs, sentence_delimiter, summary_types):
     """Extract summaries from 2008-2011 updated/guided summary tasks 
@@ -127,7 +152,24 @@ def get_summaries(dataset_path, setIDs, sentence_delimiter, summary_types):
               values as dict, whose
                               keys as summarizer ID (str, e.g., "E" ), 
                               values as a list of strs, (summaries from 4 humans and 43 summarizers)
-                              Each summary is a "\n"-separated string. 
+                              Each summary is a list of strings.
+
+            Return may contain escape sequences 
+
+        "docset 1": {"summarizer1": [sent1, sent2, ...], 
+                    "summarizer2": [sent1, sent2, ...],
+                    ...
+                    "summarizer43": [sent1, sent2, ...],
+                    "summarizerA": [sent1, sent2, ...],
+                    ... # only 4 humans, could be any 4 between A and H 
+                    "summarizerH": [sent1, sent2, ...], 
+                    }, 
+        "docset 2": {... },
+
+        ...
+
+        "docset n": {...}, 
+
  
     File structure: GuidedSumm20{08,09,10,11}_eval{.tgz}
                     |___> manual
@@ -148,29 +190,133 @@ def get_summaries(dataset_path, setIDs, sentence_delimiter, summary_types):
     summaries = {} 
     for summary_type in summary_types:
         for summary_file in glob.glob(os.path.join(dataset_path,summary_type, "*")):
-                    print (summary_file)
+#                    print (summary_file)
                     [docset_name, _, _, _, summarizer] = summary_file.split("/")[-1].split(".")
-                    if docset_name not in summaries:
-                        summaries[docset_name] = {}
-                    with open(os.path.join(dataset_path, summary_type, summary_file), 
-                            encoding="utf8", errors='ignore') as f:
-                        summary = f.read()
-#                        summary = summary.decode('utf-8')
-#                        print (summary)
-                    summaries[docset_name].setdefault(summarizer, []).append(summary)
+                    setID = docset_name.split("-")[1]
+                    if setID in setIDs:
+                        if docset_name not in summaries:
+                            summaries[docset_name] = {}
+                        with open(os.path.join(dataset_path, summary_type, summary_file), 
+                                encoding="utf8", errors='ignore') as f:
+                            summary = f.readlines()
+                        summaries[docset_name].setdefault(summarizer, []).append(summary)
     return summaries 
     
+
+def get_scores(score_path, summary_types, setIDs):
+    """Extract scores for each summarizers, both machine and human, for each document set 
+
+    Peer file format:
+        D1001-A	1	0.286	5	0	A	A	0.276	4	2
+        D1001-A	2	0.179	3	0	A	A	0.172	4	2
+    MOdel file format:
+        ['D1001-A', 'A', '16', 'A', 'A', '0.905', '5', '5']
+
+    See README_EVAL.txt to confirm 
+
+    score_path: str, path to a manual evaluation results folder, e.g., 
+                  TAC2010/GuidedSumm2010_eval/manual
+
+    summary_types: list of strs, subsets of ["peers", "models"]
+ 
+    setIDs: list of str, consisting of "A" or "B"
+        Most TAC summarization tasks uses two sets,
+        each set consisting of 10 news articles
+
+
+    """
+    scores = {}
+    for summary_type in summary_types:
+        summary_type = summary_type[:-1] # drops the plural s 
+        for setID in setIDs:
+            scorefile = os.path.join(score_path, ".".join(["manual", summary_type, setID]))
+            with open(scorefile) as f:
+                for line in f:
+                    l = line.split()
+                    setID = l[0]
+                    summarizer = l[1]
+                    if setID not in scores:
+                            scores[setID] = {}
+
+                    if summary_type == "peer":
+                        pyramid_score = float(l[2])
+                        modified_score = float(l[7])
+                        linguistic_quality = int(l[8])
+                        overall_score = int(l[9])
+                    elif summary_type == "model":
+                        modified_score = float(l[5])
+                        linguistic_quality = int(l[6])
+                        overall_score = int(l[7])
+                    else:
+                        print ("wrong summarizer")
+                        exit()
+                    scores[setID][summarizer] = [modified_score, linguistic_quality, overall_score]
+
+    return scores
+
+def dump_data(articles, summaries, scores, dump_to=None):
+    """combine articles, summaries, and scores into one dictionary and dump as JSON
+
+    final structure:
+
+        {"docset 1":
+                    {"articles": [[sent1, sent2, ...]
+                                  ...
+                                  # 1 to 10 articles in this docset 
+                                 ] # end of articles in this docset 
+
+                     "summaries": {"summarizer 1": 
+                                                  {"sentences": [sent1, sent2, ...]
+                                                   "scores": [score1, score2, ...]
+                                                  }
+                                   "summarizer 2": { "sentences": [...]
+                                                     "scores": [...]
+                                                    }
+                                    ....
+                                   # 43 + 4 machine and human summarizers
+                                  } # end of summaries and scores for this docset
+                    } # end of the 1st docset 
+         "docset 2": 
+                    ...
+
+        }
+
+
+    """
+    combined  = {}
+    for docID, summary_dict in summaries.items():
+            combined[docID] = {}
+            combined[docID]["articles"] = articles[docID]
+            for summarizer, summary_sentences in summary_dict.items():
+                combined[docID]["summary"]={}
+                combined[docID]["summary"][summarizer] = {}
+                combined[docID]["summary"][summarizer]["sentences"] = summary_sentences
+                combined[docID]["summary"][summarizer]["scores"] = scores[docID][summarizer]
+
+    if dump_to != None:
+        parsed = json.dumps(combined, indent=4, sort_keys=True, separators=(',', ': '))
+        with open(dump_to, 'w') as f:
+            f.write(parsed)
+
+    return combined 
 
 if __name__ == "__main__":
     article_set_path = "/mnt/insecure/data/TAC/TAC2010/TAC2010_Summarization_Documents/GuidedSumm10_test_docs_files/"
     summary_set_path = "/mnt/insecure/data/TAC/TAC2010/GuidedSumm2010_eval/ROUGE"
+    score_path = "/mnt/insecure/data/TAC/TAC2010/GuidedSumm2010_eval/manual"
+    dump_to = "TAC2010_all.json"
 
-    setID = ["A"]
+
+    setIDs = ["A"]
     sentence_delimiter = "  "
     summary_types = ["peers", "models"]
 
-#    articles = get_articles(article_set_path, ["A"], sentence_delimiter)
-#    print (get_statistics(articles))
+    articles = get_articles(article_set_path, setIDs, sentence_delimiter)
+    _,_,_ = get_statistics(articles)
 
-    summaries = get_summaries(summary_set_path, ["A"], sentence_delimiter, summary_types)
+    summaries = get_summaries(summary_set_path, setIDs, sentence_delimiter, summary_types)
                                                 # sentence_delimiter,  NOT IN USE 
+
+    scores = get_scores(score_path, summary_types, setIDs)
+
+    combined = dump_data(articles, summaries, scores, dump_to=dump_to)

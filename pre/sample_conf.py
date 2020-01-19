@@ -10,7 +10,13 @@ save_tsv = True
 dataset_name = "cnn_dailymail"
 dataset_features = {"cnn_dailymail": ['article', 'highlights'],
     "big_patent": ['description', 'abstract'],
-    "newsroom": ['text', 'summary']}
+    "newsroom": ['text', 'summary'],
+    "scientific_papers": ['artcile', 'abstract'],
+    "billsum":['text','summary']
+    }
+
+dataset_sizes = {"billsum":23455, "scientific_papers":215913, "newsroom":1212740, 
+        "cnn_dailymail":311971, "big_patent":1341362}
 
 splits = ['train', 'validation', 'test']
 features = dataset_features[dataset_name]

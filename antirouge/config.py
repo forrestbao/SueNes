@@ -12,12 +12,33 @@ MAX_NUM_WORDS = 200000
 # np.percentile(sents, 80)      # 47
 # np.percentile(sum_sents, 80)  # 1
 
-ARTICLE_MAX_WORD = 1091
-SUMMARY_MAX_WORD = 55
+# ARTICLE_MAX_WORD = 1091
+# SUMMARY_MAX_WORD = 55
 
-# CNN/DM
+# CNN/DM 92579
+# ARTICLE_MAX_WORD = 1091
+# SUMMARY_MAX_WORD = 55
 # ARTICLE_MAX_SENT = 47
-# SUMMARY_MAX_SENT = 3
+# SUMMARY_MAX_SENT = 1
+
+# News Room 995041
+# ARTICLE_MAX_WORD = 1079
+# SUMMARY_MAX_WORD = 36
+# ARTICLE_MAX_SENT = 45
+# SUMMARY_MAX_SENT = 2
+
+# bigPatent 1207222
+# ARTICLE_MAX_WORD = 4750
+# SUMMARY_MAX_WORD = 156
+# ARTICLE_MAX_SENT = 185
+# SUMMARY_MAX_SENT = 5
+
+# NYT 654873
+ARTICLE_MAX_WORD = 1219
+SUMMARY_MAX_WORD = 67
+# ARTICLE_MAX_SENT = 51
+# SUMMARY_MAX_SENT = 1
+
 
 # DUC
 # config.ARTICLE_MAX_SENT = 39
@@ -32,7 +53,7 @@ EMBEDDING_DIM = 100
 
 # VALIDATION_SPLIT = 0.2
 
-DATA_DIR = "F:\\Dataset\\newsroom"
+DATA_DIR = "F:\\Dataset\\nyt_corpus"
 # CNN_DIR = os.path.join(DATA_DIR, 'cnn/stroies')
 # DM_DIR = os.path.join(DATA_DIR, 'dailymail/stories')
 CNN_TOKENIZED_DIR = os.path.join(DATA_DIR, 'tokenized_stories')

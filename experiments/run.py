@@ -10,7 +10,7 @@ from antirouge import embedding
 
 
 def tokenize():
-    #pre.preprocess_story_pickle(30000)
+    pre.preprocess_story_pickle(30000)
     pre.preprocess_word_mutated()
     pre.preprocess_negative_sampling()
 
@@ -28,6 +28,8 @@ def embed():
     
 
 if __name__ == '__main__':
+    # pre.preprocess_story_pickle(count_only = True)
+    
     # tokenize()
     # embed()
     # main.run_exp2('neg', 'USE', 30000, 1, 'FC')
@@ -36,13 +38,26 @@ if __name__ == '__main__':
     for embedding_method in ['USE', 'USE-Large', 'InferSent', 'glove']:
         answer[embedding_method] = {}
         for arch in ['CNN', 'FC', 'LSTM', '2-LSTM']:
-            answer[embedding_method][arch] = main.run_exp2('neg', embedding_method, 30000, 1, arch)
-            print((embedding_method, arch, answer[embedding_method][arch]))
+            answer[embedding_method][arch] = {}
+            for fake_option in ['add', 'delete', 'replace']:
+                answer[embedding_method][arch][fake_option] = main.run_exp2('mutate', embedding_method, 30000, 1, arch, fake_option)
+                print((embedding_method, arch, answer[embedding_method][arch][fake_option]))
     
-    print(answer)
-
     with open("result.pickle", 'wb') as f:
         pickle.dump(answer, f)
+    
+    answer2 = {}
+
+    for embedding_method in ['USE', 'USE-Large', 'InferSent', 'glove']:
+        answer2[embedding_method] = {}
+        for arch in ['CNN', 'FC', 'LSTM', '2-LSTM']:
+            answer2[embedding_method][arch] = main.run_exp2('neg', embedding_method, 30000, 1, arch)
+            print((embedding_method, arch, answer2[embedding_method][arch][fake_option]))
+    
+    with open("result.pickle", 'wb') as f:
+        pickle.dump(answer2, f)
+    
+    print(answer, answer2)
     
 
     '''

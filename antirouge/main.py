@@ -731,7 +731,7 @@ def run_exp2(fake_method, embedding_method, num_samples,
 
     if label_type == 'regression':
         loss = 'mse'
-        metrics = ['mae', 'mse', 'accuracy', pearson_correlation_f]
+        metrics = [pearson_correlation_f, 'accuracy', 'mse', 'mae']
     elif label_type == 'classification':
         loss = 'binary_crossentropy'
         # loss = 'hinge'

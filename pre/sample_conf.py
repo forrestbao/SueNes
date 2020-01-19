@@ -8,8 +8,12 @@ save_tsv = True
 
 # Must match their names in TFDS 
 dataset_name = "cnn_dailymail"
+dataset_features = {"cnn_dailymail": ['article', 'highlights'],
+    "big_patent": ['description', 'abstract'],
+    "newsroom": ['text', 'summary']}
+
 splits = ['train', 'validation', 'test']
-features =['article', 'highlights']
+features = dataset_features[dataset_name]
 
 # Percentage of data from the split to be used to generate samples
 take_percent =  1  # range from 0 to 100; 100 means all;0 means none. 

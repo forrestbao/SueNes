@@ -156,9 +156,13 @@ def get_vocab(data_pairs):
     """generate a set of all vocabularies, tokenized by spaces, from pairs of documents and summaries  
     """
     long_doc, long_sum = "", "" 
+    '''
     for (_doc, _sum) in data_pairs:
         long_doc += _doc + " "
         long_sum += _sum + " "
+    '''
+    long_doc = " ".join([_doc for _doc, _sum in data_pairs])
+    long_sum = " ".join([_sum for _doc, _sum in data_pairs])
     all_sent = long_doc + long_sum 
     vocab = set(all_sent.split(' '))
     vocab.remove("")

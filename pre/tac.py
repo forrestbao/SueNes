@@ -287,8 +287,8 @@ def dump_data(articles, summaries, scores, dump_to=None):
     for docID, summary_dict in summaries.items():
             combined[docID] = {}
             combined[docID]["articles"] = articles[docID]
+            combined[docID]["summary"]={}
             for summarizer, summary_sentences in summary_dict.items():
-                combined[docID]["summary"]={}
                 combined[docID]["summary"][summarizer] = {}
                 combined[docID]["summary"][summarizer]["sentences"] = summary_sentences
                 combined[docID]["summary"][summarizer]["scores"] = scores[docID][summarizer]

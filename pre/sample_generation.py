@@ -8,6 +8,8 @@
 # functions with examples have been tested
 
 import random
+import itertools
+import joblib
 
 #===== lexical processing
 
@@ -90,7 +92,23 @@ def load_pairs(dataset_name, split, load_percent, num_shards, features, special_
 
 #========== crosspairing and associated functions 
 
-def cross_pair(data_pairs, neg_pos_ratio, dump_to=None, in_memory=False ):
+def cross_index(n,i,r):
+    """Given an index _i_, and a range from 0 to _n_, randomly sample 
+    _r_ or (_n_-1) numbers, whatever is smaller, from 0 to n 
+    such that they do not equal to _i_. 
+
+    >>> list(cross_index(5,1,3))
+        [(1, 4), (1, 2), (1, 0)]
+
+
+    """
+    legit_indexes = list(itertools.chain(range(0,i), range(i+1,n)))
+    num_samples = min(n-1, r)
+    sum_indexes = random.sample(legit_indexes, num_samples)
+    return zip([i]*num_samples, sum_indexes)
+
+
+def cross_pair(data_pairs, neg_pos_ratio, dump_to=None, in_memory=False, n_jobs=4):
     """Create positive and negative samples using cross pairing 
 
     input:
@@ -104,6 +122,8 @@ def cross_pair(data_pairs, neg_pos_ratio, dump_to=None, in_memory=False ):
 
         in_memory: Bool, whether to return labeled samples in memory
                 default False 
+
+        n_jobs: int, number of CPU cores to use
 
     return: list of triplets, [doc, sum, 0 or 1]
             0 if sum and doc do not match. 1 if so. 
@@ -145,12 +165,18 @@ def cross_pair(data_pairs, neg_pos_ratio, dump_to=None, in_memory=False ):
     # negative samples
     num_pair = len(data_pairs)
 
-    for i in range(num_pair):
-        doc_index = i
-        legit_indexes = list(range(num_pair))
-        legit_indexes.remove(i)
-        sum_indexes = random.sample(legit_indexes, min(num_pair-1, neg_pos_ratio))
-        for sum_index in sum_indexes:
+    neg_sample_indexes = joblib.Parallel(n_jobs=4)\
+                         (joblib.delayed (cross_index) \
+                                 (num_pair, i, neg_pos_ratio) for i in range(num_pair))
+
+    for index_chains in neg_sample_indexes:
+        for (doc_index, sum_index) in index_chains:
+#        _doc, _sum = data_pairs[doc_index][0], data_pairs[sum_index][1]
+#   for i in range(num_pair):
+#       doc_index = i
+#       legit_indexes = itertools.chain(range(0,num_pair), range(num_pair+1,num_pair+1))
+#       sum_indexes = random.sample(legit_indexes, min(num_pair-1, neg_pos_ratio))
+#       for sum_index in sum_indexes:
             _doc, _sum = data_pairs[doc_index][0], data_pairs[sum_index][1]
             if dump_to != None:
                 f.write("\t".join([_doc, _sum, "0\n"]))

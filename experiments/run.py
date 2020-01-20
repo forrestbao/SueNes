@@ -33,7 +33,7 @@ if __name__ == '__main__':
     # tokenize()
     # embed()
     # main.run_exp2('neg', 'USE', 30000, 1, 'FC')
-    
+    '''
     answer = {}
     for embedding_method in ['USE', 'USE-Large', 'InferSent', 'glove']:
         answer[embedding_method] = {}
@@ -45,6 +45,7 @@ if __name__ == '__main__':
     
     with open("result.pickle", 'wb') as f:
         pickle.dump(answer, f)
+    '''
     
     answer2 = {}
 
@@ -52,7 +53,7 @@ if __name__ == '__main__':
         answer2[embedding_method] = {}
         for arch in ['CNN', 'FC', 'LSTM', '2-LSTM']:
             answer2[embedding_method][arch] = main.run_exp2('neg', embedding_method, 30000, 1, arch)
-            print((embedding_method, arch, answer2[embedding_method][arch][fake_option]))
+            print((embedding_method, arch, answer2[embedding_method][arch]))
     
     with open("result.pickle", 'wb') as f:
         pickle.dump(answer2, f)

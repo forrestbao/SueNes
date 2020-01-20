@@ -7,7 +7,7 @@
 
 # functions with examples have been tested
 
-
+import random
 
 #===== lexical processing
 
@@ -20,7 +20,7 @@ def replace_special_character(s, L):
 
 #====== data loading
 
-def load_pairs(dataset_name, split, take_percent, features, special_chars, load_from, save_tsv):
+def load_pairs(dataset_name, split, load_percent, num_shards, features, special_chars, load_from, scramble, save_tsv):
     """Load pairs of documents and their summaries
 
     dataset_name: str, a unique name to ref to it in tfds 
@@ -29,7 +29,10 @@ def load_pairs(dataset_name, split, take_percent, features, special_chars, load_
     split: str, 'test', 'train' or 'validation' 
            results in a _OptionsDataset type 
 
-    take_percent: int, 0 to 100, ratio of data to take from the dataset or data split. 100 means use all data 
+    load_percent: int, 0 to 100, ratio of data to take from the dataset or data split. 100 means use all data
+
+    num_shards: int, creates a Dataset that includes only 1/num_shards of this dataset,
+                to be used in downstreams
 
     features: [str, str], names of the document and the summary in TFDS, 
               e.g., ['article', 'highlights'] in CNN_DailyMail
@@ -39,12 +42,16 @@ def load_pairs(dataset_name, split, take_percent, features, special_chars, load_
 
     load_from: str, load data from tfds or tsv. Default TFDS. 
     
+    scramble: bool, whether to sramble the loaded data
+                    only effective when load_from is TFDS.
+
     save_tsv: bool, whether to save doc-sum pairs into a TSV file 
                     for computers without TF2 or TFDS. 
 
     """
 
-    tsv_filename = "./" + dataset_name + "_" +split + "_" + str(take_percent) + ".tsv"
+    tsv_filename = "./" + dataset_name + "_" +split + "_" + \
+                   str(load_percent) + "_" + str(num_shards) + ".tsv"
 
     if load_from == "tfds":
 
@@ -52,8 +59,13 @@ def load_pairs(dataset_name, split, take_percent, features, special_chars, load_
         print ("Loading data. If the data not available locally, download first.")
 
         dataset = tfds.load(name=dataset_name, split=
-                split+ '[{}%:{}%]'.format(0, take_percent)
+                split+ '[{}%:{}%]'.format(0, load_percent)
                 )
+
+        if scramble: 
+            dataset.shuffle(4096)
+
+        dataset = dataset.shard(num_shards=num_shards, index=0)
 
     #    plain_pairs = [(piece[features[0]], piece[features[1]]) for piece in dataset]
 
@@ -313,7 +325,7 @@ def sample_generation():
     import os
     dataset_name = cfg.dataset_name 
     for split in cfg.splits:
-        pairs = load_pairs(cfg.dataset_name, split, cfg.take_percent, cfg.features, cfg.special_characters_to_clean, cfg.load_from, cfg.save_tsv)
+        pairs = load_pairs(cfg.dataset_name, split, cfg.load_percent, cfg.num_shards, cfg.features, cfg.special_characters_to_clean, cfg.load_from, cfg.scramble, cfg.save_tsv)
 #        pairs = [("A B", "1 2"), ("C D", "3 4")] # for testing
         for method in cfg.methods: 
             print ("generating samples using {} from dataset {}'s {} set"\

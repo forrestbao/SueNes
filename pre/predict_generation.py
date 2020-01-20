@@ -10,23 +10,23 @@ if __name__ == "__main__":
 
     with open(test_file, "w", encoding="utf-8") as f:
         ct = 0
+        
         for doc in tac.keys():
-            for article in tac[doc]['articles']:
-                article = " ".join(article)
-                article = article.replace("\n", " ")
-                article = article.replace("\t", " ")
+            for summarizer in tac[doc]['summary'].keys():
+                summary = " ".join(tac[doc]['summary'][summarizer]['sentences'][0])
+                summary = summary.replace("\n", " ")
+                summary = summary.replace("\t", " ")
+                scores = tac[doc]['summary'][summarizer]['scores']
+                scores = " ".join([str(score) for score in scores])
 
-                if len(article) == 0:
-                    article = "." 
+                for article in tac[doc]['articles']:
+                    article = " ".join(article)
+                    article = article.replace("\n", " ")
+                    article = article.replace("\t", " ")
 
-                for summarizer in tac[doc]['summary'].keys():
-                    summary = " ".join(tac[doc]['summary'][summarizer]['sentences'][0])
-                    summary = summary.replace("\n", " ")
-                    summary = summary.replace("\t", " ")
+                    if len(article) == 0:
+                        article = "." 
                     
-                    scores = tac[doc]['summary'][summarizer]['scores']
-                    scores = " ".join([str(score) for score in scores])
-
                     line = "\t".join([article, summary, scores]) + '\n'
                     f.write(line)
 

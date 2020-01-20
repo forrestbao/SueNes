@@ -16,6 +16,9 @@ if __name__ == "__main__":
                 summary = " ".join(tac[doc]['summary'][summarizer]['sentences'][0])
                 summary = summary.replace("\n", " ")
                 summary = summary.replace("\t", " ")
+                if len(summary) == 0:
+                    summary = "."
+                
                 scores = tac[doc]['summary'][summarizer]['scores']
                 scores = " ".join([str(score) for score in scores])
 

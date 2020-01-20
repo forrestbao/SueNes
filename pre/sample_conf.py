@@ -36,6 +36,7 @@ load_percent =  1  # range from 0 to 100; 100 means all;0 means none.
 # Not to confuse with take_percent.
 # for example, we may load all data and only use 1/10 of it, 
 # vs. load only the first 10 percent and use all of that 10 percent. 
+# Set as 1 for using all data loaded
 num_shards = 10 
 
 

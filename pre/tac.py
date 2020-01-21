@@ -25,6 +25,7 @@ import os, statistics, glob
 import bs4 # beautifulsoup
 import numpy as np
 import json
+import re
 
 # Human summarizer ID
 
@@ -300,17 +301,98 @@ def dump_data(articles, summaries, scores, dump_to=None):
 
     return combined 
 
+def get_rouge(filepath, dump_to=None):
+    """Load TAC2010 ROUGE score results 
+
+
+    filepath: str, GuidedSumm2010_eval/ROUGE/rouge_A.m.out
+
+
+    Structure of scores:
+             ('D1035-A', '28'): {'1': (0.32374, 0.34439, 0.33375),
+                                  '2': (0.05569, 0.05928, 0.05743),
+                                  '3': (0.01467, 0.01562, 0.01513),
+                                  '4': (0.00741, 0.00789, 0.00764),
+                                  'L': (0.26619, 0.28316, 0.27441),
+                                  'SU4': (0.09885, 0.10533, 0.10199),
+                                  'W-1.2': (0.08912, 0.17609, 0.11835)},
+
+    Structure of ordered_scores 
+        ('D1035-A', '28'): [0.32374,
+          0.34439,
+          0.33375,
+          0.05569,
+          0.05928,
+          0.05743,
+          0.01467,
+          0.01562,
+          0.01513,
+          0.00741,
+          0.00789,
+          0.00764,
+          0.26619,
+          0.28316,
+          0.27441,
+          0.09885,
+          0.10533,
+          0.10199,
+          0.08912,
+          0.17609,
+          0.11835],
+
+
+    return: dict, keys as a tuple (docset, summarizer), 
+                  values as 21 ROUGE scores, 
+                  which are Recall, precision, F1 for Rouge 1, 
+                  then  Recall, precision, F1 for Rouge 2, 
+                  then ... for                    Rouge 3,
+                  then   ........             for Rouge 4,
+                  then   .......              for Rouge L
+                  then   .......              for Rouge SU4
+                  then   .......              for Rouge W-1.2
+
+
+
+
+    """
+    scores = {}
+    ROUGE_types = ["1", "2", "3", "4", "L", "SU4", "W-1.2"]
+    with open(filepath) as f:
+        for line in f:
+            m=re.match(r'(\d+) ROUGE-([\d\w\-\.]+) Eval D(\d+)-A.M.100.[A-H].(\d{1,2}) R:0.(\d{5}) P:0.(\d{5}) F:0.(\d{5})\n', line)
+            if m!=None:
+                (summarizer, ROUGE_type, docset_number, _, R, P, F) = m.groups()
+                docsetID = "D"+docset_number+"-A" # only deal with set A
+                if (docsetID, summarizer) not in scores:
+                    scores[(docsetID, summarizer)] = {}
+                scores[(docsetID, summarizer)][ROUGE_type] = (float("."+R), float("."+P), float("."+F))
+
+    ordered_scores = {}
+    for key in scores.keys():
+        for ROUGE_type in ROUGE_types:
+            ordered_scores.setdefault(key, []).extend(scores[key][ROUGE_type])
+
+    if dump_to != None:
+        parsed = json.dumps(ordered_scores, indent=4, sort_keys=True, separators=(',', ': '))
+        with open(dump_to, 'w') as f:
+            f.write(parsed)
+
+    return ordered_scores
+
 if __name__ == "__main__":
     article_set_path = "/mnt/insecure/data/TAC/TAC2010/TAC2010_Summarization_Documents/GuidedSumm10_test_docs_files/"
     summary_set_path = "/mnt/insecure/data/TAC/TAC2010/GuidedSumm2010_eval/ROUGE"
     score_path = "/mnt/insecure/data/TAC/TAC2010/GuidedSumm2010_eval/manual"
     dump_to = "TAC2010_all.json"
 
+    rouge_score_path = "/mnt/insecure/data/TAC/TAC2010/GuidedSumm2010_eval/ROUGE/rouge_A.m.out"
+    dump_to_rouge = "rouge2010.json"
 
     setIDs = ["A"]
     sentence_delimiter = "  "
     summary_types = ["peers", "models"]
-
+    
+    """
     articles = get_articles(article_set_path, setIDs, sentence_delimiter)
     _,_,_ = get_statistics(articles)
 
@@ -320,3 +402,7 @@ if __name__ == "__main__":
     scores = get_scores(score_path, summary_types, setIDs)
 
     combined = dump_data(articles, summaries, scores, dump_to=dump_to)
+    """
+
+    rouge_scores = get_rouge(rouge_score_path, dump_to_rouge)
+#    print (rouge_scores)

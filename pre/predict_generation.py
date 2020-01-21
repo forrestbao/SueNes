@@ -20,7 +20,7 @@ if __name__ == "__main__":
                     summary = "."
                 
                 scores = tac[doc]['summary'][summarizer]['scores']
-                scores = " ".join([str(score) for score in scores])
+                scores = "\t".join([str(score) for score in scores])
 
                 for article in tac[doc]['articles']:
                     article = " ".join(article)

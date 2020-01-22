@@ -3,6 +3,7 @@ import json
 if __name__ == "__main__":
     tac_file = "TAC2010_all.json"
     test_file = "TAC2010_test.tsv"
+    human = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'}
 
     tac = None
     with open(tac_file, "r", encoding="utf-8") as f:
@@ -30,7 +31,7 @@ if __name__ == "__main__":
                     if len(article) == 0:
                         article = "." 
                     
-                    line = "\t".join([article, summary, scores]) + '\n'
+                    line = "\t".join([article, summary, scores, "0" if summarizer in human else "1"]) + '\n'
                     f.write(line)
 
                     ct += 1

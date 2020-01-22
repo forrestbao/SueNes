@@ -252,11 +252,13 @@ def get_scores(score_path, summary_types, setIDs):
 
                     if summary_type == "peer":
                         pyramid_score = float(l[2])
-                        modified_score = float(l[7])
+                        #modified_score = float(l[7])
+                        modified_score = pyramid_score
                         linguistic_quality = int(l[8])
                         overall_score = int(l[9])
                     elif summary_type == "model":
                         modified_score = float(l[5])
+                        # modified_score = "0"
                         linguistic_quality = int(l[6])
                         overall_score = int(l[7])
                     else:

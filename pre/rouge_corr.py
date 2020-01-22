@@ -31,7 +31,7 @@ if __name__ == "__main__":
     rouge_scores = get_rouge(rouge_score_path)
 
     x = [ [rouge_scores[key][i] for key in rouge_scores.keys()] for i in range(rscore_type)]
-    y = [ [scores[doc][summarizer][i] for doc, summarizer in rouge_scores] for i in range(hscore_type)]
+    y = [ [scores[doc][summarizer][i] for doc, summarizer in rouge_scores.keys()] for i in range(hscore_type)]
 
     corr_pearson = np.zeros((rscore_type, hscore_type), dtype=np.float32)
     corr_spearman = np.zeros((rscore_type, hscore_type), dtype=np.float32)

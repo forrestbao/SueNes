@@ -41,10 +41,19 @@ def parse_tac_article(filename, sentence_delimiter):
 
     """
 #    print (filename)
-    with open(filename) as f:
+    #print(filename)
+    article = []
+    with open(filename, encoding="UTF-8", errors='ignore') as f:
         s = bs4.BeautifulSoup(f, "html.parser")
 #        article = sentence_delimiter.join([p.get_text() for p in s.find_all("p")])
-        article = [p.get_text() for p in s.find_all("p")]
+        
+        label_p = [p.get_text() for p in s.find_all("p")]
+        
+        label_text = [] if len(label_p) != 0 else [text.get_text() for text in s.find_all("text")]
+         
+        #print(label_text)
+        article.extend(label_p)
+        article.extend(label_text)
 
 #        article = article.replace("\n", " ")
 
@@ -192,14 +201,16 @@ def get_summaries(dataset_path, setIDs, sentence_delimiter, summary_types):
     for summary_type in summary_types:
         for summary_file in glob.glob(os.path.join(dataset_path,summary_type, "*")):
 #                    print (summary_file)
-                    [docset_name, _, _, _, summarizer] = summary_file.split("/")[-1].split(".")
+                    [docset_name, _, _, _, summarizer] = summary_file.split("\\")[-1].split(".")
                     setID = docset_name.split("-")[1]
                     if setID in setIDs:
                         if docset_name not in summaries:
                             summaries[docset_name] = {}
-                        with open(os.path.join(dataset_path, summary_type, summary_file), 
-                                encoding="utf8", errors='ignore') as f:
-                            summary = f.readlines()
+                        summary = parse_tac_article(os.path.join(dataset_path, summary_type, summary_file), None)
+                        if len(summary) == 0:
+                            with open(os.path.join(dataset_path, summary_type, summary_file), 
+                                    encoding="utf8", errors='ignore') as f:
+                                summary = f.readlines()
                         summaries[docset_name].setdefault(summarizer, []).append(summary)
     return summaries 
     
@@ -380,9 +391,9 @@ def get_rouge(filepath, dump_to=None):
     return ordered_scores
 
 if __name__ == "__main__":
-    article_set_path = "/mnt/insecure/data/TAC/TAC2010/TAC2010_Summarization_Documents/GuidedSumm10_test_docs_files/"
-    summary_set_path = "/mnt/insecure/data/TAC/TAC2010/GuidedSumm2010_eval/ROUGE"
-    score_path = "/mnt/insecure/data/TAC/TAC2010/GuidedSumm2010_eval/manual"
+    article_set_path = "F:/Dataset/TAC2010/TAC2010/TAC2010_Summarization_Documents/GuidedSumm10_test_docs_files/"
+    summary_set_path = "F:/Dataset/TAC2010/TAC2010/GuidedSumm2010_eval/ROUGE"
+    score_path = "F:/Dataset/TAC2010/TAC2010/GuidedSumm2010_eval/manual"
     dump_to = "TAC2010_all.json"
 
     rouge_score_path = "/mnt/insecure/data/TAC/TAC2010/GuidedSumm2010_eval/ROUGE/rouge_A.m.out"
@@ -392,7 +403,7 @@ if __name__ == "__main__":
     sentence_delimiter = "  "
     summary_types = ["peers", "models"]
     
-    """
+    
     articles = get_articles(article_set_path, setIDs, sentence_delimiter)
     _,_,_ = get_statistics(articles)
 
@@ -402,7 +413,7 @@ if __name__ == "__main__":
     scores = get_scores(score_path, summary_types, setIDs)
 
     combined = dump_data(articles, summaries, scores, dump_to=dump_to)
-    """
+    
 
-    rouge_scores = get_rouge(rouge_score_path, dump_to_rouge)
+    #rouge_scores = get_rouge(rouge_score_path, dump_to_rouge)
 #    print (rouge_scores)

@@ -25,10 +25,11 @@ def calc_cc(x, y):
         corr_spearman = spearmanr(x, y[i])
 
         print(corr_pearson[0], corr_spearman[0])
+    print("---------------------------")
 
 if __name__ == "__main__":
     test_file = "TAC2010_test.tsv"
-    result_path = "C:\\Users\\NKWBTB\\Desktop"
+    result_path = "C:\\Users\\NKWBTB\\Desktop\\Projects\\bert\\tmp\\bert_output_scorer_mix"
     #result_path = "C:\\Users\\NKWBTB\\Desktop\\Projects\\bert\\tmp\\bert_output_scorer_replace"
     #result_path = "C:\\Users\\NKWBTB\\Desktop\\Projects\\bert\\tmp\\bert_output_scorer_add"
     #result_path = "C:\\Users\\NKWBTB\\Desktop\\Projects\\bert\\tmp\\bert_output_scorer_delete"
@@ -41,7 +42,12 @@ if __name__ == "__main__":
 
     x_human, x_machine = [], []
     y_human, y_machine = [[],[],[]], [[],[],[]]
+    x_all, y_all = [], [[],[],[]]
     for idx in range(len(result)):
+        x_all.append(float(result[idx][feature_colmn]))
+        y_all[0].append(float(test[idx][2]))
+        y_all[1].append(float(test[idx][3]))
+        y_all[2].append(float(test[idx][4]))
         if int(test[idx][5]) == 0:
             x_human.append(float(result[idx][feature_colmn]))
             y_human[0].append(float(test[idx][2]))
@@ -55,8 +61,9 @@ if __name__ == "__main__":
 
     print(len(x_human), len(y_human[0]))
 
+    
     calc_cc(x_human, y_human)
     calc_cc(x_machine, y_machine)
-
+    calc_cc(x_all, y_all)
                     
                 

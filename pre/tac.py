@@ -251,9 +251,9 @@ def get_scores(score_path, summary_types, setIDs):
                             scores[setID] = {}
 
                     if summary_type == "peer":
-                        pyramid_score = float(l[2])
-                        #modified_score = float(l[7])
-                        modified_score = pyramid_score
+                        #pyramid_score = float(l[2])
+                        modified_score = float(l[7])
+                        #modified_score = pyramid_score
                         linguistic_quality = int(l[8])
                         overall_score = int(l[9])
                     elif summary_type == "model":

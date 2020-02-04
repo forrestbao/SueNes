@@ -8,10 +8,22 @@
 # functions with examples have been tested
 
 import random
-import itertools
+import itertools, re, os
 import joblib
+import copy
 
 #===== lexical processing
+
+def auto_escape(s):
+    """Return the escape sequence of a character if it is special
+    """
+    d = {"?": "\\?", ".": "\\."}
+    try:
+        return d[s]
+    except KeyError:
+        return s
+auto_escape(".")
+
 
 def replace_special_character(s, L):
     """replaces all special characters in _L_ within _s_ by spaces
@@ -20,9 +32,18 @@ def replace_special_character(s, L):
         s= s.replace(l, " ")
     return s
 
+def normalize_sentence(s, special_chars):
+    """Normalizing a sentence
+    """
+    s = s.lower()
+    s = replace_special_character(s, special_chars)
+
+    return s 
+
 #====== data loading
 
-def load_pairs(dataset_name, split, load_percent, num_shards, features, special_chars, load_from, scramble, save_tsv):
+def load_pairs(dataset_name, split, load_percent, num_shards, 
+               features, special_chars, load_from, scramble, save_tsv):
     """Load pairs of documents and their summaries
 
     dataset_name: str, a unique name to ref to it in tfds 
@@ -31,7 +52,8 @@ def load_pairs(dataset_name, split, load_percent, num_shards, features, special_
     split: str, 'test', 'train' or 'validation' 
            results in a _OptionsDataset type 
 
-    load_percent: int, 0 to 100, ratio of data to take from the dataset or data split. 100 means use all data
+    load_percent: int, 0 to 100, ratio of data to take from the dataset or data split. 
+                100 means use all data
 
     num_shards: int, creates a Dataset that includes only 1/num_shards of this dataset,
                 to be used in downstreams
@@ -71,9 +93,9 @@ def load_pairs(dataset_name, split, load_percent, num_shards, features, special_
 
     #    plain_pairs = [(piece[features[0]], piece[features[1]]) for piece in dataset]
 
-        pairs = [(replace_special_character(piece[features[0]].numpy().decode("utf-8"), special_chars), 
-                  replace_special_character(piece[features[1]].numpy().decode("utf-8"), special_chars) )
-                 for piece in dataset]
+        pairs = [(normalize_sentence(piece[features[0]].numpy().decode("utf-8"), special_chars), 
+                  normalize_sentence(piece[features[1]].numpy().decode("utf-8"), special_chars) )
+                  for piece in dataset]
 
         if save_tsv and load_from == "tfds":
             with open(tsv_filename, 'w') as f:
@@ -98,17 +120,18 @@ def cross_index(n,i,r):
     such that they do not equal to _i_. 
 
     >>> list(cross_index(5,1,3))
-        [(1, 4), (1, 2), (1, 0)]
+        (1, [4, 2, 0])
 
 
     """
-    legit_indexes = list(itertools.chain(range(0,i), range(i+1,n)))
+    index_pool = list(itertools.chain(range(0,i), range(i+1,n)))
     num_samples = min(n-1, r)
-    sum_indexes = random.sample(legit_indexes, num_samples)
-    return zip([i]*num_samples, sum_indexes)
+    sum_indexes = random.sample(index_pool, num_samples)
+#    return zip([i]*num_samples, sum_indexes)
+    return (i, sum_indexes)
 
-
-def cross_pair(data_pairs, neg_pos_ratio, dump_to=None, in_memory=False, n_jobs=4):
+def cross_pair(data_pairs, neg_pos_ratio, dump_to, 
+               in_memory, n_jobs):
     """Create positive and negative samples using cross pairing 
 
     input:
@@ -118,10 +141,8 @@ def cross_pair(data_pairs, neg_pos_ratio, dump_to=None, in_memory=False, n_jobs=
                        should be >= 1  
 
         dump_to: str, file path to dump the labeled doc-sum pair
-                default none. 
 
         in_memory: Bool, whether to return labeled samples in memory
-                default False 
 
         n_jobs: int, number of CPU cores to use
 
@@ -129,7 +150,7 @@ def cross_pair(data_pairs, neg_pos_ratio, dump_to=None, in_memory=False, n_jobs=
             0 if sum and doc do not match. 1 if so. 
 
     example: 
-        >>> sample_generation.cross_pair([("A", "1"),("B", "2"), ("C", "3")], 1, in_memory=True)
+        >>> sample_generation.cross_pair([("A", "1"),("B", "2"), ("C", "3")], 1, None, True, 4)
             [('A', '1', 1),
              ('B', '2', 1),
              ('C', '3', 1),
@@ -137,7 +158,7 @@ def cross_pair(data_pairs, neg_pos_ratio, dump_to=None, in_memory=False, n_jobs=
              ('B', '1', 0),
              ('C', '1', 0)]
 
-        >>> sample_generation.cross_pair([("A", "1"),("B", "2"), ("C", "3")], 20, in_memory=True)
+        >>> sample_generation.cross_pair([("A", "1"),("B", "2"), ("C", "3")], 20, None, True, 16)
             [('A', '1', 1),
              ('B', '2', 1),
              ('C', '3', 1),
@@ -149,15 +170,11 @@ def cross_pair(data_pairs, neg_pos_ratio, dump_to=None, in_memory=False, n_jobs=
              ('C', '1', 0)]
 
     """
-    import random 
-
     samples = []
 
     # positive samples 
     if dump_to != None:
         f = open(dump_to, 'w')
-        for (_doc, _sum) in data_pairs: 
-            f.write("\t".join([_doc, _sum, "1\n"]))
 
     if in_memory:
         samples = [(_doc, _sum, 1) for (_doc,_sum) in data_pairs]
@@ -165,23 +182,26 @@ def cross_pair(data_pairs, neg_pos_ratio, dump_to=None, in_memory=False, n_jobs=
     # negative samples
     num_pair = len(data_pairs)
 
-    neg_sample_indexes = joblib.Parallel(n_jobs=4)\
+    print ("Start generating sample indexes")
+    neg_sample_indexes = joblib.Parallel(n_jobs=n_jobs)\
                          (joblib.delayed (cross_index) \
                                  (num_pair, i, neg_pos_ratio) for i in range(num_pair))
 
-    for index_chains in neg_sample_indexes:
-        for (doc_index, sum_index) in index_chains:
-#        _doc, _sum = data_pairs[doc_index][0], data_pairs[sum_index][1]
-#   for i in range(num_pair):
-#       doc_index = i
-#       legit_indexes = itertools.chain(range(0,num_pair), range(num_pair+1,num_pair+1))
-#       sum_indexes = random.sample(legit_indexes, min(num_pair-1, neg_pos_ratio))
-#       for sum_index in sum_indexes:
-            _doc, _sum = data_pairs[doc_index][0], data_pairs[sum_index][1]
-            if dump_to != None:
-                f.write("\t".join([_doc, _sum, "0\n"]))
+    print("Done generating sample indexes")
+    print ("Start popping samples")
+
+    for (doc_index, neg_sum_indexes) in neg_sample_indexes:
+        [_doc, pos_sum] = data_pairs[doc_index]
+        line = [_doc, pos_sum, "1"]
+        for neg_sum_index in neg_sum_indexes:
+            neg_sum = data_pairs[neg_sum_index][1]
             if in_memory:
-                samples.append((_doc,_sum, 0))
+                samples.append((_doc, neg_sum, 0))
+            line += [neg_sum, "0"]
+        if dump_to != None:
+            f.write("\t".join(line) + "\n")
+
+    print ("Done popping samples from indexes ")
 
     if dump_to != None:
         f.close()
@@ -190,41 +210,50 @@ def cross_pair(data_pairs, neg_pos_ratio, dump_to=None, in_memory=False, n_jobs=
 
 ### mutation and associated functions 
 
-def get_vocab(data_pairs):
-    """generate a set of all vocabularies, tokenized by spaces, from pairs of documents and summaries  
+
+def build_vocab(data_pairs, sent_end):
+    """Build a set of all vocabularies, tokenized by spaces, from pairs of documents and summaries  
     """
-    long_doc, long_sum = "", "" 
-    '''
-    for (_doc, _sum) in data_pairs:
-        long_doc += _doc + " "
-        long_sum += _sum + " "
-    '''
+
     long_doc = " ".join([_doc for _doc, _sum in data_pairs])
     long_sum = " ".join([_sum for _doc, _sum in data_pairs])
-    all_sent = long_doc + long_sum 
-    vocab = set(all_sent.split(' '))
-    vocab.remove("")
-    return vocab 
+    all_sent = long_doc + " " + long_sum   + " "
 
-def mutate_add(words, vocab, ratio):
+    # print (all_sent)
+    for s in sent_end:
+        all_sent = all_sent.replace(s, " ")
+    # all_sent = re.sub("|".join(map(auto_escape, sent_end)), " ", all_sent)
+    # print (all_sent)
+    vocab = set(all_sent.split(' '))
+
+    vocab.remove("")
+
+    return vocab 
+# build_vocab([(" A B? ", " 1? 2 "), (" C. D", " 3 4! ")], [".", "!", "?"])
+# build_vocab([("A B", "1. 2"), ("C. D", "3! 4?")], [".", "!", "?"])
+
+
+def mutate_add(words, vocab, ratio, sent_end):
     """add _ratio_% of vocab into random locations in _words_
 
     words: list of strings, e.g., ["I", "am", "lucky"]
     vocab: list of strings, 
     ratio: float, 0 to 1. 
+    sent_end: list of strings, the end of a sentence, e.g., [".", "?", "!"]
 
     example: 
         >>> mutate_add("i am a happy guy now".split(' '), ["hhhhh","jjjjj"], 0.2)
         'i am a happy jjjjj guy now'
 
     """
-    import random
+    words =  copy.deepcopy(words)
     length = len(words)
     indices = random.sample(range(length), int(ratio * length))
     res = []
     for i in range(length):
         if i in indices:
-            res.append(vocab[random.randrange(len(vocab))])
+            candidate = vocab[random.randrange(len(vocab))] 
+            res.append(candidate)
         res.append(words[i])
     return ' '.join(res)
 
@@ -234,19 +263,19 @@ def mutate_delete(words, ratio, sent_end):
 
     words: list of strings, e.g., ["I", "am", "lucky"]
     ratio: float, 0 to 1 
-    sent_end: list of strings
+    sent_end: list of strings, the end of a sentence, e.g., [".", "?", "!"]
 
     example: 
         >>> mutate_delete("i am a happy guy now".split(' '), 0.2, ["."])
         'am a guy now'
 
-
     """
-    import random
+    words =  copy.deepcopy(words)
     length = len(words)
-    indices = random.sample(range(length), int( (1 - ratio) * length))
+    indices = random.sample(range(length), int( ratio * length))
 
-    return ' '.join([words[i] for i in range(length) if i in indices and words[i] not in sent_end])
+    return ' '.join([words[i] for i in range(length) \
+                    if i not in indices or words[i][-1] in sent_end])
 
 def mutate_replace(words, vocab, ratio, sent_end):
     """replace _ratio_% of words in random locations of _words_, 
@@ -255,7 +284,7 @@ def mutate_replace(words, vocab, ratio, sent_end):
     words: list of strings, e.g., ["I", "am", "lucky"]
     vocab: list of strings, 
     ratio: float, 0 to 1  
-    sent_end: list of strings
+    sent_end: list of strings, the end of a sentence, e.g., [".", "?", "!"]
 
 
     example:
@@ -264,15 +293,46 @@ def mutate_replace(words, vocab, ratio, sent_end):
         'i am a jjjjjjj guy now'
 
     """
-    import random
+    words =  copy.deepcopy(words)
+
     length = len(words)
     indices = random.sample(range(length), int(ratio * length))
     for i in indices: 
-        if words[i] not in sent_end:
-            words[i] =vocab[random.randrange(len(vocab))]
+        if words[i][-1] not in sent_end:
+            words[i] = vocab[random.randrange(len(vocab))]
     return ' '.join(words)
 
-def mutate(data_pairs, ratios, method, sent_end, dump_to=None, in_memory=False ):
+def mutate_switch(pair, all_vocab, method, ratios, sent_end):
+    """Switch between 3 mutation methods,
+    given a pair of document and summary, a list of vocabulary, 
+    and a list of ratios.
+    """
+    
+    (_doc, _sum)  = pair 
+    # split the words and then feed to mutator 
+    splitted_summary = _sum.split(' ')
+    mutated = [] 
+
+    for ratio in ratios: 
+        # print (splitted_summary, end=" ")
+        # print ("->", end=" ")
+
+        if method == "add":
+            mutated_tmp = mutate_add(splitted_summary, all_vocab, ratio, sent_end)
+        elif  method == "delete":
+            mutated_tmp = mutate_delete(splitted_summary, ratio, sent_end)
+        elif  method == "replace":
+            mutated_tmp = mutate_replace(splitted_summary, all_vocab, ratio, sent_end)
+        else: 
+            mutated_tmp = None 
+
+        mutated.append((mutated_tmp, ratio))
+
+        # print (mutated_tmp)
+
+    return (_doc, mutated)
+
+def mutate(data_pairs, ratios, method, sent_end, dump_to, n_jobs):
     """Create positive and negative samples using cross pairing 
 
     input:
@@ -282,60 +342,48 @@ def mutate(data_pairs, ratios, method, sent_end, dump_to=None, in_memory=False )
 
         method: str, one of ["add", "delete", "replace"]
 
-        sent_end: list of strings
+        sent_end: list of strings, the end of a sentence, e.g., [".", "?", "!"]
 
         dump_to: str, file path to dump the labeled doc-sum pair
-                default none. 
 
-        in_memory: Bool, whether to return labeled samples in memory
-                default False 
+        n_jobs: int, number of CPU cores to use
 
     return: list of triplets, [doc, mutated sum, ratio]
          
     example: 
-         >>> mutate([("A B", "1 2"), ("C D", "3 4")], [0.5], 'replace', ['.'], in_memory= True )
-            [('A B', '1 D', 0.5), ('C D', '1 4', 0.5)]
+         >>> list(mutate([("A B", "1. 2"), ("C. D", "3! 4?")], [0, 0.5, 1], 'replace', ['.', '!'], None, 4 ))
+            [('A B', [('1. 2', 0), ('1. 1', 0.5), ('1. 4?', 1)]), 
+             ('C. D', [('3! 4?', 0), ('3! C', 0.5), ('3! B', 1)])]
+            # Note that 4? is treated as one word because ? is not in sent_end
 
-        >>> mutate([("A B", "1 2"), ("C D", "3 4")], [0.5], 'add', ['.'], in_memory= True )
-            [('A B', '1 A 2', 0.5), ('C D', '3 A 4', 0.5)]
+        >>> list(mutate([("A B", "1. 2"), ("C. D", "3! 4?")], [0, 0.5, 1], 'add', ['.', '!'], None, 4 ))
+            [('A B', [('1. 2', 0), ('A 1. 2', 0.5), ('2 1. A 2', 1)]),
+             ('C. D', [('3! 4?', 0), ('A 3! 4?', 0.5), ('B 3! 4? 4?', 1)])]
 
-        >>> mutate([("A B", "1 2"), ("C D", "3 4")], [0.5], 'delete', ['.'], in_memory= True )
-            [('A B', '1', 0.5), ('C D', '4', 0.5)]
+        >>> list(mutate([("A B", "1. 2"), ("C. D", "3! 4?")], [0, 0.5, 1], 'delete', ['.', '!'], None, 4 ))
+            [('A B', [('1. 2', 0), ('1. 2', 0.5), ('1.', 1)]),
+             ('C. D', [('3! 4?', 0), ('3!', 0.5), ('3!', 1)])]
 
     """
-    import random 
-    all_vocab = list(get_vocab(data_pairs))
+    all_vocab = list(build_vocab(data_pairs, sent_end))
     mutated = []
 
+    # print (all_vocab)
+
+    triples  = joblib.Parallel(n_jobs=n_jobs)\
+                         (joblib.delayed (mutate_switch) \
+                                 (pair, all_vocab, method, ratios, sent_end) for pair in data_pairs)
+
+    mutated = itertools.chain(triples)
+
     if dump_to != None:
-        f= open(dump_to, 'w') 
-
-    for (_doc, _sum) in data_pairs:
-        # split the words and then feed to mutator 
-        splitted_summary = _sum.split(' ')
-
-#        print ("generating samples using {} from dataset {}'s {} set"\
-#              .format(method, "", split))
-
-        for ratio in ratios:
-            if method == "add":
-                mutated_tmp = mutate_add(splitted_summary, all_vocab, ratio)
-            elif  method == "delete":
-                mutated_tmp = mutate_delete(splitted_summary, ratio, sent_end)
-            elif  method == "replace":
-                mutated_tmp = mutate_replace(splitted_summary, all_vocab, ratio, sent_end)
-            else: 
-                print ("wrong method of mutation")
-                exit()
-
-            if dump_to != None:
-                f.write("\t".join([_doc, mutated_tmp, str(ratio)]))
+        with open(dump_to, 'w')  as f:
+            for (_doc, mutate_tuples)  in mutated: 
+                line = [_doc]
+                for (mutated_tmp, ratio) in mutate_tuples:
+                    line +=  [mutated_tmp, str(ratio)]
+                f.write("\t".join(line))
                 f.write("\n")
-            if in_memory: 
-                mutated.append((_doc, mutated_tmp, ratio))
-
-    if dump_to != None:
-        f.close()
 
     return mutated 
 
@@ -344,30 +392,31 @@ def mutate(data_pairs, ratios, method, sent_end, dump_to=None, in_memory=False )
 def sample_generation():
     """
 
-    2020-1-9: tested using pairs injected
+    2020-2-4: tested using pairs injected again
     """
 
     import sample_conf as cfg
-    import os
     dataset_name = cfg.dataset_name 
+
     for split in cfg.splits:
         pairs = load_pairs(cfg.dataset_name, split, cfg.load_percent, cfg.num_shards, cfg.features, cfg.special_characters_to_clean, cfg.load_from, cfg.scramble, cfg.save_tsv)
-#        pairs = [("A B", "1 2"), ("C D", "3 4")] # for testing
+        # pairs = [("A B", "1. 2"), ("C D", "3? 4")] # for testing
         for method in cfg.methods: 
             print ("generating samples using {} from dataset {}'s {} set"\
                       .format(method, dataset_name, split))
             if method in ["add", "delete", "replace"]:
                 # NOTE: vocabulary generation is repeated here
                 samples = mutate(pairs, cfg.mutate_ratios, method, cfg.sent_end, 
-                        dump_to=eval(cfg.dump_to), in_memory = cfg.in_memory)
+                        eval(cfg.dump_to), cfg.n_jobs)
             elif method in ["cross"]:
                 samples = cross_pair(pairs, cfg.neg_pos_ratio, 
-                        dump_to=eval(cfg.dump_to), in_memory=cfg.in_memory)
+                        eval(cfg.dump_to), cfg.in_memory, cfg.n_jobs)
 
     return samples # only the last one 
 
 
 if __name__ == "__main__":
-    sample_generation()
+    _ = sample_generation()
+
 
 

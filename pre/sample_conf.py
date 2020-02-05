@@ -47,8 +47,9 @@ num_shards = 1
 # filename nomenclature to save dumped data with labels 
 # e.g., ./cnn_dailymail_cross_test.tsv means test data, 
 # generated using crosspairing on cnn_dailymail dataset
-# Set as None if you do not wanna dump but use in memory 
+# Set as "None" (a str, not Nonetype) if you do not wanna dump but use in memory 
 dump_to="'./'+dataset_name+'_'+method+'_'+split+'.tsv'" 
+# dump_to = "None"
 
 # whether to save samples as variables in the memory 
 # default: false 
@@ -61,7 +62,7 @@ n_jobs = 16
 
 special_characters_to_clean = ['\n', '\t', '\''] # replace such strings in raw data 
 
-sent_end = [".","!","?"]  # symbols that represent the end of a sentence 
+sent_end = [".", "!", "?"]  # symbols that represent the end of a sentence 
 
 #========= negative sampling parameters 
 

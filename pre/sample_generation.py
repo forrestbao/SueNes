@@ -9,8 +9,10 @@
 
 import random
 import itertools, re, os
-import joblib
+import joblib, multiprocessing
 import copy
+
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2" 
 
 #===== lexical processing
 
@@ -127,7 +129,6 @@ def cross_index(n,i,r):
     index_pool = list(itertools.chain(range(0,i), range(i+1,n)))
     num_samples = min(n-1, r)
     sum_indexes = random.sample(index_pool, num_samples)
-#    return zip([i]*num_samples, sum_indexes)
     return (i, sum_indexes)
 
 def cross_pair(data_pairs, neg_pos_ratio, dump_to, 
@@ -182,13 +183,13 @@ def cross_pair(data_pairs, neg_pos_ratio, dump_to,
     # negative samples
     num_pair = len(data_pairs)
 
-    print ("Start generating sample indexes")
+    print ("Generating random sample indexes...", end=" ")
     neg_sample_indexes = joblib.Parallel(n_jobs=n_jobs)\
                          (joblib.delayed (cross_index) \
                                  (num_pair, i, neg_pos_ratio) for i in range(num_pair))
 
-    print("Done generating sample indexes")
-    print ("Start popping samples")
+    print("Done ")
+    print ("Popping samples from random indexes", end=" ")
 
     for (doc_index, neg_sum_indexes) in neg_sample_indexes:
         [_doc, pos_sum] = data_pairs[doc_index]
@@ -201,7 +202,7 @@ def cross_pair(data_pairs, neg_pos_ratio, dump_to,
         if dump_to != None:
             f.write("\t".join(line) + "\n")
 
-    print ("Done popping samples from indexes ")
+    print ("Done ")
 
     if dump_to != None:
         f.close()
@@ -210,23 +211,36 @@ def cross_pair(data_pairs, neg_pos_ratio, dump_to,
 
 ### mutation and associated functions 
 
+def pair2words(data_pair, sent_end):
+    """Extract all words in one pair of document and summary 
 
-def build_vocab(data_pairs, sent_end):
+    Examples: 
+    >>> pair2words((" A B. ", "1. 2 "), [".", "!"])
+        ['', 'A', 'B', '', '1', '', '2', '']
+    >>> pair2words((" A B. ", "1. 2 "), ["?", "!"])
+        ['', 'A', 'B.', '1.', '2', '']
+    >>> pair2words((" A   B. ", "1. 2 "), ["?", "!"])
+        ['', 'A', '', '', 'B.', '1.', '2', '']
+    """
+    words = ""
+    for s in data_pair :
+        for e in sent_end:
+            s = s.replace(e, " ")
+        words += s + " "
+    return words.split()
+
+def build_vocab(data_pairs, sent_end, n_jobs):
     """Build a set of all vocabularies, tokenized by spaces, from pairs of documents and summaries  
     """
 
-    long_doc = " ".join([_doc for _doc, _sum in data_pairs])
-    long_sum = " ".join([_sum for _doc, _sum in data_pairs])
-    all_sent = long_doc + " " + long_sum   + " "
+    with multiprocessing.Pool(n_jobs) as p:
+        words = p.starmap(pair2words, zip(data_pairs, itertools.repeat(sent_end) ) )
 
-    # print (all_sent)
-    for s in sent_end:
-        all_sent = all_sent.replace(s, " ")
-    # all_sent = re.sub("|".join(map(auto_escape, sent_end)), " ", all_sent)
-    # print (all_sent)
-    vocab = set(all_sent.split(' '))
+    words = itertools.chain(*words)
+    vocab = set(words)
 
-    vocab.remove("")
+    if "" in vocab:
+        vocab.remove("")
 
     return vocab 
 # build_vocab([(" A B? ", " 1? 2 "), (" C. D", " 3 4! ")], [".", "!", "?"])
@@ -237,7 +251,7 @@ def mutate_add(words, vocab, ratio, sent_end):
     """add _ratio_% of vocab into random locations in _words_
 
     words: list of strings, e.g., ["I", "am", "lucky"]
-    vocab: list of strings, 
+    vocab: list of strings, the vocabulary of all docs and summaries in a dataset
     ratio: float, 0 to 1. 
     sent_end: list of strings, the end of a sentence, e.g., [".", "?", "!"]
 
@@ -274,15 +288,20 @@ def mutate_delete(words, ratio, sent_end):
     length = len(words)
     indices = random.sample(range(length), int( ratio * length))
 
-    return ' '.join([words[i] for i in range(length) \
+    try : 
+        res=  ' '.join([words[i] for i in range(length) \
                     if i not in indices or words[i][-1] in sent_end])
+    except IndexError:
+        print (words )
+
+    return res 
 
 def mutate_replace(words, vocab, ratio, sent_end):
     """replace _ratio_% of words in random locations of _words_, 
     while preserving sentence separators
 
     words: list of strings, e.g., ["I", "am", "lucky"]
-    vocab: list of strings, 
+    vocab: list of strings, the vocabulary of all docs and summaries in a dataset
     ratio: float, 0 to 1  
     sent_end: list of strings, the end of a sentence, e.g., [".", "?", "!"]
 
@@ -302,7 +321,7 @@ def mutate_replace(words, vocab, ratio, sent_end):
             words[i] = vocab[random.randrange(len(vocab))]
     return ' '.join(words)
 
-def mutate_switch(pair, all_vocab, method, ratios, sent_end):
+def mutate_switch(pair, vocab, method, ratios, sent_end):
     """Switch between 3 mutation methods,
     given a pair of document and summary, a list of vocabulary, 
     and a list of ratios.
@@ -310,7 +329,8 @@ def mutate_switch(pair, all_vocab, method, ratios, sent_end):
     
     (_doc, _sum)  = pair 
     # split the words and then feed to mutator 
-    splitted_summary = _sum.split(' ')
+#    print (_sum)
+    splitted_summary = _sum.split()
     mutated = [] 
 
     for ratio in ratios: 
@@ -318,11 +338,11 @@ def mutate_switch(pair, all_vocab, method, ratios, sent_end):
         # print ("->", end=" ")
 
         if method == "add":
-            mutated_tmp = mutate_add(splitted_summary, all_vocab, ratio, sent_end)
+            mutated_tmp = mutate_add(splitted_summary, vocab, ratio, sent_end)
         elif  method == "delete":
             mutated_tmp = mutate_delete(splitted_summary, ratio, sent_end)
         elif  method == "replace":
-            mutated_tmp = mutate_replace(splitted_summary, all_vocab, ratio, sent_end)
+            mutated_tmp = mutate_replace(splitted_summary, vocab, ratio, sent_end)
         else: 
             mutated_tmp = None 
 
@@ -365,17 +385,22 @@ def mutate(data_pairs, ratios, method, sent_end, dump_to, n_jobs):
              ('C. D', [('3! 4?', 0), ('3!', 0.5), ('3!', 1)])]
 
     """
-    all_vocab = list(build_vocab(data_pairs, sent_end))
+    print ("Building vocabulary..." , end  = " ")
+    vocab = build_vocab(data_pairs, sent_end, n_jobs)
+    vocab = list(vocab)
     mutated = []
 
-    # print (all_vocab)
+    print ("Done ")
 
-    triples  = joblib.Parallel(n_jobs=n_jobs)\
-                         (joblib.delayed (mutate_switch) \
-                                 (pair, all_vocab, method, ratios, sent_end) for pair in data_pairs)
+    print ("Mutating in parallel...", end  = " ")
 
-    mutated = itertools.chain(triples)
+    with multiprocessing.Pool(n_jobs)  as p:
+        mutated = p.starmap(mutate_switch, zip(data_pairs, itertools.repeat(vocab), \
+                                              itertools.repeat(method), itertools.repeat(ratios), \
+                                              itertools.repeat(sent_end)))
+    print ("Done" )
 
+    print ("Writing mutation to file...", end  = " ")
     if dump_to != None:
         with open(dump_to, 'w')  as f:
             for (_doc, mutate_tuples)  in mutated: 
@@ -384,6 +409,8 @@ def mutate(data_pairs, ratios, method, sent_end, dump_to, n_jobs):
                     line +=  [mutated_tmp, str(ratio)]
                 f.write("\t".join(line))
                 f.write("\n")
+                
+    print ("Done ")
 
     return mutated 
 
@@ -394,12 +421,14 @@ def sample_generation():
 
     2020-2-4: tested using pairs injected again
     """
-
+    samples = []
     import sample_conf as cfg
     dataset_name = cfg.dataset_name 
 
     for split in cfg.splits:
-        pairs = load_pairs(cfg.dataset_name, split, cfg.load_percent, cfg.num_shards, cfg.features, cfg.special_characters_to_clean, cfg.load_from, cfg.scramble, cfg.save_tsv)
+        pairs = load_pairs(cfg.dataset_name, split, cfg.load_percent,\
+                cfg.num_shards, cfg.features, cfg.special_characters_to_clean, \
+                cfg.load_from, cfg.scramble, cfg.save_tsv)
         # pairs = [("A B", "1. 2"), ("C D", "3? 4")] # for testing
         for method in cfg.methods: 
             print ("generating samples using {} from dataset {}'s {} set"\
@@ -417,6 +446,4 @@ def sample_generation():
 
 if __name__ == "__main__":
     _ = sample_generation()
-
-
 

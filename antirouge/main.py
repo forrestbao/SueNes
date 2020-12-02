@@ -680,6 +680,7 @@ def run_exp2(fake_method, embedding_method, num_samples,
             i += batch_size
             if i >= shuffle.shape[0]:
                 i = 0
+                np.random.shuffle(shuffle)
             
     '''
     data = pad_shuffle_split_data(articles, summaries, labels,

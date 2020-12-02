@@ -10,7 +10,7 @@ import random
 from keras.preprocessing.sequence import pad_sequences
 
 from antirouge.utils import create_tokenizer_from_texts, save_tokenizer, load_tokenizer
-from antirouge.utils import read_text_file
+# from antirouge.utils import read_text_file
 
 from antirouge.config import *
 

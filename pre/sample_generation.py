@@ -11,6 +11,7 @@ import random
 import itertools, re, os
 import joblib, multiprocessing
 import copy
+import functools
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2" 
 
@@ -109,8 +110,11 @@ def load_pairs(dataset_name, split, load_percent, num_shards,
         pairs = []
         with open(tsv_filename, 'r') as f:
             for line in f:
-                [_doc, _sum] = line[:-1].split("\t")
-                pairs.append((_doc, _sum))
+                try:
+                    [_doc, _sum] = line.replace("\n","").split("\t")
+                    pairs.append((_doc, _sum))
+                except ValueError:
+                    print ("skipping this line:", line)
 
     return pairs 
 
@@ -132,7 +136,7 @@ def cross_index(n,i,r):
     return (i, sum_indexes)
 
 def cross_pair(data_pairs, neg_pos_ratio, dump_to, 
-               in_memory, n_jobs):
+               in_memory, n_jobs, dump_format):
     """Create positive and negative samples using cross pairing 
 
     input:
@@ -146,6 +150,8 @@ def cross_pair(data_pairs, neg_pos_ratio, dump_to,
         in_memory: Bool, whether to return labeled samples in memory
 
         n_jobs: int, number of CPU cores to use
+
+        dump_format: str, "compact" or "plain". The dump format, see conf. 
 
     return: list of triplets, [doc, sum, 0 or 1]
             0 if sum and doc do not match. 1 if so. 
@@ -183,23 +189,33 @@ def cross_pair(data_pairs, neg_pos_ratio, dump_to,
     # negative samples
     num_pair = len(data_pairs)
 
-    print ("Generating random sample indexes...", end=" ")
+    print ("\t Generating random sample indexes...", end=" ")
     neg_sample_indexes = joblib.Parallel(n_jobs=n_jobs)\
                          (joblib.delayed (cross_index) \
                                  (num_pair, i, neg_pos_ratio) for i in range(num_pair))
 
-    print("Done ")
-    print ("Popping samples from random indexes", end=" ")
+    print("\tDone ")
+    print ("\tPopping samples from random indexes", end=" ")
 
     for (doc_index, neg_sum_indexes) in neg_sample_indexes:
         [_doc, pos_sum] = data_pairs[doc_index]
         line = [_doc, pos_sum, "1"]
+        if dump_to != None and dump_format == "plain": 
+            f.write("\t".join(line) + "\n")
+
         for neg_sum_index in neg_sum_indexes:
             neg_sum = data_pairs[neg_sum_index][1]
             if in_memory:
                 samples.append((_doc, neg_sum, 0))
-            line += [neg_sum, "0"]
-        if dump_to != None:
+            
+            if dump_to != None:
+                if dump_format == "plain":
+                    line = [_doc, neg_sum, "0"]
+                    f.write("\t".join(line) + "\n")
+                elif dump_format == "compact":
+                    line += [neg_sum, "0"]
+
+        if dump_to != None and dump_format == "compact":
             f.write("\t".join(line) + "\n")
 
     print ("Done ")
@@ -222,22 +238,28 @@ def pair2words(data_pair, sent_end):
     >>> pair2words((" A   B. ", "1. 2 "), ["?", "!"])
         ['', 'A', '', '', 'B.', '1.', '2', '']
     """
-    words = ""
-    for s in data_pair :
-        for e in sent_end:
-            s = s.replace(e, " ")
-        words += s + " "
-    return words.split()
+    doc_and_sum = data_pair[0] + " " +data_pair[1]
+
+    for e in sent_end:
+        doc_and_sum = doc_and_sum.replace(e, " ")
+
+    return doc_and_sum.split()
 
 def build_vocab(data_pairs, sent_end, n_jobs):
     """Build a set of all vocabularies, tokenized by spaces, from pairs of documents and summaries  
     """
 
-    with multiprocessing.Pool(n_jobs) as p:
-        words = p.starmap(pair2words, zip(data_pairs, itertools.repeat(sent_end) ) )
+    print ("\t Building vocabulary..." , end  = " ")
 
+    with multiprocessing.Pool(n_jobs) as p:
+#        words = p.map(pair2words, data_pairs, itertools.repeat(sent_end))
+        words = p.map(functools.partial(pair2words, sent_end=sent_end), data_pairs)
+
+    print (" Word list generated", end="...")
     words = itertools.chain(*words)
     vocab = set(words)
+
+    print ("Vocabulary built")
 
     if "" in vocab:
         vocab.remove("")
@@ -321,10 +343,11 @@ def mutate_replace(words, vocab, ratio, sent_end):
             words[i] = vocab[random.randrange(len(vocab))]
     return ' '.join(words)
 
-def mutate_switch(pair, vocab, method, ratios, sent_end):
+def mutate_switch(pair, vocab, method, neg_pos_ratio, sent_end):
     """Switch between 3 mutation methods,
     given a pair of document and summary, a list of vocabulary, 
-    and a list of ratios.
+    and neg_pos_ratio. 
+
     """
     
     (_doc, _sum)  = pair 
@@ -332,6 +355,9 @@ def mutate_switch(pair, vocab, method, ratios, sent_end):
 #    print (_sum)
     splitted_summary = _sum.split()
     mutated = [] 
+
+    ratios = [random.uniform(0, 1) for _ in range(neg_pos_ratio)]
+    # ratios = itertools.repeat(random.uniform(0,1), neg_pos_ratio)
 
     for ratio in ratios: 
         # print (splitted_summary, end=" ")
@@ -352,13 +378,14 @@ def mutate_switch(pair, vocab, method, ratios, sent_end):
 
     return (_doc, mutated)
 
-def mutate(data_pairs, ratios, method, sent_end, dump_to, n_jobs):
-    """Create positive and negative samples using cross pairing 
+def mutate(data_pairs, neg_pos_ratio, method, sent_end, dump_to, n_jobs, dump_format):
+    """Create positive and negative samples using one of the 3 mutation methods
 
     input:
         data_pairs: list of 2-tuples of strings (a document, its summary) 
 
-        ratios: list of floats, each of which is 0 to 1. The ratio of mutation. 
+        neg_pos_ratio: int, ratio of negative sampels vs positive samples 
+                should be >= 1  
 
         method: str, one of ["add", "delete", "replace"]
 
@@ -368,10 +395,12 @@ def mutate(data_pairs, ratios, method, sent_end, dump_to, n_jobs):
 
         n_jobs: int, number of CPU cores to use
 
+        dump_format: str, "compact" or "plain". See cfg. 
+
     return: list of triplets, [doc, mutated sum, ratio]
          
     example: 
-         >>> list(mutate([("A B", "1. 2"), ("C. D", "3! 4?")], [0, 0.5, 1], 'replace', ['.', '!'], None, 4 ))
+        >>> list(mutate([("A B", "1. 2"), ("C. D", "3! 4?")], [0, 0.5, 1], 'replace', ['.', '!'], None, 4 ))
             [('A B', [('1. 2', 0), ('1. 1', 0.5), ('1. 4?', 1)]), 
              ('C. D', [('3! 4?', 0), ('3! C', 0.5), ('3! B', 1)])]
             # Note that 4? is treated as one word because ? is not in sent_end
@@ -385,44 +414,54 @@ def mutate(data_pairs, ratios, method, sent_end, dump_to, n_jobs):
              ('C. D', [('3! 4?', 0), ('3!', 0.5), ('3!', 1)])]
 
     """
-    print ("Building vocabulary..." , end  = " ")
+
     vocab = build_vocab(data_pairs, sent_end, n_jobs)
     vocab = list(vocab)
     mutated = []
 
-    print ("Done ")
+    print ("\t Mutating in ", method, end = "... ")
 
-    print ("Mutating in parallel...", end  = " ")
+    if dump_to != None:
+        f = open(dump_to, 'w')
 
-    with multiprocessing.Pool(n_jobs)  as p:
-        mutated = p.starmap(mutate_switch, zip(data_pairs, itertools.repeat(vocab), \
-                                              itertools.repeat(method), itertools.repeat(ratios), \
-                                              itertools.repeat(sent_end)))
+    with multiprocessing.Pool(n_jobs) as p:
+        # mutated = p.starmap(mutate_switch, zip(data_pairs, itertools.repeat(vocab), \
+        #                                       itertools.repeat(method), itertools.repeat(ratios), \
+        #                                       itertools.repeat(sent_end)))
+
+        mutated = p.map(functools.partial(mutate_switch, vocab=vocab, method=method, neg_pos_ratio=neg_pos_ratio, sent_end = sent_end), data_pairs)
     print ("Done" )
 
-    print ("Writing mutation to file...", end  = " ")
-    if dump_to != None:
-        with open(dump_to, 'w')  as f:
-            for (_doc, mutate_tuples)  in mutated: 
-                line = [_doc]
-                for (mutated_tmp, ratio) in mutate_tuples:
-                    line +=  [mutated_tmp, str(ratio)]
+    print ("\t Writing mutation to file...", end  = " ")
+
+    if dump_format == "compact":
+        for (_doc, mutate_tuples) in mutated: 
+            line = [_doc]
+            for (mutated_tmp, ratio) in mutate_tuples:
+                line +=  [mutated_tmp, str(ratio)]
+            f.write("\t".join(line))
+            f.write("\n")
+
+    elif dump_format == "plain":
+        for (_doc, mutate_tuples) in mutated: 
+            for (mutated_tmp, ratio) in mutate_tuples:
+                line =  [_doc, mutated_tmp, str(ratio)]
                 f.write("\t".join(line))
                 f.write("\n")
-                
-    print ("Done ")
 
+    f.close()
+    print ("Done ")
     return mutated 
 
 ### put everything together 懶人包
 
-def sample_generation():
+def sample_generation(conf):
     """
 
-    2020-2-4: tested using pairs injected again
+    conf: str, a python module name 
     """
     samples = []
-    import sample_conf as cfg
+    cfg = __import__(conf)
     dataset_name = cfg.dataset_name 
 
     for split in cfg.splits:
@@ -431,19 +470,40 @@ def sample_generation():
                 cfg.load_from, cfg.scramble, cfg.save_tsv)
         # pairs = [("A B", "1. 2"), ("C D", "3? 4")] # for testing
         for method in cfg.methods: 
+
+            filename = eval(cfg.dump_to)
+
+            if not os.path.exists(os.path.dirname(filename)):
+                try:
+                    os.makedirs(os.path.dirname(filename))
+                except OSError as exc: # Guard against race condition
+                    if exc.errno != errno.EEXIST:
+                        raise
+
             print ("generating samples using {} from dataset {}'s {} set"\
                       .format(method, dataset_name, split))
             if method in ["add", "delete", "replace"]:
                 # NOTE: vocabulary generation is repeated here
-                samples = mutate(pairs, cfg.mutate_ratios, method, cfg.sent_end, 
-                        eval(cfg.dump_to), cfg.n_jobs)
+                samples = mutate(pairs, cfg.neg_pos_ratio, method, cfg.sent_end, 
+                        filename, cfg.n_jobs, cfg.dump_format)
             elif method in ["cross"]:
                 samples = cross_pair(pairs, cfg.neg_pos_ratio, 
-                        eval(cfg.dump_to), cfg.in_memory, cfg.n_jobs)
+                        filename, cfg.in_memory, cfg.n_jobs, cfg.dump_format)
+            
+            samples = [] # free space
 
     return samples # only the last one 
 
 
 if __name__ == "__main__":
-    _ = sample_generation()
+    # Generate samples from CNN DM using configurations in cnndm_conf.py 
+    _ = sample_generation("cnndm_conf")
 
+    # Generate samples from Billsum
+    _ = sample_generation("billsum_conf")
+
+    # Generate samples from Scientific papers
+    _ = sample_generation("scientific_papers_conf")
+
+    # Generate samples from big patents
+    _ = sample_generation("big_patents_conf")

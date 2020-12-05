@@ -1,29 +1,45 @@
-# Preprocessing 
+# Negative sampling 
 
-GNU GPL 3.0+
-Forrest Sheng Bao 2020 
+## Dependencies 
+* `tensorflow` 2.x (needed for tensorflow-datasets)
+* `tensorflow-datasets` 
 
+For example, you may install them using:
 
-## Step 1: Sample generation 
-Two ways to generate labled samples: cross pairing and mutation 
-
-Specify the data and methods to generate samples in `sample_conf.py` 
-Comments in the configuration file contains information about them.
-If you are still confused, contact Forrest. 
-
-The parameter that you might wanna change is `take_percent` which is 1 
-when the code is commited. 
-1 means only 1 percent of the data is used, for quick testing. 
-Set it to a number such that your GPU can handle in reasonable amount
-of GPU memory and time. 
-If you are super rich, set it to 100! 
-
-```shell
-python3 sample_generation.py
+```sh
+pip3 install tensorflow tensorflow-datasets 
 ```
 
-By default, samples are dumped into TSV files of the naming convention
-`dataset_GenerationMethod_Split`
+## Usage 
+
+Just run 
+```bash 
+python3 sample_generation.py
+```
+and have a cup of coffee or go to bed, and then data will be ready. 
+
+Sample generation is controlled using a configuration file (such as `cnn_dailymail.py`), 
+including specifying the dataset (e.g., `cnn_dailymail` or `big_patent`) and split (training, test, or validation) 
+from which positive samples are extracted, the negative sampling method, etc. 
+Such configurable settings are detailed in
+comments of example configuration files. 
+Some important ones are given below. 
+The script `sample_generation.py` loads such configuration files for multiple single-document summarization datasets and generate samples accordingly. 
+
+## Important configurations
+* `load_percent`: Set it to 1 to use only 1 percent of data in a dataset for quick testing. Set it to 100 to use all -- slowest. Set it to an integer in between based on your computation power. 
+* `dump_to`: Default paths of resulting files are `DATASET/METHOD/SPLIT.tsv`. For example, samples, both positive and negative, generated from the training set of CNN/DailyMail dataset using crosspairing, will be saved as `cnn_dailymail/cross/train.tsv`. You may change the path hierarchy and names here. 
+* `dump_format`: Because for every positive document-summary pair, there could be multiple negative ones, we provide two output formats. When `plain` (default), samples are stored as a 3-column TSV file: 
+    ``` 
+    document \t summary \t label
+    ``` 
+  When `compact`, samples are stored as a multiple-column TSV file: 
+
+    ``` 
+    document \t 1st_summary \t 1st_label \t 2nd_summary \t 2nd_label ...
+    ```
+
+
 
 
 ## Step 2: Sentence embedding

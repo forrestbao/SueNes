@@ -41,7 +41,7 @@ def load_tokenizer(fname):
         return tokenizer
 def read_lines(text_file):
     lines = []
-    with open(text_file, "r") as f:
+    with open(text_file, "r", encoding='UTF-8') as f:
         for line in f:
             lines.append(line.strip())
     return lines

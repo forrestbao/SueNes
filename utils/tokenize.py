@@ -29,13 +29,13 @@ Stanford CoreNLP Tokenizer"""
     print("Successfully finished tokenizing %s to %s.\n"
           % (stories_dir, tokenized_stories_dir))
 
-if __name__ == '__test__':
-    data_dir = '/home/hebi/mnt/data/nlp/'
-    cnn_stories_dir = os.path.join(data_dir, 'cnn/stories')
+if __name__ == '__main__':
+    data_dir = 'F:/Dataset/nyt_corpus'
+    cnn_stories_dir = os.path.join(data_dir, 'converted')
     cnn_tokenized_stories_dir = os.path.join(data_dir,
-                                             'cnn_tokenized_stories')
-    dailymail_stories_dir = os.path.join(data_dir, 'dailymail/stories')
-    dailymail_tokenized_stories_dir = os.path.join(data_dir,
-                                                   'dailymail_tokenized_stories')
+                                             'tokenized_stories')
+    #dailymail_stories_dir = os.path.join(data_dir, 'dailymail/stories')
+    #dailymail_tokenized_stories_dir = os.path.join(data_dir,
+    #                                               'dailymail_tokenized_stories')
     tokenize_stories(cnn_stories_dir, cnn_tokenized_stories_dir)
-    tokenize_stories(dailymail_stories_dir, dailymail_tokenized_stories_dir)
+    #tokenize_stories(dailymail_stories_dir, dailymail_tokenized_stories_dir)

@@ -126,30 +126,61 @@ def mutate_summary_replace(summary, random_word_generator):
         res['label'].append(r)
     return res
 
-def preprocess_story_pickle():
+def preprocess_story_pickle(num = None, count_only = False):
     """Read text, parse article and summary text file into pickle
     {'article': 'xxxxx', 'summary': 'xxxxxxx'}
 
     """
     # 92,579 stories
     stories = os.listdir(CNN_TOKENIZED_DIR)
+    print(len(stories))
+    keys = set(stories)
+    if num != None:
+        if os.path.exists(KEYS_FILE):
+            with open(KEYS_FILE, "rb") as f:
+                saved_keys = pickle.load(f)
+                assert(saved_keys.issubset(keys))
+                keys = saved_keys
+                print("Load saved keys.")
+        else:
+            keys = set(random.sample(stories, num))
+            with open(KEYS_FILE, "wb") as f:
+                pickle.dump(keys, f)
+                print("Saving sample keys.")
+    
     ct = 0
     data = {}
+
+    words, sents, sum_words, sum_sents = [], [], [], []
     for key in stories:
         ct += 1
         if ct % 10000 == 0:
-            print ('--', ct*10000)
+            print ('--', ct)
         story_file = os.path.join(CNN_TOKENIZED_DIR, key)
         item = {}
         article, summary = get_art_abs(story_file)
         item['article'] = article
         item['summary'] = summary
-        data[key] = item
-    with open(STORY_PICKLE_FILE, 'wb') as f:
-        pickle.dump(data, f)
+
+        words.append(len(article.split()))
+        sents.append(len(sentence_split(article)))
+        sum_words.append(len(summary.split()))
+        sum_sents.append(len(sentence_split(summary)))
+
+        if (not count_only) and (key in keys):
+            data[key] = item
+    
+    print(np.percentile(words, 80))     # 1091
+    print(np.percentile(sum_words, 80))  # 55
+    print(np.percentile(sents, 80))      # 47
+    print(np.percentile(sum_sents, 80))  # 1
+    
+    if not count_only:
+        with open(STORY_PICKLE_FILE, 'wb') as f:
+            pickle.dump(data, f)
 
 
-def plot_story_length():
+def plot_story_length(stories):
     """Plot the length distribution of article and summary.
     """
     with open(STORY_PICKLE_FILE, 'rb') as f:
@@ -165,12 +196,12 @@ def plot_story_length():
     np.median(sents)            # 29
     np.median(sum_sents)        # 1
 
-    np.percentile(words, 80)     # 1091
-    np.percentile(sum_words, 80)  # 55
-    np.percentile(sents, 80)      # 47
-    np.percentile(sum_sents, 80)  # 1
+    print(np.percentile(words, 80))     # 1091
+    print(np.percentile(sum_words, 80))  # 55
+    print(np.percentile(sents, 80))      # 47
+    print(np.percentile(sum_sents, 80))  # 1
 
-    
+    '''
     plt.hist(words)
     plt.hist(sents)
     plt.hist(sum_words)
@@ -180,6 +211,7 @@ def plot_story_length():
     plt.show()
     plt.plot([len(sentence_split(s['article'])) for s in stories])
     plt.plot([len(sentence_split(s['summary'])) for s in stories])
+    '''
 
 def preprocess_word_mutated():
     """

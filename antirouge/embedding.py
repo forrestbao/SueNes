@@ -2,8 +2,9 @@
 
 import sys
 
-import tensorflow as tf
-import tensorflow_hub as hub
+from antirouge.tf2 import *
+#import tensorflow as tf
+#import tensorflow_hub as hub
 import torch
 import numpy as np
 import zipfile
@@ -14,6 +15,7 @@ import keras
 from keras.layers import Embedding
 from keras.initializers import Constant
 from keras.utils.data_utils import get_file
+
 
 # pip install --user git+https://github.com/lihebi/InferSent
 from infersent.models import InferSent
@@ -37,7 +39,7 @@ def load_glove_matrix():
         zipfile.ZipFile(path).extractall(os.path.dirname(path))
     assert(os.path.exists(glove_txt))
     res = {}
-    with open(glove_txt) as f:
+    with open(glove_txt, encoding='UTF-8') as f:
         for line in f:
             values = line.split()
             word = values[0]
@@ -90,7 +92,7 @@ tf.logging.set_verbosity(tf.logging.WARN)
 
 _USE_small_module = None
 _USE_small_sess = None
-def _sentence_embed_USE_small(sentences):
+def _sentence_embed_USE_small_tf1(sentences):
     global _USE_small_module
     global _USE_small_sess
     device = '/cpu:0'
@@ -106,10 +108,18 @@ def _sentence_embed_USE_small(sentences):
     with tf.device(device):
         return _USE_small_sess.run(_USE_small_module(sentences))
 
+def _sentence_embed_USE_small_tf2(sentences):
+    global _USE_small_module
+    url = "https://tfhub.dev/google/universal-sentence-encoder/4"
+    if not _USE_small_module:
+        _USE_small_module = hub.load(url)
+    return _USE_small_module(sentences)
+
+_sentence_embed_USE_small = _sentence_embed_USE_small_tf2 if tf.__version__.startswith('2') else _sentence_embed_USE_small_tf1
 
 _USE_large_module = None
 _USE_large_sess = None
-def _sentence_embed_USE_large(sentences):
+def _sentence_embed_USE_large_tf1(sentences):
     global _USE_large_module
     global _USE_large_sess
     device = '/gpu:0'
@@ -128,6 +138,16 @@ def _sentence_embed_USE_large(sentences):
     with tf.device(device):
         return _USE_large_sess.run(_USE_large_module(sentences))
 
+def _sentence_embed_USE_large_tf2(sentences):
+    # Memory leak for unknown reason?
+    global _USE_large_module
+    url = "https://tfhub.dev/google/universal-sentence-encoder-large/5"
+    if not _USE_large_module:
+        _USE_large_module = hub.load(url)
+    return _USE_large_module(sentences)
+
+_sentence_embed_USE_large = _sentence_embed_USE_large_tf2 if tf.__version__.startswith('2') else _sentence_embed_USE_large_tf1
+
 # Some note about InferSent version:
 #
 # version 1 uses infersent1.pkl, glove.840B.300d.txt, and when
@@ -140,9 +160,9 @@ def get_infersent_modelpath():
     
 def get_infersent_w2vpath():
     path = get_file('crawl-300d-2M.vec.zip',
-                    'https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M-subword.zip')
+                    'https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip')
     # crawl-300d-2M.vec?
-    vec_file = os.path.join(os.path.dirname(path), 'crawl-300d-2M-subword.vec')
+    vec_file = os.path.join(os.path.dirname(path), 'crawl-300d-2M.vec')
     if not os.path.exists(vec_file):
         zipfile.ZipFile(path).extractall(os.path.dirname(path))
     assert(os.path.exists(vec_file))
@@ -191,12 +211,62 @@ def sentence_embed(embed_name, sentences, batch_size):
     embed_func = {'USE': _sentence_embed_USE_small,
                   'USE-Large': _sentence_embed_USE_large,
                   'InferSent': _sentence_embed_InferSent}[embed_name]
+
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    if gpus:
+        try:
+            # Currently, memory growth needs to be the same across GPUs
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+                logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+                print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+        except RuntimeError as e:
+            # Memory growth must be set before GPUs have been initialized
+            print(e)
+
     res = []
     print('embedding %s sentences, batch size: %s'
           % (len(sentences), batch_size))
-    rg = range(0, len(sentences), batch_size)
+    # rg = range(0, len(sentences), batch_size)
+
+    # sort by length in descending order to avoid OOM
+    length = np.array([-len(sentence) for sentence in sentences])
+    index = np.argsort(length)
+
     msg = ''
     start = time.time()
+    limit = 10000
+    batch = []
+    enum = range(len(index))
+    for i in enum:
+        batch.append(sentences[index[i]])
+        if -length[index[i]] >= limit or len(batch) == batch_size or i == len(index)-1:
+            print('\b' * len(msg), end='')
+            total_time = time.time() - start
+            if i == 0:
+                eta = -1
+            else:
+                eta = (total_time / i) * (len(index) - i)
+            speed = 0 if total_time == 0 else i / total_time
+            msg = ('batch size: %s, iteration num %s / %s, '
+                'speed: %.0f sent/s, Total Time: %.0fs, ETA: %.0fs'
+                % (batch_size, i, len(index), speed, total_time, eta))
+            print(msg, end='', flush=True)
+
+            tmp = np.array(embed_func(batch))
+            res.append(tmp)
+            batch = []
+    
+    print('')
+    # reorder
+    tmp = np.vstack(res)
+    result = [None] * len(index)
+    for i in enum:
+        result[index[i]] = tmp[i]
+    
+    return np.array(result)
+
+    '''
     for idx,stidx in enumerate(rg):
         # I have to set the batch size really small to avoid
         # memory or assertion issue. Thus there will be many batch
@@ -211,7 +281,7 @@ def sentence_embed(embed_name, sentences, batch_size):
                 eta = -1
             else:
                 eta = (total_time / idx) * (len(rg) - idx)
-            speed = batch_size * idx / total_time
+            speed = 0 if total_time == 0 else batch_size * idx / total_time
             msg = ('batch size: %s, batch num %s / %s, '
                    'speed: %.0f sent/s, Total Time: %.0fs, ETA: %.0fs'
                    % (batch_size, idx, len(rg), speed, total_time, eta))
@@ -221,6 +291,7 @@ def sentence_embed(embed_name, sentences, batch_size):
         res.append(tmp)
     print('')
     return np.vstack(res)
+    '''
 
 
 def __test():

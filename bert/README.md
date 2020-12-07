@@ -8,6 +8,14 @@ The Python script is `run_classifier.py` which is called in the script `run_clas
       --data_dir=$DATA_DIR/$dataset/$method/
 ```
 
+If you augment the data using [our script](../pre/sample_generation.py), then the folders are already organized in that way. You just need to specify the correct `DATA_DIR`. 
+
+# Dependencies
+
+Tensorflow 1.x
+
+It won't work for TF 2.x, although our data augmentation code is based on TF 2.x. 
+
 # Basic experiments, no human evaluation
 Test sets are the test sets of original summarization datasets. Set 
 

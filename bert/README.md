@@ -2,23 +2,25 @@
 
 Some important files under this folder are modified from [Google's official BERT release](https://github.com/google-research/bert).
 
-Options for our script are very similar to those of BERT's officially released `run_classifier.py`. 
+The Python script is `run_classifier.py` which is called in the script `run_classifier.sh`, where you can specify the type of experiments (dataset, augmentation method, and with or without human evaluation). Options for our script are very similar to those of BERT's officially released `run_classifier.py`. Following the tradition in GLUE tasks, each folder containing task data consists of three files, `train.tsv`, `validation.tsv`, and `test.tsv`. To automatically loop the experiments thru different datasets and different methods, please organize folders as 
 
-# Basic experiments, no TAC2010
-Test sets are test sets of the original summarization datasets. 
+```
+      --data_dir=$DATA_DIR/$dataset/$method/
+```
 
-## Crosspair-based
+# Basic experiments, no human evaluation
+Test sets are the test sets of original summarization datasets. Set 
 
-They are modeled as classification problems. So the Python script is `run_classifier.py` which is called in the script `run_classifier.sh` 
+```bash
+exp_type=basic
+```
 
-## Mutation-based
+# Advanced experiments with alignment to human evaluation 
 
-They are modeled as regression problems. So the Python script is `run_scorer.py` which is called in the script `run_scorer.py`
+To be implemented. 
 
-# Advanced experiments, with TAC2010
-Test sets are from TAC2010 
+Evaluation/development sets are the testsets of original summarization datasets. 
+Test sets are from human evaluation data of TAC2010 and [Newsroom](https://github.com/lil-lab/newsroom/tree/master/humaneval). 
 
 
-# Files
-* `data_processor.py`: Classes to load data in our own `plain` format where each row is `document \t summary \t label`
 

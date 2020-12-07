@@ -116,13 +116,19 @@ from utils import PaddingInputExample
 from utils import InputFeatures
 from utils import InputExample
 
-class CrossProcessor(DataProcessor):
+class BasicProcessor(DataProcessor):
   """Processor for the Better Than Rogue experiments based on crosspairing."""
   def __init__(self):
 
     self.f_train = "train.tsv" 
     self.f_dev = "validation.tsv" 
     self.f_test = "test.tsv" 
+
+    # TODO: Create an inheritated class, differing only in the constructor
+    # using test as validation and TAC2010 human evaluatuion as test
+
+    # TODO: Create an inheritated class, differing only in the constructor
+    # using test as validation and CORNELL human evaluation as test
 
   def get_train_examples(self, data_dir):
     """See base class."""
@@ -141,20 +147,21 @@ class CrossProcessor(DataProcessor):
 
   def get_labels(self):
     """See base class."""
-    return ["0", "1"]
+  #   return ["0", "1"]
+    return None
 
   def _create_examples(self, lines, set_type):
     """Creates examples for the training and dev sets."""
     examples = []
     for (i, line) in enumerate(lines):
-      # if i == 0:
+      # if i == 0:  # skip the header line? 
       #   continue
       guid = "%s-%s" % (set_type, i)
       line0 = ' '.join(line[0].split()[0:400])
       line1 = ' '.join(line[1].split()[0:200])
       text_a = tokenization.convert_to_unicode(line0)
       text_b = tokenization.convert_to_unicode(line1)
-      label = tokenization.convert_to_unicode(line[2])
+      label = float(line[2].strip())
       examples.append(
           InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
     return examples
@@ -247,7 +254,8 @@ def convert_single_example(ex_index, example, label_list, max_seq_length,
   #  label_id = int(float(example.label) > 0.5)
   #else:
   label_id = float(example.label)
-  if ex_index < 5:
+  # if ex_index < 5:
+  if False: 
     tf.logging.info("*** Example ***")
     tf.logging.info("guid: %s" % (example.guid))
     tf.logging.info("tokens: %s" % " ".join(
@@ -406,17 +414,25 @@ def create_model(bert_config, is_training, input_ids, input_mask, segment_ids,
     logits = tf.matmul(output_layer2, output_weights, transpose_b=True)
     logits = tf.nn.bias_add(logits, output_bias)
     probabilities = None
+
+    # Below is original BERT experiment code, which 
+    # computes cross-entropy loss for binary/multi-class classification
+    #
+    # probabilities = tf.nn.softmax(logits, axis=-1)
+    # log_probs = tf.nn.log_softmax(logits, axis=-1)
+    # one_hot_labels = tf.one_hot(labels, depth=num_labels, dtype=tf.float32)
+    # per_example_loss = -tf.reduce_sum(one_hot_labels * log_probs, axis=-1)
+    # loss = tf.reduce_mean(per_example_loss)
+    #
+    # End of BERT's original loss computation
+
     logits = tf.reshape(logits, [-1])
-    #probabilities = tf.nn.softmax(logits, axis=-1)
-    #log_probs = tf.nn.log_softmax(logits, axis=-1)
+    labels = tf.reshape(labels, [-1])
 
-    #one_hot_labels = tf.one_hot(labels, depth=num_labels, dtype=tf.float32)
-
-    #per_example_loss = -tf.reduce_sum(one_hot_labels * log_probs, axis=-1)
-    #loss = tf.reduce_mean(per_example_loss)
-    labels2 = tf.cast(labels, tf.float32)
     #per_example_loss = tf.pow(tf.reshape(logits, [-1]) - tf.reshape(labels2, [-1]), 2)
-    per_example_loss = tf.nn.l2_loss(logits - tf.reshape(labels2, [-1]))
+    # per_example_loss = tf.nn.l2_loss(logits - labels)
+    per_example_loss = tf.square(logits - labels)
+
     loss = tf.sqrt(tf.reduce_mean(per_example_loss))
 
     return (loss, per_example_loss, logits, probabilities)
@@ -496,20 +512,32 @@ def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
 
       def metric_fn(per_example_loss, label_ids, logits, is_real_example):
         #predictions = tf.argmax(logits, axis=-1, output_type=tf.int32)
-        predictions = tf.cast(logits > 0.5, tf.int32)
-        label_ids2 = tf.cast(label_ids, tf.int32)
+        binary_predictions = tf.cast(logits > 0.5, tf.int32)
+        int_label_ids = tf.cast(label_ids, tf.int32)
+        # FIXME: do we really need int32 here? will float work as well? 
         accuracy = tf.metrics.accuracy(
-            labels=label_ids2, predictions=predictions)
+            labels=int_label_ids, predictions=binary_predictions)
         loss = tf.metrics.mean(values=per_example_loss)
-        corr = tf.contrib.metrics.streaming_pearson_correlation(logits, label_ids)
-        pred_mean = tf.metrics.mean(predictions)
-        label_mean = tf.metrics.mean(label_ids2)
+        pearson = tf.contrib.metrics.streaming_pearson_correlation(logits, label_ids)
+
+
+        # Compute Spearman correlation
+        size = tf.size(logits)
+        indice_of_ranks_pred = tf.nn.top_k(logits, k=size)[1]
+        indice_of_ranks_label = tf.nn.top_k(label_ids, k=size)[1]
+        rank_pred = tf.nn.top_k(-indice_of_ranks_pred, k=size)[1]
+        rank_label = tf.nn.top_k(-indice_of_ranks_label, k=size)[1]
+        rank_pred = tf.to_float(rank_pred)
+        rank_label = tf.to_float(rank_label)
+        spearman = tf.contrib.metrics.streaming_pearson_correlation(rank_pred, rank_label)
+
         return {
             "eval_accuracy": accuracy,
             "eval_loss": loss,
-            "mean_label": label_mean,
-            "mean_pred": pred_mean,
-            "corr": corr
+            "mean_label": tf.metrics.mean(label_ids),
+            "mean_pred": tf.metrics.mean(logits),
+            "pearson": pearson, 
+            "spearman": spearman
         }
 
       eval_metrics = (metric_fn,
@@ -523,6 +551,7 @@ def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
       output_spec = tf.contrib.tpu.TPUEstimatorSpec(
           mode=mode,
           predictions={"probabilities": probabilities},
+          # predictions={"probabilities": logits},
           scaffold_fn=scaffold_fn)
     return output_spec
 
@@ -605,7 +634,7 @@ def main(_):
   tf.logging.set_verbosity(tf.logging.INFO)
 
   processors = {
-      "cross": CrossProcessor,
+      "basic": BasicProcessor,
   }
 
   tokenization.validate_case_matches_checkpoint(FLAGS.do_lower_case,

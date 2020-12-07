@@ -1,13 +1,15 @@
 export BERT_BASE_DIR=./bert_tiny
 export DATA_DIR=../data/
 
-for dataset in cnn_dailymail 
+exp_type=basic  # or TAC or newsroom 
+
+for dataset in cnn_dailymail billsum
 do 
-  for method in cross 
+  for method in cross delete 
   do 
 
-    python3 run_classifier.py \
-      --task_name=$method  \
+    python3 run_classifier.py -W ignore::DeprecationWarning \
+      --task_name=$exp_type \
       --do_train=False \
       --do_eval=true \
       --do_lower_case=true \

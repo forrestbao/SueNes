@@ -391,12 +391,12 @@ def create_model(bert_config, is_training, input_ids, input_mask, segment_ids,
 
   hidden_size = output_layer.shape[-1].value
 
-  output_weights = tf.get_variable(
-      "output_weights", [1, 128], #hidden_size],
-      initializer=tf.truncated_normal_initializer(stddev=0.02))
+  # output_weights = tf.get_variable(
+  #     "output_weights", [1, 128], #hidden_size],
+  #     initializer=tf.truncated_normal_initializer(stddev=0.02))
 
-  output_bias = tf.get_variable(
-      "output_bias", [1], initializer=tf.zeros_initializer())
+  # output_bias = tf.get_variable(
+  #     "output_bias", [1], initializer=tf.zeros_initializer())
 
   with tf.variable_scope("loss"):
     if is_training:
@@ -411,8 +411,16 @@ def create_model(bert_config, is_training, input_ids, input_mask, segment_ids,
         weights_regularizer=tf.contrib.layers.l2_regularizer(scale=1e-3),
         biases_initializer=tf.constant_initializer(1e-4))
 
-    logits = tf.matmul(output_layer2, output_weights, transpose_b=True)
-    logits = tf.nn.bias_add(logits, output_bias)
+    logits = tf.contrib.layers.fully_connected(
+        inputs=output_layer2,  
+        num_outputs=1,
+        activation_fn=tf.sigmoid,   # add sigmoid back
+        weights_initializer=tf.truncated_normal_initializer(stddev=0.02),
+        weights_regularizer=tf.contrib.layers.l2_regularizer(scale=1e-3),
+        biases_initializer=tf.zeros_initializer())
+
+    # logits = tf.matmul(output_layer2, output_weights, transpose_b=True)
+    # logits = tf.nn.bias_add(logits, output_bias)
     probabilities = None
 
     # Below is original BERT experiment code, which 
@@ -550,8 +558,8 @@ def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
     else:
       output_spec = tf.contrib.tpu.TPUEstimatorSpec(
           mode=mode,
-          predictions={"probabilities": probabilities},
-          # predictions={"probabilities": logits},
+          # predictions={"probabilities": probabilities},
+          predictions={"probabilities": logits},
           scaffold_fn=scaffold_fn)
     return output_spec
 
@@ -861,9 +869,13 @@ def main(_):
         probabilities = prediction["probabilities"]
         if i >= num_actual_predict_examples:
           break
+        output_line = str(probabilities) + "\n"
+        '''
         output_line = "\t".join(
             str(class_probability)
             for class_probability in probabilities) + "\n"
+        '''
+
         writer.write(output_line)
         num_written_lines += 1
     assert num_written_lines == num_actual_predict_examples

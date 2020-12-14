@@ -151,7 +151,7 @@ class Batch():
         return int((len(self.files)) * self.story_per_file *
                    (self.neg_size + 1) / self.batch_size)
 
-def get_data_generators(folder):
+def load_data_generators_old(folder):
     """For old CNN data folder"""
     files = glob_sorted(folder + '/*')
     random.shuffle(files)
@@ -175,7 +175,7 @@ def get_data_generators(folder):
     return training_seq, validation_seq, testing_seq
 
 
-def get_separate_generators(train_folder, validation_folder, test_folder, bsize=100):
+def load_data_generators(train_folder, validation_folder, test_folder, bsize=100):
     """For new xxx_add/cross/delete/replace folders"""
     training_files = glob_sorted(train_folder + '/*')
     testing_files = glob_sorted(test_folder + '/*')

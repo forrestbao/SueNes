@@ -96,7 +96,7 @@ def get_art_abs(story_file):
     return article, abstract
 
 
-def serial_process_story(in_dir, out_dir, batch_size=100):
+def preprocess_story_old(in_dir, out_dir, batch_size=100):
     """Save as a list. [(article, summary) ...].
 
     in_dir CNN_TOKENIZED_DIR, should contains a list of xxx.story, text with
@@ -131,13 +131,13 @@ def serial_process_story(in_dir, out_dir, batch_size=100):
             with open(fname, 'wb') as f:
                 pickle.dump(res, f)
             res = []
-def process_tsv_folder(folder, embedder, batch_size=100):
-    process_tsv(os.path.join(folder, 'train.tsv'), embedder, batch_size)
-    process_tsv(os.path.join(folder, 'test.tsv'), embedder, batch_size)
-    process_tsv(os.path.join(folder, 'validation.tsv'), embedder, batch_size)
+def pre_embed_tsv_folder(folder, embedder, batch_size=100):
+    pre_embed_tsv(os.path.join(folder, 'train.tsv'), embedder, batch_size)
+    pre_embed_tsv(os.path.join(folder, 'test.tsv'), embedder, batch_size)
+    pre_embed_tsv(os.path.join(folder, 'validation.tsv'), embedder, batch_size)
 
 
-def process_tsv(tsv_file, embedder, batch_size=100):
+def pre_embed_tsv(tsv_file, embedder, batch_size=100):
     """Process new tsv data files"""
     # 1. read train.tsv, validation.tsv, and test.tsv
     # 2. generate
@@ -193,7 +193,7 @@ def process_tsv(tsv_file, embedder, batch_size=100):
 
 
 
-def serial_process_embed(base_folder, embedder):
+def pre_embed_old(base_folder, embedder):
     """Process folder/story and write folder/XXX where XXX is the embedder
 name.
 
@@ -237,12 +237,3 @@ name.
             print('writing to %s ..' % out_fname)
             with open(out_fname, 'wb') as f:
                 pickle.dump(obj, f)
-
-
-
-if __name__ == '__main__':
-    serial_process_story(config.CNN_TOKENIZED_DIR,
-                            os.path.join(config.CNN_SERIAL_DIR, 'story'))
-    serial_process_embed(config.CNN_SERIAL_DIR, 'USE')
-    serial_process_embed(config.CNN_SERIAL_DIR, 'USE-Large')
-    serial_process_embed(config.CNN_SERIAL_DIR, 'InferSent')

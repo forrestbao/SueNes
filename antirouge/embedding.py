@@ -1,16 +1,5 @@
 #!/usr/bin/env python3
 
-"""
-This file provides 2 classes:
-- UseEmbedder
-- InferSentEmbedder
-
-and 1 function:
-- sentence_embed(embed_name, sentences, batch_size=None)
-- embed_keep_shape(v, embedder_name):
-- load_glove_layer(word_index)
-"""
-
 import sys
 import os
 

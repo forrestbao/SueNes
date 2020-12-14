@@ -102,32 +102,6 @@ def build_model(embedding_method, label_type, embedding_layer,
     return model
 
 
-def get_sent_model(embedding_size):
-    """Sentence embedding model. The size is 512 for USE and 4096 for
-InferSent."""
-    article_input = keras.layers.Input(shape=(config.ARTICLE_MAX_SENT, embedding_size),
-                                       dtype='float32')
-    summary_input = keras.layers.Input(shape=(config.SUMMARY_MAX_SENT, embedding_size),
-                                       dtype='float32')
-    x = keras.layers.concatenate([article_input, summary_input], axis=1)
-    
-    # x = keras.layers.Conv1D(128, 5, activation='relu')(x)
-    # x = MaxPooling1D(3)(x)
-    # x = keras.layers.GlobalMaxPooling1D()(x)
-    
-    x = keras.layers.Flatten()(x)
-    x = keras.layers.Dense(512, activation='relu')(x)
-    
-    x = keras.layers.Dense(128, activation='relu')(x)
-    x = keras.layers.Dense(128, activation='relu')(x)
-    # x = keras.layers.Dense(128, activation='relu')(x)
-    preds = keras.layers.Dense(1, activation='sigmoid')(x)
-    model = keras.models.Model(inputs=[article_input, summary_input],
-                               outputs=preds)
-    return model
-
-
-
 def create_FC_model(embedding_size):
     """Sentence embedding model. The size is 512 for USE and 4096 for
 InferSent."""
@@ -167,7 +141,6 @@ InferSent."""
     model = keras.models.Model(inputs=[article_input, summary_input],
                                outputs=preds)
     return model
-
 
 
 def create_CNN1D_model(embedding_size):

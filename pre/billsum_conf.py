@@ -48,10 +48,9 @@ num_shards = 1
 #========= data output/dumping parameters 
 
 # filename nomenclature to save dumped data with labels 
-# e.g., ./cnn_dailymail_cross_test.tsv means test data, 
-# generated using crosspairing on cnn_dailymail dataset
+# e.g., ./cnn_dailymail/cross/{train,validate,test}.tsv
 # Set as "None" (a str, not Nonetype) if you do not wanna dump but use in memory 
-dump_to="'./'+dataset_name + '_' + method + '/'+split+'.tsv'" 
+dump_to="'../data/'+dataset_name + '/' + method + '/'+split+'.tsv'"  
 # dump_to = "None"
 
 # whether to save samples as variables in the memory 

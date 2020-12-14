@@ -2,6 +2,7 @@ __pycache__
 *.pyc
 *.json
 *.pickle
+*.pkl
 
 *.png
 *.tar.gz
@@ -11,3 +12,8 @@ datasets
 *.ckpt
 *.tfrecords
 *.xlsx
+
+*.tsv
+*.ckpt.*
+checkpoint
+*-checkpoint.ipynb

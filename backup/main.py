@@ -110,6 +110,8 @@ def load_data_helper(fake_method, embedding_method, num_samples,
     story_keys = set(stories.keys())
     negative_keys = set(negatives.keys())
     keys = story_keys.intersection(negative_keys)
+    print('DEBUG: ', KEYS_FILE)
+    print('DEBUG: ', len(keys))
     if os.path.exists(KEYS_FILE):
         with open(KEYS_FILE, "rb") as f:
             saved_keys = pickle.load(f)

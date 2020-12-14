@@ -14,7 +14,11 @@ Stanford CoreNLP Tokenizer"""
             f.write("%s \t %s\n"
                     % (os.path.join(stories_dir, s),
                        os.path.join(tokenized_stories_dir, s)))
-    command = ['java', 'edu.stanford.nlp.process.PTBTokenizer',
+    # point to the path to the real jar file
+    os.environ['CLASSPATH'] = os.path.expanduser('~/data/stanford-corenlp-3.9.2.jar')
+    command = [
+                'java',
+                'edu.stanford.nlp.process.PTBTokenizer',
                '-ioFileList', '-preserveLines', 'mapping.txt']
     print("Tokenizing %i files in %s and saving in %s..."
           % (len(stories), stories_dir, tokenized_stories_dir))
@@ -30,10 +34,16 @@ Stanford CoreNLP Tokenizer"""
           % (stories_dir, tokenized_stories_dir))
 
 if __name__ == '__main__':
-    data_dir = 'F:/Dataset/nyt_corpus'
-    cnn_stories_dir = os.path.join(data_dir, 'converted')
-    cnn_tokenized_stories_dir = os.path.join(data_dir,
-                                             'tokenized_stories')
+    # data_dir = 'F:/Dataset/nyt_corpus'
+    import sys
+    sys.path.append('.')
+    from antirouge import config
+    data_dir = config.DATA_DIR
+    # cnn_stories_dir = os.path.join(data_dir, 'converted')
+    cnn_stories_dir = config.CNN_DIR
+    # cnn_tokenized_stories_dir = os.path.join(data_dir,
+    #                                          'tokenized_stories')
+    cnn_tokenized_stories_dir = config.CNN_TOKENIZED_DIR
     #dailymail_stories_dir = os.path.join(data_dir, 'dailymail/stories')
     #dailymail_tokenized_stories_dir = os.path.join(data_dir,
     #                                               'dailymail_tokenized_stories')

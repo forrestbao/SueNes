@@ -3,6 +3,9 @@ import uuid
 
 import pickle
 import os
+import glob
+import urllib.request
+import zipfile, tarfile
 
 from keras.preprocessing.text import Tokenizer, one_hot
 from keras.preprocessing.sequence import pad_sequences
@@ -39,6 +42,40 @@ def load_tokenizer(fname):
         j_str = f.read()
         tokenizer = tokenizer_from_json(j_str)
         return tokenizer
+
+
+def glob_sorted(pattern):
+    """Sort according to the number in the filename."""
+    return sorted(glob.glob(pattern), key=lambda f:
+                  int(''.join(filter(str.isdigit, f))))
+
+def _create_tokenizer_CNN():
+    # read all stories
+    story_folder = os.path.join(CNN_SERIAL_DIR, 'story')
+    all_files = glob_sorted(story_folder + '/*')
+    all_text = []
+    for fname in all_files:
+        with open(fname, 'rb') as f:
+            stories = pickle.load(f)
+            keys = [story[0] for story in stories]
+            articles = [story[1] for story in stories]
+            summaries = [story[2] for story in stories]
+            all_text.extend(articles)
+            all_text.extend(summaries)
+    tokenizer = create_tokenizer_from_texts(all_text)
+    fname = os.path.join(CNN_SERIAL_DIR, 'tokenizer.json')
+    save_tokenizer(tokenizer, fname)
+    
+def load_tokenizer_CNN():
+    fname = os.path.join(CNN_SERIAL_DIR, 'tokenizer.json')
+    if not os.path.exists(fname):
+        print('Tokenizer %s not exists. Creating ..' % fname)
+        _create_tokenizer_CNN()
+        print('Tokenizer created. Loading ..')
+    return load_tokenizer(fname)
+
+
+
 def read_lines(text_file):
     lines = []
     with open(text_file, "r", encoding='UTF-8') as f:
@@ -114,3 +151,30 @@ def dict_pickle_read(folder):
                 p = pickle.load(f)
                 res.update(p)
     return res
+
+
+
+def download(url, target):
+    """Download url if not exist."""
+    # FIXME if interrupted, the incomplete file does not seem to be deleted
+    if not os.path.exists(target):
+        urllib.request.urlretrieve(url, os.path.expanduser(target))
+
+
+
+def unzip(zip_file, target_dir):
+    with zipfile.ZipFile(os.path.expanduser(zip_file), 'r') as zip_ref:
+        zip_ref.extractall(os.path.expanduser(target_dir))
+
+
+def untar(tar_file, target_dir):
+    tar_file = os.path.expanduser(tar_file)
+    target_dir = os.path.expanduser(target_dir)
+    tar = tarfile.open(tar_file)
+    # change to target dir
+    curdir = os.getcwd()
+    os.chdir(target_dir)
+    tar.extractall()
+    tar.close()
+    # change dir back?
+    os.chdir(curdir)

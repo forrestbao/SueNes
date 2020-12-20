@@ -63,11 +63,12 @@ n_jobs = 35
 
 # compact or plain 
 # plain is 3-column, doc, summary, target
-# but plain may contain repeated docs and summaries, 
+# but plain may contain repeated docs, 
 # which will cause extra time in sentence embedding (not applicable for BERT) 
-# compact: small but increases issues down the road. easy for inspecting dump. 
+# compact: small. easy for inspecting dump. Format per line: 
+# doc, sum1, label1, sum2, label2, sum3, label3, ...
 
-dump_format = "plain"
+dump_format = "compact"
 
 #========= NLP parameters
 

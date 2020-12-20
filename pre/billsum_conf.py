@@ -1,3 +1,5 @@
+import string
+
 # ==== constants about datasets 
 dataset_features = {"cnn_dailymail": ['article', 'highlights'],
     "big_patent": ['description', 'abstract'],
@@ -35,7 +37,7 @@ splits = ['test', 'ca_test', 'train']
 # note that billsum has no validation set
 
 # Percentage of data to load from orignal size 
-load_percent =  1  # int from 0 to 100; 100 means all;0 means none. 
+load_percent =  100  # int from 0 to 100; 100 means all;0 means none. 
 
 # Amoung loaded, usually after scambling, use only 1/num_shards of this dataset.
 # Not to confuse with load_percent.
@@ -57,7 +59,7 @@ dump_to="'../data/'+dataset_name + '/' + method + '/'+split+'.tsv'"
 # default: false 
 in_memory=False
 
-n_jobs = 4
+n_jobs = 35
 
 # compact or plain 
 # plain is 3-column, doc, summary, target
@@ -69,9 +71,10 @@ dump_format = "plain"
 
 #========= NLP parameters
 
-special_characters_to_clean = ['\n', '\t', '\''] # replace such strings in raw data 
+special_characters_to_clean = ['\n', '\t'] # replace such strings in raw data 
 
 sent_end = [".", "!", "?"]  # symbols that represent the end of a sentence 
+sent_end = string.punctuation
 
 #========= negative sampling parameters 
 

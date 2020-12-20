@@ -12,6 +12,7 @@ import itertools, re, os
 import joblib, multiprocessing
 import copy
 import functools
+import gc
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2" 
 
@@ -38,7 +39,7 @@ def replace_special_character(s, L):
 def normalize_sentence(s, special_chars):
     """Normalizing a sentence
     """
-    s = s.lower()
+    # s = s.lower()
     s = replace_special_character(s, special_chars)
 
     return s 
@@ -252,11 +253,11 @@ def build_vocab(data_pairs, sent_end, n_jobs):
     print ("\t Building vocabulary..." , end  = " ")
 
     with multiprocessing.Pool(n_jobs) as p:
-#        words = p.map(pair2words, data_pairs, itertools.repeat(sent_end))
         words = p.map(functools.partial(pair2words, sent_end=sent_end), data_pairs)
-
+    
     print (" Word list generated", end="...")
     words = itertools.chain(*words)
+    # this step takes too much memory, even with single core 
     vocab = set(words)
 
     print ("Vocabulary built")
@@ -268,6 +269,22 @@ def build_vocab(data_pairs, sent_end, n_jobs):
 # build_vocab([(" A B? ", " 1? 2 "), (" C. D", " 3 4! ")], [".", "!", "?"])
 # build_vocab([("A B", "1. 2"), ("C. D", "3! 4?")], [".", "!", "?"])
 
+def pick_random_word(data_pairs, sent_end):
+    """Pick a random word from pairs of documents and summaries
+
+    data_pairs: list of 2-tuples, [(doc1, sum1), (doc2, sum2), etc. ]
+    sent_end: tuple of str, end of sentences 
+    """
+    upper = len(data_pairs)
+    pair_index = random.randrange(upper)
+    all_sentences = data_pairs[pair_index][0] + " " + data_pairs[pair_index][1]
+    for e in sent_end:
+        all_sentences = all_sentences.replace(e, " ")
+    words = all_sentences.split()
+    # print (all_sentences)
+    # print (words)
+    return random.choice(words)
+    
 
 def mutate_add(words, vocab, ratio, sent_end):
     """add _ratio_% of vocab into random locations in _words_
@@ -276,11 +293,12 @@ def mutate_add(words, vocab, ratio, sent_end):
     vocab: list of strings, the vocabulary of all docs and summaries in a dataset
     ratio: float, 0 to 1. 
     sent_end: list of strings, the end of a sentence, e.g., [".", "?", "!"]
+    data_pairs: list of 2-tuples, [(doc1, sum1), (doc2, sum2), etc. ]
 
     example: 
-        >>> mutate_add("i am a happy guy now".split(' '), ["hhhhh","jjjjj"], 0.2)
-        'i am a happy jjjjj guy now'
-
+        >>> mutate_add("i am a happy guy now".split(" "), [], 0.2,\
+            string.punctuation, [("A B", "1. 2"), ("C. D", "3! 4?")])            
+            'i am a happy A guy now'
     """
     words =  copy.deepcopy(words)
     length = len(words)
@@ -302,9 +320,8 @@ def mutate_delete(words, ratio, sent_end):
     sent_end: list of strings, the end of a sentence, e.g., [".", "?", "!"]
 
     example: 
-        >>> mutate_delete("i am a happy guy now".split(' '), 0.2, ["."])
-        'am a guy now'
-
+        >>> mutate_delete("i am a happy guy now".split(" "), 0.2, string.punctuation)
+            'i am a guy'
     """
     words =  copy.deepcopy(words)
     length = len(words)
@@ -329,20 +346,28 @@ def mutate_replace(words, vocab, ratio, sent_end):
 
 
     example:
-        >>> mutate_replace("i am a happy guy now".split(' '), ["hhhhh", "jjjjjjj"], 0.2, ["."]
-    ...: )
-        'i am a jjjjjjj guy now'
-
+        >>> mutate_replace("i am a happy guy now".split(" "), [], \
+            0.2, string.punctuation, [("A B", "1. 2"), ("C. D", "3! 4?")])
+            'i am a B guy now'
     """
     words =  copy.deepcopy(words)
 
     length = len(words)
-    indices = random.sample(range(length), int(ratio * length))
+    try: 
+        indices = random.sample(range(length), int(ratio * length))
+    except ValueError:
+        print (ratio, words)
+        print ("Ratio error. quit. ")
+        exit()
     for i in indices: 
-        if words[i][-1] not in sent_end:
+        #with vocab 
+        if words[i][-1] in sent_end:
+            words[i] = vocab[random.randrange(len(vocab))] + words[i][-1]
+        else: 
             words[i] = vocab[random.randrange(len(vocab))]
     return ' '.join(words)
 
+# def mutate_switch(pair, vocab, method, neg_pos_ratio, sent_end, data_pairs):
 def mutate_switch(pair, vocab, method, neg_pos_ratio, sent_end):
     """Switch between 3 mutation methods,
     given a pair of document and summary, a list of vocabulary, 
@@ -350,14 +375,13 @@ def mutate_switch(pair, vocab, method, neg_pos_ratio, sent_end):
 
     """
     
-    (_doc, _sum)  = pair 
+    (_doc, _sum) = pair 
     # split the words and then feed to mutator 
 #    print (_sum)
     splitted_summary = _sum.split()
     mutated = [] 
 
     ratios = [random.uniform(0, 1) for _ in range(neg_pos_ratio)]
-    # ratios = itertools.repeat(random.uniform(0,1), neg_pos_ratio)
 
     for ratio in ratios: 
         # print (splitted_summary, end=" ")
@@ -400,23 +424,19 @@ def mutate(data_pairs, neg_pos_ratio, method, sent_end, dump_to, n_jobs, dump_fo
     return: list of triplets, [doc, mutated sum, ratio]
          
     example: 
-        >>> list(mutate([("A B", "1. 2"), ("C. D", "3! 4?")], [0, 0.5, 1], 'replace', ['.', '!'], None, 4 ))
-            [('A B', [('1. 2', 0), ('1. 1', 0.5), ('1. 4?', 1)]), 
-             ('C. D', [('3! 4?', 0), ('3! C', 0.5), ('3! B', 1)])]
+        >>> list(sample_generation.mutate([("A B", "1. 2"), ("C. D", "3! 4?")], 2, 'replace', ['.', '!', '?'], None, 4 , "plain"))
+            [('A B', [('D. 2', 0.9743772514534714), ('1. 2', 0.01600339659373673)]),
+             ('C. D', [('1! 4?', 0.8081154190302389), ('D! 4?', 0.5093176309531442)])]
             # Note that 4? is treated as one word because ? is not in sent_end
-
-        >>> list(mutate([("A B", "1. 2"), ("C. D", "3! 4?")], [0, 0.5, 1], 'add', ['.', '!'], None, 4 ))
-            [('A B', [('1. 2', 0), ('A 1. 2', 0.5), ('2 1. A 2', 1)]),
-             ('C. D', [('3! 4?', 0), ('A 3! 4?', 0.5), ('B 3! 4? 4?', 1)])]
-
-        >>> list(mutate([("A B", "1. 2"), ("C. D", "3! 4?")], [0, 0.5, 1], 'delete', ['.', '!'], None, 4 ))
-            [('A B', [('1. 2', 0), ('1. 2', 0.5), ('1.', 1)]),
-             ('C. D', [('3! 4?', 0), ('3!', 0.5), ('3!', 1)])]
-
+            # Since we do not fix random state, the result may vary. 
     """
 
-    vocab = build_vocab(data_pairs, sent_end, n_jobs)
-    vocab = list(vocab)
+    if method == "delete":
+        vocab= []
+    else:
+        vocab = build_vocab(data_pairs, sent_end, n_jobs)
+        vocab = list(vocab)
+
     mutated = []
 
     print ("\t Mutating in ", method, end = "... ")
@@ -424,32 +444,50 @@ def mutate(data_pairs, neg_pos_ratio, method, sent_end, dump_to, n_jobs, dump_fo
     if dump_to != None:
         f = open(dump_to, 'w')
 
-    with multiprocessing.Pool(n_jobs) as p:
-        # mutated = p.starmap(mutate_switch, zip(data_pairs, itertools.repeat(vocab), \
-        #                                       itertools.repeat(method), itertools.repeat(ratios), \
-        #                                       itertools.repeat(sent_end)))
+    # no parallelization 
+    # mutated = [mutate_switch(pair, vocab, method, neg_pos_ratio, sent_end, data_pairs)
+    #             for pair in data_pairs]
 
-        mutated = p.map(functools.partial(mutate_switch, vocab=vocab, method=method, neg_pos_ratio=neg_pos_ratio, sent_end = sent_end), data_pairs)
+    # parallel with joblib
+    # joblib sucks. do not use. 
+    # mutated = joblib.Parallel(n_jobs=n_jobs)\
+    #           (joblib.delayed 
+    #           (functools.partial(mutate_switch, vocab=vocab, method=method, \
+    #               neg_pos_ratio=neg_pos_ratio, sent_end = sent_end, data_pairs=data_pairs)) \
+    #                         (pair) for pair in  data_pairs)
+
+    # parallel with multiprocessing 
+    # without vocab 
+    # with multiprocessing.Pool(n_jobs) as p:
+    #     mutated = p.map(functools.partial(mutate_switch, \
+    #                     vocab=vocab, method=method, neg_pos_ratio=neg_pos_ratio, sent_end = sent_end,\
+    #                     data_pairs=data_pairs), data_pairs)
+    # with vocab 
+    with multiprocessing.Pool(n_jobs) as p:
+        mutated = p.map(functools.partial(mutate_switch, \
+                        vocab=vocab, method=method, neg_pos_ratio=neg_pos_ratio, sent_end = sent_end), data_pairs)
+
     print ("Done" )
 
     print ("\t Writing mutation to file...", end  = " ")
 
-    if dump_format == "compact":
-        for (_doc, mutate_tuples) in mutated: 
-            line = [_doc]
-            for (mutated_tmp, ratio) in mutate_tuples:
-                line +=  [mutated_tmp, str(ratio)]
-            f.write("\t".join(line))
-            f.write("\n")
-
-    elif dump_format == "plain":
-        for (_doc, mutate_tuples) in mutated: 
-            for (mutated_tmp, ratio) in mutate_tuples:
-                line =  [_doc, mutated_tmp, str(ratio)]
+    if dump_to != None:
+        if dump_format == "compact":
+            for (_doc, mutate_tuples) in mutated: 
+                line = [_doc]
+                for (mutated_tmp, ratio) in mutate_tuples:
+                    line +=  [mutated_tmp, str(ratio)]
                 f.write("\t".join(line))
                 f.write("\n")
 
-    f.close()
+        elif dump_format == "plain":
+            for (_doc, mutate_tuples) in mutated: 
+                for (mutated_tmp, ratio) in mutate_tuples:
+                    line =  [_doc, mutated_tmp, str(ratio)]
+                    f.write("\t".join(line))
+                    f.write("\n")
+
+        f.close()
     print ("Done ")
     return mutated 
 
@@ -491,6 +529,7 @@ def sample_generation(conf):
                         filename, cfg.in_memory, cfg.n_jobs, cfg.dump_format)
             
             samples = [] # free space
+            gc.collect() 
 
     return samples # only the last one 
 
@@ -500,10 +539,10 @@ if __name__ == "__main__":
     _ = sample_generation("cnndm_conf")
 
     # Generate samples from Billsum
-    _ = sample_generation("billsum_conf")
+    # _ = sample_generation("billsum_conf")
 
     # Generate samples from Scientific papers
-    _ = sample_generation("scientific_papers_conf")
+    # _ = sample_generation("scientific_papers_conf")
 
     # Generate samples from big patents
-    _ = sample_generation("big_patents_conf")
+    # _ = sample_generation("big_patents_conf")

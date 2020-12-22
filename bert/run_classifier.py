@@ -26,6 +26,9 @@ import optimization
 import tokenization
 import tensorflow as tf
 
+import scipy.stats
+import json
+
 flags = tf.flags
 
 FLAGS = flags.FLAGS
@@ -117,53 +120,100 @@ from utils import InputFeatures
 from utils import InputExample
 
 class BasicProcessor(DataProcessor):
-  """Processor for the Better Than Rogue experiments based on crosspairing."""
+  """Processor for the Better Than Rogue experiments."""
   def __init__(self):
 
     self.f_train = "train.tsv" 
-    self.f_dev = "validation.tsv" 
-    self.f_test = "test.tsv" 
+    # self.f_dev = "validation.tsv" 
+    self.f_dev = "test.tsv"  # use test set as dev set to get scores on test set
+    self.f_test = "TAC2010_all.json" # make predictions on TAC2010 document Sets A
 
     # TODO: Create an inheritated class, differing only in the constructor
-    # using test as validation and TAC2010 human evaluatuion as test
-
-    # TODO: Create an inheritated class, differing only in the constructor
-    # using test as validation and CORNELL human evaluation as test
+    # using CORNELL human evaluation as test
 
   def get_train_examples(self, data_dir):
     """See base class."""
-    return self._create_examples(
+    return self._pop_compact_samples(
         self._read_tsv(os.path.join(data_dir, self.f_train)), "train")
 
   def get_dev_examples(self, data_dir):
     """See base class."""
-    return self._create_examples(
+    return self._pop_compact_samples(
         self._read_tsv(os.path.join(data_dir, self.f_dev)), "dev")
 
   def get_test_examples(self, data_dir):
     """See base class."""
-    return self._create_examples(
-        self._read_tsv(os.path.join(data_dir, self.f_test)), "test")
+    return self._pop_tac_samples(
+        os.path.join(data_dir, self.f_test), "test")
 
   def get_labels(self):
     """See base class."""
   #   return ["0", "1"]
     return None
 
-  def _create_examples(self, lines, set_type):
-    """Creates examples for the training and dev sets."""
+  def _pop_compact_samples(self, lines, set_type):
+    """Creates examples for the training and dev sets.
+    Compact format samples: 
+        document \t 1st_summary \t 1st_label \t 2nd_summary \t 2nd_label ...
+    """
+
     examples = []
-    for (i, line) in enumerate(lines):
+    i = 0 
+    for line in lines: # line is already tab-separated 
       # if i == 0:  # skip the header line? 
       #   continue
-      guid = "%s-%s" % (set_type, i)
-      line0 = ' '.join(line[0].split()[0:400])
-      line1 = ' '.join(line[1].split()[0:200])
-      text_a = tokenization.convert_to_unicode(line0)
-      text_b = tokenization.convert_to_unicode(line1)
-      label = float(line[2].strip())
-      examples.append(
-          InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+      _doc = ' '.join(line[0].split()[0:400])
+      for j in range(1, len(line), 2) :
+        _sum = ' '.join(line[j].split()[0:200])
+        label = float(line[j+1].strip())
+
+        guid = "%s-%s" % (set_type, i)
+        text_a = tokenization.convert_to_unicode(_doc)
+        text_b = tokenization.convert_to_unicode(_sum)
+        
+        examples.append(
+            InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+        
+        i += 1  # increase i for every sample 
+    return examples
+
+  def _pop_tac_samples(self, json_file, set_type):
+    """Creates examples for json files for tac results 
+    Compact format samples: 
+        document \t 1st_summary \t 1st_label \t 2nd_summary \t 2nd_label ...
+    """
+
+    examples = []
+    i = 0 
+    tac = json.load(open(json_file, 'r'))
+    for docset in tac.keys():
+      for article in tac[docset]["articles"]: # each of 10 articles is a list of strings 
+        article = " ".join(article)
+        article = article.replace("\n", " ")
+        article = article.replace("\t", " ")
+        if len(article) == 0:
+          article = " ." 
+
+        _doc = ' '.join(article.split()[0:400])
+
+        for summarizer in tac[docset]["summaries"].keys():
+          summary = " ".join(tac[docset]['summaries'][summarizer]['sentences']) # no need for [0] since we changed the format of jsonfile
+          summary = summary.replace("\n", " ")
+          summary = summary.replace("\t", " ")
+          if len(summary) == 0:
+              summary = "."
+
+          _sum = ' '.join(summary.split()[0:200])
+          label = 0 # just a place holder 
+
+          guid = "%s-%s" % (set_type, i)
+          text_a = tokenization.convert_to_unicode(_doc)
+          text_b = tokenization.convert_to_unicode(_sum)
+          
+          examples.append(
+              InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+          
+          i += 1 # increase i for every sample 
     return examples
 
 def convert_single_example(ex_index, example, label_list, max_seq_length,
@@ -526,8 +576,16 @@ def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
         accuracy = tf.metrics.accuracy(
             labels=int_label_ids, predictions=binary_predictions)
         loss = tf.metrics.mean(values=per_example_loss)
-        pearson = tf.contrib.metrics.streaming_pearson_correlation(logits, label_ids)
 
+        # print (type(logits))
+        # print (type(label_ids))
+
+
+        pearson = tf.contrib.metrics.streaming_pearson_correlation(logits, label_ids)
+        # Replace tf1 pearson with Scipy coz it's also more accurate
+        # See https://stackoverflow.com/questions/53404367/why-pearson-correlation-is-different-between-tensorflow-and-scipy
+        # pearson = tf.py_function(scipy.stats.pearsonr, [tf.cast(logits, tf.float32), 
+        #                tf.cast(label_ids, tf.float32)], Tout = tf.float32)[0]
 
         # Compute Spearman correlation
         size = tf.size(logits)
@@ -538,6 +596,9 @@ def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
         rank_pred = tf.to_float(rank_pred)
         rank_label = tf.to_float(rank_label)
         spearman = tf.contrib.metrics.streaming_pearson_correlation(rank_pred, rank_label)
+        # Use Scipy
+        # spearman = tf.py_function(scipy.stats.spearmanr, [tf.cast(logits, tf.float32), 
+        #                tf.cast(label_ids, tf.float32)], Tout = tf.float32)[0]
 
         return {
             "eval_accuracy": accuracy,

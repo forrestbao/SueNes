@@ -3,16 +3,17 @@ export DATA_DIR=../data/
 
 exp_type=basic  # or TAC or newsroom 
 
-for dataset in cnn_dailymail billsum
+for dataset in cnn_dailymail billsum scientic_papers
 do 
-  for method in cross delete 
+  for method in cross add replace delete 
   do 
 
-    python3 run_classifier.py -W ignore::DeprecationWarning \
+    python3 run_classifier.py -W ignore \
       --task_name=$exp_type \
-      --do_train=False \
+      --do_train=True \
       --do_eval=true \
       --do_lower_case=true \
+      --do_predict=True \
       --data_dir=$DATA_DIR/$dataset/$method/ \
       --vocab_file=$BERT_BASE_DIR/vocab.txt \
       --bert_config_file=$BERT_BASE_DIR/bert_config.json \

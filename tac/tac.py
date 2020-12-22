@@ -17,11 +17,7 @@
 # Two baseline summarizer: Leadword (ID=1) and MEAD (ID=2)
 # 3. Scores: 
 
-
-
-
-
-import os, statistics, glob
+import os, statistics, glob, os.path
 import bs4 # beautifulsoup
 import numpy as np
 import json
@@ -89,7 +85,6 @@ def get_articles(dataset_path, setIDs, sentence_delimiter):
     }
 
 
-
     File structure: TAC20{08,09,10}_Summarization_Documents{.tgz}
                     |___> GuidedSumm{}_test_docs_files{.tar.gz}  (==dataset_path)
                           |___> D1001A
@@ -119,18 +114,17 @@ def get_statistics(articles):
     """
 
     articles: dict, keys as document set (10 articles form one docset), 
-                    values as list of strings, or
-                              list of lists of strings 
+                    values as list of strings
 
     """
     c, w, s = [], [], [] # number of characters, words, and sentences
     for docset, docs in articles.items():
         for doc in docs:
-            if type(doc) == str: # each doc is a length string
-                c.append(len(doc)) 
-                w.append(len(doc.split(" ")))
-                s.append(len(doc.split(". ")))
-            elif type(doc) == list: #each doc is a list of strings
+            # if type(doc) == str: # each doc is a length string
+            #     c.append(len(doc)) 
+            #     w.append(len(doc.split(" ")))
+            #     s.append(len(doc.split(". ")))
+            # elif type(doc) == list: #each doc is a list of strings
                 c.append(sum(map(len, doc))) 
                 w.append(sum([len(sent.split(" ")) for sent in doc]))
                 s.append(len(doc))
@@ -201,7 +195,7 @@ def get_summaries(dataset_path, setIDs, sentence_delimiter, summary_types):
     for summary_type in summary_types:
         for summary_file in glob.glob(os.path.join(dataset_path,summary_type, "*")):
 #                    print (summary_file)
-                    [docset_name, _, _, _, summarizer] = summary_file.split("\\")[-1].split(".")
+                    [docset_name, _, _, _, summarizer] = os.path.basename(summary_file).split(".")
                     setID = docset_name.split("-")[1]
                     if setID in setIDs:
                         if docset_name not in summaries:
@@ -211,7 +205,8 @@ def get_summaries(dataset_path, setIDs, sentence_delimiter, summary_types):
                             with open(os.path.join(dataset_path, summary_type, summary_file), 
                                     encoding="utf8", errors='ignore') as f:
                                 summary = f.readlines()
-                        summaries[docset_name].setdefault(summarizer, []).append(summary)
+                        # summaries[docset_name].setdefault(summarizer, []).append(summary)
+                        summaries[docset_name][summarizer] = summary # each summarizer writes only one summary per document set
     return summaries 
     
 
@@ -249,7 +244,6 @@ def get_scores(score_path, summary_types, setIDs):
                     summarizer = l[1]
                     if setID not in scores:
                             scores[setID] = {}
-
                     if summary_type == "peer":
                         #pyramid_score = float(l[2])
                         modified_score = float(l[7])
@@ -268,7 +262,7 @@ def get_scores(score_path, summary_types, setIDs):
 
     return scores
 
-def dump_data(articles, summaries, scores, dump_to=None):
+def dump_data(articles, summaries, scores, dump_to):
     """combine articles, summaries, and scores into one dictionary and dump as JSON
 
     final structure:
@@ -299,18 +293,17 @@ def dump_data(articles, summaries, scores, dump_to=None):
     """
     combined  = {}
     for docID, summary_dict in summaries.items():
-            combined[docID] = {}
-            combined[docID]["articles"] = articles[docID]
-            combined[docID]["summary"]={}
-            for summarizer, summary_sentences in summary_dict.items():
-                combined[docID]["summary"][summarizer] = {}
-                combined[docID]["summary"][summarizer]["sentences"] = summary_sentences
-                combined[docID]["summary"][summarizer]["scores"] = scores[docID][summarizer]
+        combined[docID] = {}
+        combined[docID]["articles"] = articles[docID]
+        combined[docID]["summaries"]={}
+        for summarizer, summary_sentences in summary_dict.items():
+            combined[docID]["summaries"][summarizer] = {}
+            combined[docID]["summaries"][summarizer]["sentences"] = summary_sentences
+            combined[docID]["summaries"][summarizer]["scores"] = scores[docID][summarizer]
 
-    if dump_to != None:
-        parsed = json.dumps(combined, indent=4, sort_keys=True, separators=(',', ': '))
-        with open(dump_to, 'w') as f:
-            f.write(parsed)
+    parsed = json.dumps(combined, indent=4, sort_keys=True, separators=(',', ': '))
+    with open(dump_to, 'w') as f:
+        f.write(parsed)
 
     return combined 
 
@@ -393,15 +386,22 @@ def get_rouge(filepath, dump_to=None):
     return ordered_scores
 
 if __name__ == "__main__":
-    article_set_path = "F:/Dataset/TAC2010/TAC2010/TAC2010_Summarization_Documents/GuidedSumm10_test_docs_files/"
-    summary_set_path = "F:/Dataset/TAC2010/TAC2010/GuidedSumm2010_eval/ROUGE"
-    score_path = "F:/Dataset/TAC2010/TAC2010/GuidedSumm2010_eval/manual"
+    # article_set_path = "F:/Dataset/TAC2010/TAC2010/TAC2010_Summarization_Documents/GuidedSumm10_test_docs_files/"
+    # summary_set_path = "F:/Dataset/TAC2010/TAC2010/GuidedSumm2010_eval/ROUGE"
+    # score_path = "F:/Dataset/TAC2010/TAC2010/GuidedSumm2010_eval/manual"
+
+    
+
+    article_set_path = "/mnt/insecure/data/TAC/TAC2010/TAC2010_Summarization_Documents/GuidedSumm10_test_docs_files/"
+    summary_set_path = "/mnt/insecure/data/TAC/TAC2010/GuidedSumm2010_eval/ROUGE"
+    score_path = "/mnt/insecure/data/TAC/TAC2010/GuidedSumm2010_eval/manual"
+
     dump_to = "TAC2010_all.json"
 
     rouge_score_path = "/mnt/insecure/data/TAC/TAC2010/GuidedSumm2010_eval/ROUGE/rouge_A.m.out"
     dump_to_rouge = "rouge2010.json"
 
-    setIDs = ["A"]
+    setIDs = ["A"]  # we only use set A because set B is not applicable 
     sentence_delimiter = "  "
     summary_types = ["peers", "models"]
     

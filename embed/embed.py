@@ -9,12 +9,14 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 import tensorflow as tf
 import stanza 
 
+import numpy
 
 # import nltk
 # nltk.download('punkt')
 
 #%%
-def embed_from_taskfile(taskfilename, dumpfile, sentence_splitter, sentence_encoder, batch_size=10):
+def embed_from_taskfile(taskfilename, dumpfile, sentence_splitter, 
+                        sentence_encoder, batch_size=10, stats_only=False):
     """load document-summary pairs with labels and incrementally convert sentences into vectors.
 
     input format: doc\tsum1\tlabel1\tsum2\tlabel2 ... 
@@ -38,6 +40,7 @@ def embed_from_taskfile(taskfilename, dumpfile, sentence_splitter, sentence_enco
     batch = []
     count = 0 
     global_counter = 0 
+    statistics = {"doc_char_count":[], "sum_char_count":[], "doc_sent_count":[], "sum_sent_count":[]}
     with open(taskfilename, 'r') as csvfile: 
         csvreader = csv.reader(csvfile, delimiter='\t')
         for row in csvreader:
@@ -45,7 +48,9 @@ def embed_from_taskfile(taskfilename, dumpfile, sentence_splitter, sentence_enco
                 global_counter  += batch_size
                 print ("at line %s" % global_counter, end='...')
                 # return batch # debug 
-                result = process_batch(batch, dumpfile_handler, sentence_splitter, sentence_encoder)
+                stats_local = process_batch(batch, dumpfile_handler, sentence_splitter, sentence_encoder, stats_only)
+                statistics.update(stats_local)
+                print (statistics)
                 count  = 0 
                 batch = []
                 # break # DEBUG
@@ -55,13 +60,15 @@ def embed_from_taskfile(taskfilename, dumpfile, sentence_splitter, sentence_enco
 
     if count>0: # last incomplete batch 
         print ("finishing last batch of %s lines" % len(batch))
-        result = process_batch(batch, dumpfile_handler, sentence_splitter, sentence_encoder)
+        stats_local = process_batch(batch, dumpfile_handler, sentence_splitter, sentence_encoder, stats_only)
+        statistics.update(stats_local)
 
     dumpfile_handler.close()
 
-    return batch
+    # return batch # debug 
+    return statistics
 
-def process_batch(batch, dumpfile_handler, sentence_splitter, sentence_encoder):
+def process_batch(batch, dumpfile_handler, sentence_splitter, sentence_encoder, stats_only):
     """
     """
     start = time.time()
@@ -69,7 +76,20 @@ def process_batch(batch, dumpfile_handler, sentence_splitter, sentence_encoder):
     # first split and get unique sentences 
     pairs, labels, unique_sentences = split_sentences(batch, sentence_splitter)
 
+    # side task, get statistics
+    statistics = {
+        "doc_sent_count":[len(pair[0]) for pair in pairs], 
+        "sum_sent_count":[len(pair[1]) for pair in pairs], 
+        "doc_char_count":[ sum([len(unique_sentences[sent_id]) for sent_id in pair[0]]) for pair in pairs ], 
+        "sum_char_count":[ sum([len(unique_sentences[sent_id]) for sent_id in pair[1]]) for pair in pairs ]
+        }
+
+    # print (statistics)
+
     # then encode all sentences 
+    if stats_only : 
+        return statistics # skip embedding
+
     print ("embedding", end="...", flush=True)
 
     sentence_vectors = sentence_encoder(unique_sentences)
@@ -94,7 +114,7 @@ def process_batch(batch, dumpfile_handler, sentence_splitter, sentence_encoder):
     speed = len(batch)/(time.time() - start)
     print ("%f lines/s" % speed, end="\r", flush=True)
 
-    return None
+    return statistics
 
 def split_sentences(batch, sentence_splitter):
     """
@@ -216,6 +236,15 @@ def init(tokenize_batch_size, embedder_param:dict):
 
     return sentence_splitter, sentence_encoder
 
+def print_statistics(stat_dict:dict):
+    for key, counts in stat_dict.items():
+        print (key, end=":")
+        # print (counts)
+        for i in range(1, 101, 10):
+            print ("%d%%: " % i)
+            print (int(numpy.percentile(counts, i)), end=", ")
+        print (" ")
+
 def loop_over():
     ### Configure the sentence/word embedder 
 
@@ -258,13 +287,17 @@ def loop_over():
     # further sub-batch. 
     task_lines_per_batch = 128
 
+    # split without embedding to get statsitics?
+    stats_only = False   # set to True to quickly get length statistics. 
+                        # set to True to get real embeddings 
+
     ### Configure the loop grid 
 
     ## a small test run
     embedder_params = [google_use_param]
     datasets = ["cnn_dailymail_tiny"]
     methods = ["delete"]
-    splits = ["train"]
+    splits = ["test"]
 
     ## A more realistic big run 
     # embedder_params = [google_use_param, infersent_param]
@@ -281,7 +314,11 @@ def loop_over():
                     embedder_name = embedder_param['name']
                     taskfile_path = eval(taskfile_path_syntax)
                     dumpfile_path = eval(dumpfile_path_syntax)
-                    embed_from_taskfile(taskfile_path, dumpfile_path, sentence_splitter, sentence_encoder, batch_size = task_lines_per_batch)
+                    statistics = embed_from_taskfile(taskfile_path, dumpfile_path, sentence_splitter,
+                         sentence_encoder, batch_size = task_lines_per_batch, stats_only=stats_only)
+                    print (dataset, method, split)
+                    print_statistics(statistics) 
+
     
 
 if __name__ == "__main__":

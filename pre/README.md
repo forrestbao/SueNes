@@ -38,26 +38,3 @@ The script `sample_generation.py` loads such configuration files for multiple si
     ``` 
     document \t 1st_summary \t 1st_label \t 2nd_summary \t 2nd_label ...
     ```
-
-
-
-
-## Step 2: Sentence embedding
-### Dependencies 
-* tensorflow
-* tensorflow\_hub
-* pytorch 
-
-### Step 2.1: Test whether Google USE and Facebook InferSent can run with your CPU and/or GPU on your system 
-Run the two scripts separately: 
-
-```sh
-python3 google_USE_test.py
-python3 InferSent_test.py
-```
-If you see a vector after every encoding task, then it runs correctly. 
-Otherwise, email Forrest with all print-outs. 
-
-## Next: Train the model. See model folder 
-To do. 
-

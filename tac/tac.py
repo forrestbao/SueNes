@@ -31,9 +31,6 @@ def parse_tac_article(filename, sentence_delimiter):
     In the source format, each <p> tag is one sentence. 
 
     The strings may contain special characters such as end-of-line. 
-    
-    TODO: 
-    Forrest: Roger, please verify that is one sentence per <p> tag. 
 
     """
 #    print (filename)

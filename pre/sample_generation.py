@@ -476,14 +476,14 @@ def mutate(data_pairs, neg_pos_ratio, method, sent_end, dump_to, n_jobs, dump_fo
             for (_doc, mutate_tuples) in mutated: 
                 line = [_doc]
                 for (mutated_tmp, ratio) in mutate_tuples:
-                    line +=  [mutated_tmp, str(ratio)]
+                    line +=  [mutated_tmp, str(1-ratio)]
                 f.write("\t".join(line))
                 f.write("\n")
 
         elif dump_format == "plain":
             for (_doc, mutate_tuples) in mutated: 
                 for (mutated_tmp, ratio) in mutate_tuples:
-                    line =  [_doc, mutated_tmp, str(ratio)]
+                    line =  [_doc, mutated_tmp, str(1-ratio)]
                     f.write("\t".join(line))
                     f.write("\n")
 

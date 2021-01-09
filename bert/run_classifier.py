@@ -34,8 +34,6 @@ import optimization
 import tokenization
 
 
-
-
 flags = tf.flags
 
 FLAGS = flags.FLAGS
@@ -120,6 +118,13 @@ tf.flags.DEFINE_string("gcp_project", None, "[Optional] Project name for the Clo
 tf.flags.DEFINE_string("master", None, "[Optional] TensorFlow master URL.")
 tf.flags.DEFINE_integer("save_steps", 100, "save steps.")
 flags.DEFINE_integer("num_tpu_cores", 8, "Only used if `use_tpu` is True.")
+
+# our Own parameters 
+flags.DEFINE_integer("convert_batch", 10000, 
+                     "batch size in converting from compacto TSV examples to TFRecord")
+
+flags.DEFINE_bool("do_tfrecord", True, 
+                     "convert TSV examples into TFRecord")
 
 from utils import DataProcessor
 from utils import PaddingInputExample
@@ -356,10 +361,12 @@ def file_based_convert_examples_to_features(
     examples, label_list, max_seq_length, tokenizer, output_file):
   """Convert a set of `InputExample`s to a TFRecord file."""
 
+  if not FLAGS.do_tfrecord: 
+    return 0 # no need to re-convert 
 
   writer = tf.python_io.TFRecordWriter(output_file)
 
-  batch_size = 10000
+  batch_size = FLAGS.convert_batch
   for batch_index in range(len(examples) // batch_size + 1):
     if (batch_index+1)*batch_size > len(examples):  # last batch 
       tf.logging.info("Converting examples %d to %d of %d " % 

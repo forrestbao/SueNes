@@ -76,9 +76,16 @@ class DataProcessor(object):
     """Reads a tab separated value file."""
     with tf.gfile.Open(input_file, "r") as f:
       f = (x.replace('\0', '') for x in f) # to avoid NULL bytes in CSV loading 
-      reader = csv.reader(f, delimiter="\t", quotechar=quotechar)
       lines = []
-      for line in reader:
-        lines.append(line)
+
+      # manually process csv 
+      for line in f: 
+        elements = line.split('\t')
+        lines.append(elements)
+
+      # below is original BERT code using csvreader
+      # reader = csv.reader(f, delimiter="\t", quotechar=quotechar)
+      # for line in reader:
+      #   lines.append(line)
       return lines
 

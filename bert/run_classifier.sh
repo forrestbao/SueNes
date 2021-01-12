@@ -1,11 +1,15 @@
-export BERT_BASE_DIR=/home/forrest/bert_models/bert_tiny
-export DATA_DIR=../data/
+export BERT_BASE_DIR=$HOME/bert_models/bert_base
+export DATA_DIR=$HOME/anti-rouge/data/
+export RESULT_DIR=$HOME/anti-rouge/bert/result_base
+
+export NVIDIA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=0
 
 exp_type=basic  # or TAC or newsroom 
 
-for dataset in cnn_dailymail
+for dataset in scientific_papers # billsum cnn_dailymail
 do 
-  for method in mix # cross add replace delete 
+  for method in cross add replace delete mix
   do 
 
     python3 run_classifier.py -W ignore \
@@ -17,17 +21,13 @@ do
       --data_dir=$DATA_DIR/$dataset/$method/ \
       --vocab_file=$BERT_BASE_DIR/vocab.txt \
       --bert_config_file=$BERT_BASE_DIR/bert_config.json \
-      --init_checkpoint=./result/$dataset/$method/model.ckpt-53800 \
-      --max_seq_length=512 \
-      --train_batch_size=64 \
+      --init_checkpoint=$BERT_BASE_DIR/bert_model.ckpt \
+      --max_seq_length=400 \
+      --train_batch_size=14 \
       --learning_rate=1e-5 \
       --num_train_epochs=3.0 \
-      --output_dir=./result/$dataset/$method/ \
-      --convert_batch=100000 \
-      --do_tfrecord=False 
+      --output_dir=$RESULT_DIR/$dataset/$method/ \
+      --convert_batch=1000000 \
+      --do_tfrecord=True
   done
 done 
-
-# learning rete was 2e-5 for bert_tiny, cross/add/delete/replace
-# changed to 1e-5 for bert_tiny, mix
-#       --init_checkpoint=$BERT_BASE_DIR/bert_model.ckpt \

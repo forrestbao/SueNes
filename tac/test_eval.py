@@ -2,10 +2,12 @@ import numpy as np
 from scipy.stats.stats import pearsonr, spearmanr
 import os, json, csv
 
+np.set_printoptions(precision=4)
+
 article_per_set = 10
 num_summarizer = 47
 
-def read_tac_test_result(BERT_result_file, tac_json):
+def read_tac_test_result(BERT_result_file, tac_json, human_only=True):
     """Load BERT result of using TAC2010 as test set and average over 10 articles
 
     By BERT convention, the file name is test_result.tsv 
@@ -60,7 +62,8 @@ def read_tac_test_result(BERT_result_file, tac_json):
         docset = list(tac.keys())[docset_counter]
         summarizer = list(tac[docset]["summaries"].keys())[summarizer_counter]
         key = (docset, summarizer)
-        score_dict.setdefault(key, []).append(float(line))
+        if (human_only and summarizer.isnumeric()) or not human_only :
+            score_dict.setdefault(key, []).append(float(line))
         
         if summarizer_counter == 47 - 1:
             summarizer_counter = 0
@@ -77,13 +80,14 @@ def read_tac_test_result(BERT_result_file, tac_json):
     score_sorted = [] 
     for docset in tac.keys():
         for summarizer in tac[docset]["summaries"].keys():
-            ten_scores = score_dict[(docset, summarizer)]
-            avg_score = sum(ten_scores)/len(ten_scores)
-            score_sorted.append(avg_score)
+            if (human_only and summarizer.isnumeric()) or not human_only :
+                ten_scores = score_dict[(docset, summarizer)]
+                avg_score = sum(ten_scores)/len(ten_scores)
+                score_sorted.append(avg_score)
 
     return score_sorted
 
-def load_tac_json(task_json):
+def load_tac_json(task_json, human_only=True):
     """Load the human scores from TAC from the JSON file compiled and dumped by our tac.py script 
 
     task_json: the JSON file containing all TAC samples and their human scores
@@ -116,7 +120,10 @@ def load_tac_json(task_json):
 
     tac = json.load(open(task_json, 'r'))
     for docset in tac.keys():
-        tac_scores += [ tac[docset]["summaries"][summarizer]["scores"] for summarizer in tac[docset]["summaries"].keys() ]
+        if human_only: 
+            tac_scores += [ tac[docset]["summaries"][summarizer]["scores"] for summarizer in tac[docset]["summaries"].keys() if summarizer.isnumeric() ]
+        else:
+            tac_scores += [ tac[docset]["summaries"][summarizer]["scores"] for summarizer in tac[docset]["summaries"].keys()]
 
     return tac_scores 
 
@@ -137,14 +144,15 @@ def calc_cc(tac_results, tac_scores):
 
 
 def cc_all():
-    BERT_result_prefix = "/mnt/insecure/data/anti_rogue_result/cnn_dailymail/"
+    BERT_result_prefix = "/home/forrest/anti-rouge/bert/result_tiny/cnn_dailymail_1v5/"
     tac_json_file = "./TAC2010_all.json"
+    human_only=True
 
-    for method in ["cross", "add", "delete", "replace"]:
+    for method in ["cross", "add", "delete", "replace", "mix"]:
         print (method)
         BERT_result_file = os.path.join(BERT_result_prefix, method, "test_results.tsv")
-        tac_results = read_tac_test_result(BERT_result_file, tac_json_file)
-        tac_scores = load_tac_json(tac_json_file)
+        tac_results = read_tac_test_result(BERT_result_file, tac_json_file, human_only)
+        tac_scores = load_tac_json(tac_json_file, human_only)
         calc_cc(tac_results, tac_scores)
 
 if __name__ == "__main__":

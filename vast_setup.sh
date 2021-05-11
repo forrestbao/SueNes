@@ -4,24 +4,31 @@ touch ~/.no_auto_tmux
 
 echo "alias gputop='nvidia-smi --query-gpu=pstate,temperature.gpu,power.draw,utilization.gpu,utilization.memory --format=csv -l 1'" >> ~/.bashrc 
 
-
 # first allow sync of data to start 
-sudo apt install rsync git 
+apt update
+apt install vim rsync git  -y
 git clone https://github.com/forrestbao/anti-rouge
-mkdir anti-rouge/data
+mkdir data/
 
 # then do the rest 
-sudo apt install wget rsync python3 python3-pip python3-venv vim git zip htop
+apt install wget rsync python3 python3-pip python3-venv python3-dev vim git zip htop screen -y 
+apt update 
 mkdir ~/bert_models
-mkdir ~/bert_models/bert_base
-cd ~/bert_models/bert_base
 wget https://storage.googleapis.com/bert_models/2020_02_20/uncased_L-12_H-768_A-12.zip 
-unzip uncased_L-12_H-768_A-12.zip 
-cd ~
+unzip uncased_L-12_H-768_A-12.zip -d bert_models/bert_base
 
-python3 -m pip install pip --upgrade
-python3 -m venv --system-site-packages tf1 
-source tf1/bin/activate 
-python3 -m pip install tensorflow-gpu==1.15 scipy
+python3 -m pip install pip setuptools requests --upgrade
 
+# install Nvidia's own TF 1.15
+python3 -m pip install nvidia-pyindex
+python3 -m pip install nvidia-tensorflow[horovod]
+
+# install stanza, spacy  and scipy 
+# numpy should have been install with TF 
+# install stanza will install pytorch
+
+python3 -m pip install stanza
+python3 -m pip install scipy
+1python3 -m pip install spacy[cuda112]  # replace cuda112 with your cuda version
+python3 -m spacy download en_core_web_sm
 

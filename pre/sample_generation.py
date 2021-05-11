@@ -41,6 +41,7 @@ def normalize_sentence(s, special_chars):
     """
     # s = s.lower()
     s = replace_special_character(s, special_chars)
+    s = s[:4000] # up to 500 characters per article or summary, useful when article is very long.
 
     return s 
 
@@ -86,7 +87,7 @@ def load_pairs(dataset_name, split, load_percent, num_shards,
         import tensorflow_datasets as tfds 
         print ("Loading data. If the data not available locally, download first.")
 
-        dataset = tfds.load(name=dataset_name, split=
+        dataset = tfds.load(name=dataset_name, download=False, split=
                 split+ '[{}%:{}%]'.format(0, load_percent)
                 )
 
@@ -539,10 +540,10 @@ if __name__ == "__main__":
     _ = sample_generation("cnndm_conf")
 
     # Generate samples from Billsum
-    # _ = sample_generation("billsum_conf")
+    _ = sample_generation("billsum_conf")
 
     # Generate samples from Scientific papers
-    # _ = sample_generation("scientific_papers_conf")
+    _ = sample_generation("scientific_papers_conf")
 
     # Generate samples from big patents
-    # _ = sample_generation("big_patents_conf")
+    _ = sample_generation("big_patents_conf")

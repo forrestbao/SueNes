@@ -135,20 +135,29 @@ def calc_cc(tac_results, tac_scores):
     """
     tac_scores = np.array(tac_scores)
 
-    for i in range(3):
-        corr_pearson = pearsonr(tac_results, tac_scores[:, i])
-        corr_spearman = spearmanr(tac_results, tac_scores[:, i])
+    corr_pearsons = [pearsonr(tac_results, tac_scores[:, i])[0] for i in range(3)]
+    corr_spearmans = [spearmanr(tac_results, tac_scores[:, i])[0] for i in range(3)]
 
-        print(corr_pearson[0], corr_spearman[0])
-    print("---------------------------")
+    line = corr_pearsons + corr_spearmans
+    line = ["%.5f"%i for i in line]
+    line = "\t".join(line)
+
+    print (line)
+
+    # for i in range(3):
+    #     corr_pearson = pearsonr(tac_results, tac_scores[:, i])
+    #     corr_spearman = spearmanr(tac_results, tac_scores[:, i])
+
+    #     print(corr_pearson[0], corr_spearman[0])
+    # print("---------------------------")
 
 
 def cc_all():
-    BERT_result_prefix = "/home/forrest/anti-rouge/bert/result_tiny/cnn_dailymail_1v5/"
+    BERT_result_prefix = "/mnt/12T/data/NLP/anti-rogue/result_base/cnn_dailymail_1v5"
     tac_json_file = "./TAC2010_all.json"
-    human_only=True
+    human_only=False
 
-    for method in ["cross", "add", "delete", "replace", "mix"]:
+    for method in ["mix", "cross", "add", "delete", "replace", "mix"]:
         print (method)
         BERT_result_file = os.path.join(BERT_result_prefix, method, "test_results.tsv")
         tac_results = read_tac_test_result(BERT_result_file, tac_json_file, human_only)

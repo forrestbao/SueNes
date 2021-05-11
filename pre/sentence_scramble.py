@@ -171,7 +171,7 @@ def delete(pairs, neg_pos_ratio):
     # combine into the output format
     lines = []
     for sample_id, (_doc, _sum) in enumerate(pairs):
-        line = [_doc, _sum, 0] # document, positive sample, and ratio 0 (nothing deleted)
+        line = [_doc, " ".join(_sum), 0] # document, positive sample, and ratio 0 (nothing deleted)
 
         indexes_of_sentences_to_delete = \
         [numpy.random.randint(0, lengths_summaries[sample_id], size=i) for i in delete_numbers[sample_id]] 
@@ -181,6 +181,7 @@ def delete(pairs, neg_pos_ratio):
             indexes_of_sentences_to_delete = numpy.random.randint(0, lengths_summaries[sample_id], size= delete_numbers[sample_id][i])
 
             _sum_alternative = [_sum[i] for i in range(len(_sum)) if i not in indexes_of_sentences_to_delete]
+            _sum_alternative = " ".join(_sum_alternative)
 
             _ratio = delete_ratios[sample_id][i]
             line += [_sum_alternative, 1 - _ratio]
@@ -212,7 +213,7 @@ def mutate(pairs, method, dumpfile, neg_pos_ratio, batch_size= 2**12, debug=Fals
         with open(dumpfile, 'w') as f:
             for line in lines:
                 line = map(str, line)
-                f.write("\t".join(line))
+                f.write("\t".join(line)+"\n")
 
 def generate_one(dataset_name, split, features, methods, neg_pos_ratio, load_start, load_end, special_chars, data_root, batch_id): 
     """Generate one batch of data for one split (test or train) on one dataset, 

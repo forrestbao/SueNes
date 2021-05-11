@@ -18,8 +18,9 @@ def init():
     except Exception:
         stanza.download('en')
         sentence_splitter = stanza.Pipeline(lang='en', processors={'tokenize':"spacy"}, tokenize_batch_size=tokenize_batch_size)
-
     return sentence_splitter
+
+# def split_sentence(paragraph, sentence_splitter)
 
 def split_pairs(pairs, tokenize_batch_size):
     """For each pair, return the summary as a list of strings 
@@ -181,10 +182,18 @@ def sample_generation(conf):
 
         pairs = split_pairs(pairs, 64)
 
-        for method in cfg.method:
+        for method in cfg.methods:
             print (method)
             dumpfile = eval(cfg.dump_to)
-            mutate(pairs, method, dumpfile)
+
+            if not os.path.exists(os.path.dirname(dumpfile)):
+                try:
+                    os.makedirs(os.path.dirname(dumpfile))
+                except OSError as exc: # Guard against race condition
+                    if exc.errno != errno.EEXIST:
+                        raise
+
+            mutate(pairs, method, dumpfile, cfg.neg_pos_ratio)
 
     return pairs
 

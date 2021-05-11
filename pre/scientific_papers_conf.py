@@ -34,7 +34,7 @@ dataset_name = "scientific_papers"
 features = dataset_features[dataset_name]
 
 # splits = ['test', 'validation', 'train']
-splits = ['test', 'validation']
+splits = ['test', 'train']
 # note that billsum has no validation set
 
 # Percentage of data to load from orignal size 
@@ -60,7 +60,7 @@ dump_to="'../data/'+dataset_name + '/' + method + '/'+split+'.tsv'"
 # default: false 
 in_memory=False
 
-n_jobs = 35 # reduce core to save memory 
+n_jobs = 8 # reduce core to save memory 
 
 # compact or plain 
 # plain is 3-column, doc, summary, target
@@ -82,7 +82,7 @@ sent_end = string.punctuation
 
 # ratio between negative and positive samples
 # minimal: 1 
-neg_pos_ratio = 5 
+neg_pos_ratio= 3
 
 # methods used to generate negative samples 
 methods = ["cross", "add", "delete", "replace"] 

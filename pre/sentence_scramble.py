@@ -7,8 +7,11 @@ import random
 
 import numpy
 import stanza 
+import tensorflow_datasets as tfds
 
-from sample_generation import auto_escape, replace_special_character, normalize_sentence, load_pairs
+import time
+
+from sample_generation import auto_escape, replace_special_character, normalize_sentence
 
 
 def init(tokenize_batch_size = 64):
@@ -26,6 +29,9 @@ def init(tokenize_batch_size = 64):
 def split_pairs(pairs, my_batch_size=2**10, tokenize_batch_size=64, n_jobs= 4):
     """For each pair, return the summary as a list of strings 
 
+    Process-level parallelism impossible with Stanza
+    # AttributeError: Can't pickle local object 'CNNClassifier.__init__.<locals>.<lambda>'
+
     Examples
     -------------
     >>> split_pairs([("iam ahjppy asf.","fsd. sdf.fsd. fsd. f")], 64)                                       
@@ -37,69 +43,41 @@ def split_pairs(pairs, my_batch_size=2**10, tokenize_batch_size=64, n_jobs= 4):
       ['the number is low.', 'the government sucks.'])]
     """
 
+    print ("Splitting summaries...", end= " ")
+
     try: 
-        stanza_sentence_splitter = stanza.Pipeline(lang='en', processors='tokenize', tokenize_batch_size=tokenize_batch_size)
+        stanza_sentence_splitter = stanza.Pipeline(lang='en', processors='tokenize', tokenize_batch_size=tokenize_batch_size, verbose=False)
     except Exception:
         stanza.download('en')
-        stanza_sentence_splitter = stanza.Pipeline(lang='en', processors='tokenize', tokenize_batch_size=tokenize_batch_size)
+        stanza_sentence_splitter = stanza.Pipeline(lang='en', processors='tokenize', tokenize_batch_size=tokenize_batch_size, verbose=False)
 
-    # process-level parallelism impossible. 
-    # AttributeError: Can't pickle local object 'CNNClassifier.__init__.<locals>.<lambda>'
-    # with multiprocessing.Pool(n_jobs) as p:
-    #     summaries_splitted = p.map(
-    #         sentence_splitter, [_sum for (_doc, _sum) in pairs]
-    #     )
 
-    # summaries_splitted = [[x.text for x in split_result.sentences] for split_result in  summaries_splitted]
-
-    # new_pairs = zip([_doc for (_doc, _sum) in pairs], summaries_splitted)
-    # return new_pairs
-
-    # Batched Stanza tokenization with delimiters. 
-
-    boundaries = list(range(0, len(pairs), my_batch_size))
-    boundaries.append(len(pairs))
-    boundaries = list(zip(boundaries[:-1], boundaries[1:]))
-
+    # Stanza tokenization with delimiters.    
     list_summaries = []
-    for i, (start, end) in enumerate(boundaries):
-        print ("sentence segmentation, batch {0}/{1}".format(i+1, len(boundaries)))
+    combined_summary = " Forrest loves Ames. ".join([_sum  for (_doc, _sum) in pairs])
+    # This cannot be too long. otherwise, efficienty is very low. 
 
-        combined_summary = " Forrest loves Ames. ".join([_sum  for (_doc, _sum) in pairs[start:end]])
-        # This cannot be too long. otherwise, efficienty is very low. 
+    summary_splitted = [x.text for x in stanza_sentence_splitter(combined_summary).sentences]
 
-        summary_splitted = [x.text for x in stanza_sentence_splitter(combined_summary).sentences]
-
-        # print (combined_summary)
-        # print (summary_splitted)
-        
-        summary_temp = []
-        for sent in summary_splitted:
-            if len(sent) < 2:
-                continue 
-            elif sent != "Forrest loves Ames.":
-                summary_temp.append(sent)
-            else:
-                # sent = sent[:-3]
-                # summary_temp.append(sent)
-                list_summaries.append(summary_temp)
-                summary_temp = []
-        list_summaries.append(summary_temp) # last one 
+    # print (combined_summary)
+    # print (summary_splitted)
+    
+    summary_temp = []
+    for sent in summary_splitted:
+        if len(sent) < 2:
+            continue 
+        elif sent != "Forrest loves Ames.":
+            summary_temp.append(sent)
+        else:
+            # sent = sent[:-3]
+            # summary_temp.append(sent)
+            list_summaries.append(summary_temp)
+            summary_temp = []
+    list_summaries.append(summary_temp) # last one 
 
     new_pairs = list(zip([_doc for (_doc, _sum) in pairs], list_summaries))
     return new_pairs
 
-    # No parallelism at all. very slow due to frequent data exchange between GPU and CPU 
-    new_pairs =[
-        (_doc, [x.text for x in sentence_splitter(_sum).sentences]
-        )
-        for (_doc, _sum) in pairs
-    ]
-
-    # split_result = sentence_splitter(paragraph)
-    # split_result = [sentence.text for sentence in split_result.sentences]
-    # return split_result
-    return new_pairs
     
 # def replace(i, num_samples, lengths_summaries):
 #     """generate indexes for replacing sentences in a summary
@@ -211,61 +189,88 @@ def delete(pairs, neg_pos_ratio):
     return lines  
 
 def mutate(pairs, method, dumpfile, neg_pos_ratio, batch_size= 2**12, debug=False):
-    """Central method for delete and replace, bacthed 
-    """
+        """Central method for delete and replace, bacthed 
+        """
 
-    boundaries = list(range(0, len(pairs), batch_size))
-    boundaries.append(len(pairs))
-    boundaries = list(zip(boundaries[:-1], boundaries[1:]))
+        print ("Mutating", end="...")
 
-    for i, (start, end) in enumerate(boundaries):
-        print ("mutating, batch {0}/{1}".format(i+1, len(boundaries)))
+    # boundaries = list(range(0, len(pairs), batch_size))
+    # boundaries.append(len(pairs))
+    # boundaries = list(zip(boundaries[:-1], boundaries[1:]))
 
-        if method == 'sent_delete':
-            lines = delete(pairs[start:end], neg_pos_ratio)
+    # for i, (start, end) in enumerate(boundaries):
+    #     print ("mutating, batch {0}/{1}".format(i+1, len(boundaries)))
+
+        if method == 'delete':
+            # lines = delete(pairs[start:end], neg_pos_ratio)
+            lines = delete(pairs, neg_pos_ratio)
 
         if debug:
             print (lines)
 
-        with open(dumpfile, 'a') as f:
+        print ("Dumping into", dumpfile, end="...")
+        with open(dumpfile, 'w') as f:
             for line in lines:
                 line = map(str, line)
                 f.write("\t".join(line))
 
-# def generate_one(dataset_name, split, load_start, load_end, features, special_characters_to_clean, )
+def generate_one(dataset_name, split, features, methods, neg_pos_ratio, load_start, load_end, special_chars, data_root, batch_id): 
+    """Generate one batch of data for one split (test or train) on one dataset, 
+    given the start and end indexes of samples in the dataset
+    """
+
+    # 1. Load data 
+    dataset = tfds.load(name=dataset_name, download=False, 
+                        split=split+ '[{}:{}]'.format(load_start, load_end)
+                       )
+
+    pairs = [(normalize_sentence(piece[features[0]].numpy().decode("utf-8"), special_chars), 
+              normalize_sentence(piece[features[1]].numpy().decode("utf-8"), special_chars) )
+                for piece in dataset]
+
+    # 2. Split summary sentences 
+    pairs = split_pairs(pairs)
+
+    for method in methods:
+        # 3. Mutate and write results to file 
+        dumpfile = os.path.join(data_root, dataset_name, method, "{}_{}.tsv".format(split, batch_id))
+        if not os.path.exists(os.path.dirname(dumpfile)):
+            try:
+                os.makedirs(os.path.dirname(dumpfile))
+            except OSError as exc: # Guard against rare conditions
+                if exc.errno != errno.EEXIST:
+                    raise
+
+        mutate(pairs, method, dumpfile, neg_pos_ratio, batch_size=2**11)   
 
 def sample_generation(conf):
     """main function to generate samples 
     """
 
     cfg = __import__(conf)
-    dataset_name = cfg.dataset_name 
 
-    for split in cfg.splits:
-        print ("Data split:", split)
-        pairs = load_pairs(cfg.dataset_name, split, cfg.load_percent,\
-                cfg.num_shards, cfg.features, cfg.special_characters_to_clean, \
-                cfg.load_from, cfg.scramble, cfg.save_tsv)
+    for dataset_name in cfg.dataset_names:
+        print ("From dataset:", dataset_name)
+        features = cfg.dataset_features[dataset_name]
 
-        pairs = split_pairs(pairs)
+        for split in cfg.splits:
+            print ("Data split:", split)
+            total_samples = cfg.dataset_sizes_w_split[dataset_name][split]
 
-        for method in cfg.methods:
-            print ("Neg Sample method:", method)
-            dumpfile = eval(cfg.dump_to)
+            boundaries = list(range(0, total_samples, cfg.my_batch_size))
+            boundaries.append(total_samples)
+            boundaries = list(zip(boundaries[:-1], boundaries[1:]))
 
-            if not os.path.exists(os.path.dirname(dumpfile)):
-                try:
-                    os.makedirs(os.path.dirname(dumpfile))
-                except OSError as exc: # Guard against rare conditions
-                    if exc.errno != errno.EEXIST:
-                        raise
-            os.remove(dumpfile) # clean the file up 
+            for batch_id, (load_start, load_end) in enumerate(boundaries):
+                print ("\t batch {0}/{1}".format(batch_id+1, len(boundaries)), end="...")
+                start_time = time.time()
+                generate_one(dataset_name, split, features, cfg.methods, cfg.neg_pos_ratio, load_start, load_end, cfg.special_characters_to_clean, cfg.data_root, batch_id)
 
-            mutate(pairs, method, dumpfile, cfg.neg_pos_ratio, batch_size=2**11)
+                elapse = time.time() - start_time
+                print ("  Took {:.3f} seconds".format(elapse))
 
-    return pairs
 
 # sentence_splitter = init() # a global variable
 
 if __name__ == "__main__":
-    pairs = sample_generation("billsum_conf")
+    sample_generation("sentence_conf")

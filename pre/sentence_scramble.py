@@ -84,6 +84,8 @@ def split_pairs(pairs, my_batch_size=2**10, tokenize_batch_size=64, n_jobs= 4):
 def replace(pairs, neg_pos_ratio):
     """Replace sentences in a summary
 
+    OBSELETE, keep for reference 
+
     The code does something similar to delete() but using a slightly different strategy to vectorize 
 
     Examples
@@ -162,8 +164,9 @@ def replace(pairs, neg_pos_ratio):
 def delete(pairs, neg_pos_ratio):
     """Randomly delete sentences from sample 
 
-    neg_pos_ratio: how many negative samples to generate 
+    neg_pos_ratio: how many negative samples to generate
 
+    OBSELETE, keep for reference 
 
     How the code works by taking as much matrix operation as possible
     ---------------------------------------------------------------------
@@ -236,44 +239,133 @@ def delete(pairs, neg_pos_ratio):
         [numpy.random.randint(0, len(_sum), size=i) for i in delete_numbers[sample_id]] 
 
         for i in range(neg_pos_ratio): 
+            delete_number = delete_numbers[sample_id][i]
             # number_of_sentences_to_delete_in_this_neg_sample  = 
             indexes_of_sentences_to_delete = numpy.random.randint(0, lengths_summaries[sample_id], size= delete_numbers[sample_id][i])
 
-            _sum_alternative = [_sum[i] for i in range(len(_sum)) if i not in indexes_of_sentences_to_delete]
+            _sum_alternative = [_sum[i] for i in range(len(_sum)) if i in indexes_of_sentences_to_delete]
             _sum_alternative = " ".join(_sum_alternative)
 
-            _ratio = delete_ratios[sample_id][i]
-            line += [_sum_alternative, 1 - _ratio]
+            label = keep_number/len(_sum)
+            line += [_sum_alternative, label]
 
         lines.append(line)
     return lines  
 
-def mutate(pairs, method, dumpfile, neg_pos_ratio, batch_size= 2**12, debug=False):
-        """Central method for delete and replace, bacthed 
-        """
+def mutate(pairs, method, dumpfile, neg_pos_ratio, debug=False):
+    """Central method for delete and replace
 
-        print ("Mutating", end="...")
+    How the code works by taking as much matrix operation as possible
+    ---------------------------------------------------------------------
 
-    # boundaries = list(range(0, len(pairs), batch_size))
-    # boundaries.append(len(pairs))
-    # boundaries = list(zip(boundaries[:-1], boundaries[1:]))
+    >>> delete_ratios =numpy.array([[0.1, 0.4, 0.8], [0.2, 0.5, 0.7]])
+    >>> lengths_summaries=[4, 10]                
+    >>> delete_numbers = numpy.einsum("ij, i->ij", delete_ratios, lengths_summaries)
+    >>> delete_numbers # number of sentences to delete from summaries
+    array([[0.4, 1.6, 3.2],
+        [2. , 5. , 7. ]])
+    >>> delete_numbers = delete_numbers.astype(int)
+    >>> delete_numbers
+    array([[0, 1, 3],
+            [2, 5, 7]])
+    >>> delete_indexes = [[numpy.random.randint(0, lengths_summaries[sample_id], size=i) for i in delete_numbers[sample_id]]  for sample_id in range(2)]
+    >>> delete_indexes 
+    [[array([]),
+      array([2]),
+      array([1, 1, 3])],
+    [array([8, 5]),
+     array([1, 6, 6, 9, 3]),
+     array([0, 7, 8, 6, 2, 2, 8])]]
+    
 
-    # for i, (start, end) in enumerate(boundaries):
-    #     print ("mutating, batch {0}/{1}".format(i+1, len(boundaries)))
+    https://stackoverflow.com/questions/40034993/how-to-get-element-wise-matrix-multiplication-hadamard-product-in-numpy
 
-        if method == 'delete':
-            lines = delete(pairs, neg_pos_ratio)
-        elif method == 'replace':
-            lines = replace(pairs, neg_pos_ratio)
+    Examples 
+    -------------
+    >>> sentence_scramble.mutate([("doc1", [str(i) for i in  range(10) ] ), ('doc2', [str(i) for i in  range(10,20)])],  "sent_delete", "/dev/null", 3)
+    [['doc1',
+      '0 1 2 3 4 5 6 7 8 9',    1.0,
+      '0 2 3 4 6 7 8 9',    0.8,
+      '9',     0.1,
+      '0 1 2 3 4 5 6 7 8',    0.9],
+     ['doc2',
+      '10 11 12 13 14 15 16 17 18 19',    1.0,
+      '13 14 15',    0.3,
+      '10 11 14',    0.3,
+      '10 11 13 14 16 17 18 19',   0.8
+     ]
+    ]
 
-        if debug:
-            print (lines)
+    >>> sentence_scramble.mutate([("doc1", [str(i) for i in  range(10) ] ), ('doc2', [str(i) for i in  range(10,20)])],  "sent_replace", "/dev/null", 3)
+    [['doc1',
+      '0 1 2 3 4 5 6 7 8 9',    1.0,
+      '19 19 2 10 4 5 13 12 18 18',    0.3,
+      '13 14 16 14 11 11 18 18 12 15',    0.0,
+      '12 1 14 11 13 15 16 18 11 18',    0.1],
+     ['doc2',
+      '10 11 12 13 14 15 16 17 18 19',    1.0,
+      '7 0 5 4 5 0 9 6 4 1',    0.0,
+      '6 2 1 9 7 4 2 8 1 0',    0.0,
+      '8 4 3 13 14 15 16 2 9 7',    0.4
+     ]
+    ]
 
-        print ("Dumping into", dumpfile, end="...")
-        with open(dumpfile, 'w') as f:
-            for line in lines:
-                line = map(str, line)
-                f.write("\t".join(line)+"\n")
+    """
+
+    print ("Mutating", end="...")
+
+    start_time = time.time()
+
+    num_samples = len(pairs)
+    lengths_summaries = list(map(len, list(zip(*pairs))[1]))# number of sentences in each summary
+    
+    # generate indexes of sentences to keep
+    keep_ratios = numpy.random.rand(num_samples, neg_pos_ratio)
+    # 2-D array, each row is the 0<ratio<1 of summary sentences to keep
+
+    keep_numbers = numpy.einsum("ij, i->ij", keep_ratios, lengths_summaries)
+    keep_numbers = keep_numbers.astype(int) 
+    # how many sentences to keep in each neg-sampled summary, integers
+
+    lines = [] # compact form [_doc, _sum_1, label_1, _sum_2, _label_2, ....]
+    for sample_id, (_doc, _sum) in enumerate(pairs):
+        line = [_doc, " ".join(_sum), 1.0]
+        for i in range(neg_pos_ratio): # generate negative samples 
+            keep_number = keep_numbers[sample_id][i]
+
+            indexes_of_sentences_to_keep = random.sample(range(len(_sum)), k = keep_number)
+
+            if method == "sent_replace":
+                new_sum = copy.deepcopy(_sum)
+                for sentence_id in range(len(_sum)):
+                    if sentence_id not in indexes_of_sentences_to_keep:
+
+                        pair_id = sample_id # pick to new doc-sum pair
+                        while pair_id == sample_id:
+                            pair_id = random.randint(0, len(pairs)-1)
+                        new_sum [sentence_id] = random.choice(pairs[pair_id][1])
+            elif method == "sent_delete":
+                new_sum = [_sum[i] for i in range(len(_sum)) if i in indexes_of_sentences_to_keep]
+
+            label = keep_number/len(_sum)
+            # label = keep_ratios[sample_id][i] # NOTE alternative, introducing noise            
+            new_sum = " ".join(new_sum)
+            line += [new_sum, label]
+
+        lines.append(line)
+
+    if debug:
+        print (lines)
+
+    print (time.time() - start_time, end=" seconds. ")
+
+    print ("Dumping into", dumpfile, end="...")
+    with open(dumpfile, 'w') as f:
+        for line in lines:
+            line = map(str, line)
+            f.write("\t".join(line)+"\n")
+
+    return lines
 
 def generate_one(dataset_name, split, features, methods, neg_pos_ratio, load_start, load_end, special_chars, data_root, batch_id): 
     """Generate one batch of data for one split (test or train) on one dataset, 

@@ -1,3 +1,5 @@
+# configuration file for senentece-level negative sampling 
+
 import string
 
 # ==== constants about datasets 
@@ -23,7 +25,7 @@ dataset_sizes_w_split = {# new for sentence-level mutation
 
 # Must match their names in TFDS 
 # dataset_name = "dryrun" 
-dataset_names = ["billsum", "cnn_dailymail", "scientific_papers", "big_patent"]
+dataset_names = ["cnn_dailymail", "billsum", "scientific_papers", "big_patent"]
 
 splits = ['train', 'test']
 # note that billsum has no validation set
@@ -61,4 +63,4 @@ sent_end = string.punctuation
 neg_pos_ratio = 5
 
 # methods used to generate negative samples 
-methods = ["delete"] 
+methods = ["replace"] 

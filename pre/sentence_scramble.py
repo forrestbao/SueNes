@@ -255,6 +255,10 @@ def delete(pairs, neg_pos_ratio):
 def mutate(pairs, method, dumpfile, neg_pos_ratio, debug=False):
     """Central method for delete and replace
 
+    The mutation step is much faster than sentence segmentation.
+    E.g., 0.005 second vs 3 seconds. 
+    So it's not parallelized. 
+
     How the code works by taking as much matrix operation as possible
     ---------------------------------------------------------------------
 
@@ -314,8 +318,6 @@ def mutate(pairs, method, dumpfile, neg_pos_ratio, debug=False):
 
     print ("Mutating", end="...")
 
-    start_time = time.time()
-
     num_samples = len(pairs)
     lengths_summaries = list(map(len, list(zip(*pairs))[1]))# number of sentences in each summary
     
@@ -357,8 +359,6 @@ def mutate(pairs, method, dumpfile, neg_pos_ratio, debug=False):
     if debug:
         print (lines)
 
-    print (time.time() - start_time, end=" seconds. ")
-
     print ("Dumping into", dumpfile, end="...")
     with open(dumpfile, 'w') as f:
         for line in lines:
@@ -394,7 +394,7 @@ def generate_one(dataset_name, split, features, methods, neg_pos_ratio, load_sta
                 if exc.errno != errno.EEXIST:
                     raise
 
-        mutate(pairs, method, dumpfile, neg_pos_ratio, batch_size=2**11)   
+        mutate(pairs, method, dumpfile, neg_pos_ratio)
 
 def sample_generation(conf):
     """main function to generate samples 

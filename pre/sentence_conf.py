@@ -34,7 +34,6 @@ splits = ['train', 'test']
 
 data_root = "/mnt/12T/data/NLP/anti-rogue/data/"  # new for sentence-level mutation
 
-
 n_jobs = 35
 
 # compact or plain 
@@ -46,8 +45,11 @@ n_jobs = 35
 
 dump_format = "compact"
 
-my_batch_size = 2**8  # too large or too small reduces GPU utility rate. 
+my_batch_size = 2**8*64
+# how many doc-sum pairs to process each time
+# When using stanza, too large or too small reduces GPU utility rate. 2**8 is a good number.
 # The speed is about 10 seconds per 2**8 doc-sum pairs on 3090
+# Doesn't matter when using Spacy. Set it to 2**8*64 on CPU. Adjust based on your RAM.
 
 #========= NLP parameters
 
@@ -56,6 +58,9 @@ special_characters_to_clean = ['\n', '\t'] # replace such strings in raw data
 sent_end = [".", "!", "?"]  # symbols that represent the end of a sentence 
 sent_end = string.punctuation
 
+tokenizer_name = 'spacy' # or "stanza", "nltk" (to come)
+spacy_batch_size = 8000 # doesn't seem to have much effect though
+
 #========= negative sampling parameters 
 
 # ratio between negative and positive samples
@@ -63,4 +68,4 @@ sent_end = string.punctuation
 neg_pos_ratio = 5
 
 # methods used to generate negative samples 
-methods = ["replace"] 
+methods = ["sent_replace", "sent_delete"] 

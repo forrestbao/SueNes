@@ -78,6 +78,10 @@ def split_pairs(pairs, tokenizer_name="spacy", spacy_batch_size=2**10, n_jobs= 4
             list_summaries = [
                 [x.text for x in doc.sents] # sentences in each summary
                 for doc in nlp.pipe( list(zip(*pairs)) [1], n_process= n_jobs, batch_size=spacy_batch_size)]
+    
+    elif tokenizer_name == 'nltk':
+        from nltk.tokenize import sent_tokenize
+        list_summaries = [sent_tokenize(_sum) for (_doc, _sum) in pairs]
 
     new_pairs = list(zip(
                     list(zip(*pairs))[0], # docs 
@@ -215,6 +219,8 @@ def generate_one(dataset_name, split, features, methods, neg_pos_ratio, load_sta
     pairs = [(normalize_sentence(piece[features[0]].numpy().decode("utf-8"), special_chars), 
               normalize_sentence(piece[features[1]].numpy().decode("utf-8"), special_chars) )
                 for piece in dataset]
+
+    pairs = [(_doc, _sum) for (_doc, _sum) in pairs if len(_sum) > 0]
 
     # 2. Split summary sentences 
     pairs = split_pairs(pairs, tokenizer_name=tokenizer_name, spacy_batch_size=spacy_batch_size, n_jobs=n_jobs)

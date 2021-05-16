@@ -89,7 +89,7 @@ def split_pairs(pairs, tokenizer_name="spacy", spacy_batch_size=2**10, n_jobs= 4
                 ))
     return new_pairs
 
-def mutate(pairs, method, dumpfile, neg_pos_ratio, debug=False):
+def mutate(pairs, method, dumpfile, neg_pos_ratio, mode='len',debug=False):
     """Central method for delete and replace
 
     The mutation step is much faster than sentence segmentation.
@@ -169,6 +169,7 @@ def mutate(pairs, method, dumpfile, neg_pos_ratio, debug=False):
     lines = [] # compact form [_doc, _sum_1, label_1, _sum_2, _label_2, ....]
     for sample_id, (_doc, _sum) in enumerate(pairs):
         line = [_doc, " ".join(_sum), 1.0]
+        full_summary_length = len(" ".join(_sum))
         for i in range(neg_pos_ratio): # generate negative samples 
             keep_number = keep_numbers[sample_id][i]
             if keep_number < 1: # at least 1 sentence needed
@@ -188,9 +189,15 @@ def mutate(pairs, method, dumpfile, neg_pos_ratio, debug=False):
             elif method == "sent_delete":
                 new_sum = [_sum[i] for i in range(len(_sum)) if i in indexes_of_sentences_to_keep]
 
-            label = keep_number/len(_sum)
-            # label = keep_ratios[sample_id][i] # NOTE alternative, introducing noise            
+            
             new_sum = " ".join(new_sum)
+            label = 0
+            if mode == 'same':
+                label = keep_number/len(_sum)
+            elif mode == 'len':
+                # support delete only
+                label = len(new_sum) / float(full_summary_length) 
+            # label = keep_ratios[sample_id][i] # NOTE alternative, introducing noise            
             line += [new_sum, label]
 
         lines.append(line)
@@ -206,7 +213,7 @@ def mutate(pairs, method, dumpfile, neg_pos_ratio, debug=False):
 
     return lines
 
-def generate_one(dataset_name, split, features, methods, neg_pos_ratio, load_start, load_end, special_chars, data_root, tokenizer_name, n_jobs, spacy_batch_size, batch_id): 
+def generate_one(dataset_name, split, features, methods, neg_pos_ratio, load_start, load_end, special_chars, data_root, tokenizer_name, n_jobs, spacy_batch_size, batch_id, mode='len'): 
     """Generate one batch of data for one split (test or train) on one dataset, 
     given the start and end indexes of samples in the dataset
     """
@@ -235,7 +242,7 @@ def generate_one(dataset_name, split, features, methods, neg_pos_ratio, load_sta
                 if exc.errno != errno.EEXIST:
                     raise
 
-        mutate(pairs, method, dumpfile, neg_pos_ratio)
+        mutate(pairs, method, dumpfile, neg_pos_ratio, mode)
 
 def sample_generation(conf):
     """main function to generate samples 
@@ -258,7 +265,7 @@ def sample_generation(conf):
             for batch_id, (load_start, load_end) in enumerate(boundaries):
                 print ("\t batch {0}/{1}".format(batch_id+1, len(boundaries)), end="...")
                 start_time = time.time()
-                generate_one(dataset_name, split, features, cfg.methods, cfg.neg_pos_ratio, load_start, load_end, cfg.special_characters_to_clean, cfg.data_root, cfg.tokenizer_name, cfg.n_jobs, cfg.spacy_batch_size, batch_id)
+                generate_one(dataset_name, split, features, cfg.methods, cfg.neg_pos_ratio, load_start, load_end, cfg.special_characters_to_clean, cfg.data_root, cfg.tokenizer_name, cfg.n_jobs, cfg.spacy_batch_size, batch_id, cfg.mode)
 
                 elapse = time.time() - start_time
                 print ("  Took {:.3f} seconds".format(elapse))

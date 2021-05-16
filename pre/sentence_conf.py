@@ -25,14 +25,14 @@ dataset_sizes_w_split = {# new for sentence-level mutation
 
 # Must match their names in TFDS 
 # dataset_name = "dryrun" 
-dataset_names = ["cnn_dailymail", "billsum", "scientific_papers", "big_patent"]
+dataset_names = ["scientific_papers", "cnn_dailymail", "billsum"] #, "scientific_papers"] #, "big_patent"]
 
 splits = ['train', 'test']
 # note that billsum has no validation set
 
 #========= data output/dumping parameters 
 
-data_root = "/mnt/12T/data/NLP/anti-rogue/data/"  # new for sentence-level mutation
+data_root = "../data/"  # new for sentence-level mutation
 
 n_jobs = 35
 
@@ -68,4 +68,5 @@ spacy_batch_size = 8000 # doesn't seem to have much effect though
 neg_pos_ratio = 5
 
 # methods used to generate negative samples 
-methods = ["sent_replace", "sent_delete"] 
+methods = ["sent_delete"] # "sent_replace" 
+mode = 'len' # or 'same'

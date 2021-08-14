@@ -20,7 +20,10 @@ def calc_one(hyp, refs, scorers):
     return score
 
 def main():
-    scorers = [BleuMetric(), CiderMetric(), S3Metric(), MeteorMetric(), BertScoreMetric()]
+    # Fix multi reference for BertScoreMetric & S3Metric
+    # Fix model repeatly loading for BertScoreMetric
+    WORKERS = 6
+    scorers = [CiderMetric(), BleuMetric(n_workers=WORKERS), S3Metric(n_workers=WORKERS), MeteorMetric(), BertScoreMetric()]
 
     eval_path = '/home/nkwbtb/Downloads/TAC2010/GuidedSumm2010_eval/ROUGE/'
     in_file = 'rouge_A.in'
@@ -33,6 +36,8 @@ def main():
     eval = eval["ROUGE_EVAL"]["EVAL"]
 
     results = {}
+    Refs = []
+    Hyps = []
     for exp in eval:
         print(exp["@ID"])
         MODELS = exp["MODELS"]["M"]
@@ -51,7 +56,24 @@ def main():
             with open(os.path.join(eval_path, 'peers', peer_file), 'r', encoding='cp1252') as f:
                 peer_text = f.read()
 
-            results[peer_file] = calc_one(peer_text, refs, scorers)
+            # Evaluate one at a time
+            # results[peer_file] = calc_one(peer_text, refs, scorers)
+            # results[peer_file] = {}
+            
+            Hyps.append(peer_text)
+            Refs.append(refs.copy())
+
+    for scorer in scorers:
+        print(type(scorer))
+        scores = scorer.evaluate_batch(Hyps, Refs, aggregate=False)
+        cid = 0
+        for exp in eval:
+            PEERS = exp["PEERS"]["P"]
+            for peer in PEERS:
+                peer_file = peer["#text"]
+                results.setdefault(peer_file, {}).update(scores[cid])
+                print(scores[cid])
+                cid += 1
     
     with open('baselines.json', 'w', encoding='utf-8') as f:
         json.dump(results, f)

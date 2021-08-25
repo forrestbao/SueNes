@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.stats.stats import pearsonr, spearmanr
 import os, json, csv
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 np.set_printoptions(precision=4)
 
@@ -156,17 +158,42 @@ def calc_cc(tac_results, tac_scores):
     # print("---------------------------")
 
 
-def cc_all():
-    BERT_result_prefix = "/mnt/12T/data/NLP/anti-rogue/result_base_sent/big_patent/"
-    tac_json_file = "./TAC2010_all.json"
-    summarizer_type = "machine" #machine, both or human
+def cc_all(plot = True):
+    datasets = ['billsum', 'scientific_papers', 'cnn_dailymail', 'big_patent']
+    BERT_result_prefix = "../bert/result_base/"
+    tac_json_file = "../bert/TAC2010_all.json"
+    human_only=False
 
-    for method in ["sent_delete_len_0.2"]:
-        print (method)
-        BERT_result_file = os.path.join(BERT_result_prefix, method, "test_results.tsv")
-        tac_results = read_tac_test_result(BERT_result_file, tac_json_file, summarizer_type)
-        tac_scores = load_tac_json(tac_json_file, summarizer_type)
-        calc_cc(tac_results, tac_scores)
+    tac_scores = load_tac_json(tac_json_file, human_only)
+    result_dict = {}
+    for method in ["sent_delete"]:
+        for dataset in datasets:
+            print (dataset, method)
+            BERT_result_file = os.path.join(BERT_result_prefix, dataset, method, "test_results.tsv")
+            tac_results = read_tac_test_result(BERT_result_file, tac_json_file, human_only)
+            result_dict[dataset] = tac_results
+            calc_cc(tac_results, tac_scores)
+        
+    def plot_results():
+        for dataset in datasets:
+            sns.kdeplot(result_dict[dataset], label=dataset)
 
+    if plot:
+        tac_scores = np.array(tac_scores)
+        plt.figure(figsize=(12, 3))
+        ax = plt.subplot(1, 3, 1)
+        plot_results()
+        sns.kdeplot(tac_scores[ :, 0], label='Modified')
+        ax.legend()
+        ax = plt.subplot(1, 3, 2)
+        sns.histplot((tac_scores[ :, 1]-1)/4, stat='density', bins=5, label='Linguistic', color='tab:purple')
+        plot_results()
+        ax.legend()
+        ax = plt.subplot(1, 3, 3)
+        sns.histplot((tac_scores[ :, 2]-1)/4, stat='density', bins=5, label='Overall', color='tab:purple')
+        plot_results()
+        ax.legend()
+        plt.show()
+        
 if __name__ == "__main__":
     cc_all()

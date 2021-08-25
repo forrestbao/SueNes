@@ -3,11 +3,12 @@ import numpy as np
 from scipy.stats.stats import pearsonr, spearmanr
 
 if __name__ == "__main__":
-    article_set_path = "F:\\Dataset\\TAC2010/TAC2010/TAC2010_Summarization_Documents/GuidedSumm10_test_docs_files/"
-    summary_set_path = "F:\\Dataset\\TAC2010/TAC2010/GuidedSumm2010_eval/ROUGE"
-    score_path = "F:\\Dataset\\TAC2010/TAC2010/GuidedSumm2010_eval/manual"
+    TAC_result_root = "/mnt/insecure/data/TAC/TAC2010/"
+    article_set_path = TAC_result_root + "/TAC2010_Summarization_Documents/GuidedSumm10_test_docs_files/"
+    summary_set_path = TAC_result_root + "/GuidedSumm2010_eval/ROUGE"
+    score_path = TAC_result_root + "/GuidedSumm2010_eval/manual"
 
-    rouge_score_path = "F:\\Dataset\\TAC2010/TAC2010/GuidedSumm2010_eval/ROUGE/rouge_A.m.out"
+    rouge_score_path = TAC_result_root + "/GuidedSumm2010_eval/ROUGE/rouge_A.m.out"
     output_file = "rouge_score.tsv"
 
     setIDs = ["A"]

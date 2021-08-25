@@ -7,13 +7,15 @@ np.set_printoptions(precision=4)
 article_per_set = 10
 num_summarizer = 47
 
-def read_tac_test_result(BERT_result_file, tac_json, human_only=True):
+def read_tac_test_result(BERT_result_file, tac_json, summarizer_type):
     """Load BERT result of using TAC2010 as test set and average over 10 articles
 
     By BERT convention, the file name is test_result.tsv 
     46 document sets, 47 summarizers (2 baselines, 41 machine ones, and 4 humans)
 
     one number per line 
+
+    summarizer_type: str, "human", "machine", or "both"
 
     Due to how samples are generated, this is the correspondence between lines and doc-sum pairs
     docset_1: 
@@ -58,11 +60,12 @@ def read_tac_test_result(BERT_result_file, tac_json, human_only=True):
     # Note that docset_counter, article_counter, nor summarizer_counters is actual docset, article or summarizer IDs. It's just counters to know whether we loop to next article. 
     
     for line in lines:
-            # print (docset_counter, article_counter, summarizer_counter)
         docset = list(tac.keys())[docset_counter]
         summarizer = list(tac[docset]["summaries"].keys())[summarizer_counter]
         key = (docset, summarizer)
-        if (human_only and summarizer.isnumeric()) or not human_only :
+        if (summarizer_type=="machine" and summarizer.isnumeric()) or \
+               (summarizer_type=="human" and summarizer.isalpha()) or \
+               (summarizer_type=="both") :
             score_dict.setdefault(key, []).append(float(line))
         
         if summarizer_counter == 47 - 1:
@@ -80,21 +83,22 @@ def read_tac_test_result(BERT_result_file, tac_json, human_only=True):
     score_sorted = [] 
     for docset in tac.keys():
         for summarizer in tac[docset]["summaries"].keys():
-            if (human_only and summarizer.isnumeric()) or not human_only :
+            if (summarizer_type=="machine" and summarizer.isnumeric()) or \
+               (summarizer_type=="human" and summarizer.isalpha()) or \
+               (summarizer_type=="both") : # this condition is redundant but to be safe
                 ten_scores = score_dict[(docset, summarizer)]
                 avg_score = sum(ten_scores)/len(ten_scores)
                 score_sorted.append(avg_score)
 
     return score_sorted
 
-def load_tac_json(task_json, human_only=True):
+def load_tac_json(task_json, summarizer_type):
     """Load the human scores from TAC from the JSON file compiled and dumped by our tac.py script 
 
     task_json: the JSON file containing all TAC samples and their human scores
-    result_file: the test_result.txt by BERT on the test set
+    summarizer_type: str, "human", "machine", or "both"
 
     The order of extracting scores from task_json needs to match that in _pop_tac_samples() in run_classifier.py
-
 
     order:
     docset_1, summarizer_1, scores[0:2]
@@ -111,8 +115,6 @@ def load_tac_json(task_json, human_only=True):
     ...
     docset_46 
 
-    return: 
-      dict: (docset_ID, summarizerID): scores[0:2]
 
     """
 
@@ -120,9 +122,11 @@ def load_tac_json(task_json, human_only=True):
 
     tac = json.load(open(task_json, 'r'))
     for docset in tac.keys():
-        if human_only: 
+        if summarizer_type == "machine": 
             tac_scores += [ tac[docset]["summaries"][summarizer]["scores"] for summarizer in tac[docset]["summaries"].keys() if summarizer.isnumeric() ]
-        else:
+        elif summarizer_type == "human": 
+            tac_scores += [ tac[docset]["summaries"][summarizer]["scores"] for summarizer in tac[docset]["summaries"].keys() if summarizer.isalpha() ]
+        elif summarizer_type == "both":
             tac_scores += [ tac[docset]["summaries"][summarizer]["scores"] for summarizer in tac[docset]["summaries"].keys()]
 
     return tac_scores 
@@ -153,15 +157,15 @@ def calc_cc(tac_results, tac_scores):
 
 
 def cc_all():
-    BERT_result_prefix = "/mnt/12T/data/NLP/anti-rogue/result_base/cnn_dailymail_1v5"
+    BERT_result_prefix = "/mnt/12T/data/NLP/anti-rogue/result_base_sent/big_patent/"
     tac_json_file = "./TAC2010_all.json"
-    human_only=False
+    summarizer_type = "machine" #machine, both or human
 
-    for method in ["mix", "cross", "add", "delete", "replace", "mix"]:
+    for method in ["sent_delete_len_0.2"]:
         print (method)
         BERT_result_file = os.path.join(BERT_result_prefix, method, "test_results.tsv")
-        tac_results = read_tac_test_result(BERT_result_file, tac_json_file, human_only)
-        tac_scores = load_tac_json(tac_json_file, human_only)
+        tac_results = read_tac_test_result(BERT_result_file, tac_json_file, summarizer_type)
+        tac_scores = load_tac_json(tac_json_file, summarizer_type)
         calc_cc(tac_results, tac_scores)
 
 if __name__ == "__main__":

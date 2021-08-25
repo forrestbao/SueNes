@@ -23,6 +23,7 @@ import itertools, multiprocessing, functools
 import collections
 import os
 import json, csv
+import random
 
 # scipy/numpy/tf
 import tensorflow as tf
@@ -126,6 +127,10 @@ flags.DEFINE_integer("convert_batch", 10000,
 flags.DEFINE_bool("do_tfrecord", True, 
                      "convert TSV examples into TFRecord")
 
+flags.DEFINE_float("keep_1s_ratio", 1.0,
+                   "Random chance to keep label-1 samples.")
+
+
 from utils import DataProcessor
 from utils import PaddingInputExample
 from utils import InputFeatures
@@ -133,7 +138,7 @@ from utils import InputExample
 
 class BasicProcessor(DataProcessor):
   """Processor for the Better Than Rogue experiments."""
-  def __init__(self):
+  def __init__(self, keep_1s_ratio):
 
     self.f_train = "train.tsv" 
     # self.f_dev = "validation.tsv" 
@@ -142,6 +147,8 @@ class BasicProcessor(DataProcessor):
 
     # TODO: Create an inheritated class, differing only in the constructor
     # using CORNELL human evaluation as test
+
+    self.keep_1s_ratio = keep_1s_ratio
 
   def get_train_examples(self, data_dir):
     """See base class."""
@@ -179,6 +186,10 @@ class BasicProcessor(DataProcessor):
         _sum = ' '.join(line[j].split()[0:200])
         label = float(line[j+1].strip())
 
+        if label==1: # a positive sample 
+          if self.keep_1s_ratio < random.random(): # toss a coin
+            continue # skip this label-1 sample 
+
         guid = "%s-%s" % (set_type, i)
         text_a = tokenization.convert_to_unicode(_doc)
         text_b = tokenization.convert_to_unicode(_sum)
@@ -213,7 +224,7 @@ class BasicProcessor(DataProcessor):
           summary = summary.replace("\n", " ")
           summary = summary.replace("\t", " ")
           if len(summary) == 0:
-              summary = "."
+              summary = " ."
 
           _sum = ' '.join(summary.split()[0:200])
           label = 0 # just a place holder 
@@ -759,7 +770,7 @@ def main(_):
   if task_name not in processors:
     raise ValueError("Task not found: %s" % (task_name))
 
-  processor = processors[task_name]()
+  processor = processors[task_name](FLAGS.keep_1s_ratio)
 
   label_list = processor.get_labels()
 

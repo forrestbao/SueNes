@@ -238,6 +238,32 @@ class BasicProcessor(DataProcessor):
           
           i += 1 # increase i for every sample 
     return examples
+  
+  def _pop_compact_test_samples(self, lines, set_type):
+    """Creates examples for the training and dev sets.
+    Compact format samples: 
+        document \t 1st_summary \t 2nd_summary \t ...
+    """
+
+    examples = []
+    i = 0 
+    for line in lines: # line is already tab-separated 
+      # if i == 0:  # skip the header line? 
+      #   continue
+      _doc = ' '.join(line[0].split()[0:400])
+      for j in range(1, len(line)) :
+        _sum = ' '.join(line[j].split()[0:200])
+        label = 0 # just a place holder 
+
+        guid = "%s-%s" % (set_type, i)
+        text_a = tokenization.convert_to_unicode(_doc)
+        text_b = tokenization.convert_to_unicode(_sum)
+        
+        examples.append(
+            InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+        
+        i += 1  # increase i for every sample 
+    return examples
 
 def convert_single_example(ex_index, example, label_list, max_seq_length,
                            tokenizer):

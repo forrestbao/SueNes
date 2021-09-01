@@ -130,6 +130,8 @@ flags.DEFINE_bool("do_tfrecord", True,
 flags.DEFINE_float("keep_1s_ratio", 1.0,
                    "Random chance to keep label-1 samples.")
 
+flags.DEFINE_string("human_eval_dataset", None,
+                   "The human evaluation dataset to use for test: tac, realsumm, or newsrooms")
 
 from utils import DataProcessor
 from utils import PaddingInputExample
@@ -138,15 +140,19 @@ from utils import InputExample
 
 class BasicProcessor(DataProcessor):
   """Processor for the Better Than Rogue experiments."""
-  def __init__(self, keep_1s_ratio):
+  def __init__(self, keep_1s_ratio, human_eval_dataset):
+
+    self.human_eval_dataset =  human_eval_dataset
 
     self.f_train = "train.tsv" 
     # self.f_dev = "validation.tsv" 
-    self.f_dev = "test.tsv"  # use test set as dev set to get scores on test set
-    self.f_test = "TAC2010_all.json" # make predictions on TAC2010 document Sets A
+    self.f_dev = "test.tsv"  # use test set as dev set to get scores on test set. The test means the test split of a dataset
 
-    # TODO: Create an inheritated class, differing only in the constructor
-    # using CORNELL human evaluation as test
+    # we use human evaluation summaries for test
+    if human_eval_dataset.lower() == "tac":
+      self.f_test = "TAC2010_all.json" # make predictions on TAC2010 document Sets A
+    elif human_eval_dataset.lower() == "realsumm":
+      self.f_test = "realsumm_100.tsv" # make predictions on TAC2010 document Sets A
 
     self.keep_1s_ratio = keep_1s_ratio
 
@@ -162,8 +168,13 @@ class BasicProcessor(DataProcessor):
 
   def get_test_examples(self, data_dir):
     """See base class."""
-    return self._pop_tac_samples(
-        os.path.join(data_dir, self.f_test), "test")
+    if self.human_eval_dataset.lower() == "tac":
+      test_example_load_method = self._pop_tac_samples
+    elif self.human_eval_dataset.lower() == "realsumm":
+      test_example_load_method = self._pop_compact_test_samples
+    return test_example_load_method(
+      self._read_tsv(os.path.join(data_dir, self.f_test)), "test")
+      
 
   def get_labels(self):
     """See base class."""
@@ -240,7 +251,10 @@ class BasicProcessor(DataProcessor):
     return examples
   
   def _pop_compact_test_samples(self, lines, set_type):
-    """Creates examples for the training and dev sets.
+    """Creates examples for the test set from compact format.
+    
+    It dffers from _pop_compact_samples in that it has only placeholder label
+
     Compact format samples: 
         document \t 1st_summary \t 2nd_summary \t ...
     """
@@ -796,7 +810,7 @@ def main(_):
   if task_name not in processors:
     raise ValueError("Task not found: %s" % (task_name))
 
-  processor = processors[task_name](FLAGS.keep_1s_ratio)
+  processor = processors[task_name](FLAGS.keep_1s_ratio, FLAGS.human_eval_dataset)
 
   label_list = processor.get_labels()
 
@@ -990,7 +1004,7 @@ def main(_):
 
     result = estimator.predict(input_fn=predict_input_fn)
 
-    output_predict_file = os.path.join(FLAGS.output_dir, "test_results.tsv")
+    output_predict_file = os.path.join(FLAGS.output_dir, "test_results_{}.tsv".format(FLAGS.human_eval_dataset))
     with tf.gfile.GFile(output_predict_file, "w") as writer:
       num_written_lines = 0
       tf.logging.info("***** Predict results *****")

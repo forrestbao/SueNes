@@ -1,24 +1,27 @@
+# Configuration on Bao's computer 
 export BERT_BASE_DIR=$HOME/bert_models/bert_base_uncased
 export DATA_DIR=/mnt/12T/data/NLP/anti-rogue/data
 export RESULT_DIR=/mnt/12T/data/NLP/anti-rogue/result_base_sent
+# End of Bao's configuration 
+# Please do not delete
 
 export NVIDIA_VISIBLE_DEVICES=0 # set to none to use CPU only
 export CUDA_VISIBLE_DEVICES=0  # set to none to use CPU only
+ 
+human_eval_dataset=realsumm #or tac or newsroom 
 
-exp_type=basic  # or TAC or newsroom 
-
-for dataset in cnn_dailymail billsum scientific_papers big_patent
+for dataset in cnn_dailymail # billsum scientific_papers big_patent
 do 
-  for method in delete # cross delete replace add mix 
+  for method in sent_replace # cross delete replace add mix 
   do 
 
-    cat $DATA_DIR/$dataset/$method/train_*.tsv > $DATA_DIR/$dataset/$method/train.tsv
-    cat $DATA_DIR/$dataset/$method/test_*.tsv > $DATA_DIR/$dataset/$method/test.tsv
+    # cat $DATA_DIR/$dataset/$method/train_*.tsv > $DATA_DIR/$dataset/$method/train.tsv
+    # cat $DATA_DIR/$dataset/$method/test_*.tsv > $DATA_DIR/$dataset/$method/test.tsv
 
     python3 run_classifier.py -W ignore \
-      --task_name=$exp_type \
-      --do_train=True \
-      --do_eval=true \
+      --task_name=basic \
+      --do_train=False \
+      --do_eval=False \
       --do_lower_case=true \
       --do_predict=True \
       --data_dir=$DATA_DIR/$dataset/$method/ \
@@ -31,6 +34,9 @@ do
       --num_train_epochs=3.0 \
       --output_dir=$RESULT_DIR/$dataset/$method/ \
       --convert_batch=1000000 \
-      --do_tfrecord=True
+      --do_tfrecord=True \
+      --human_eval_dataset=$human_eval_dataset
   done
 done 
+
+#      --init_checkpoint=$BERT_BASE_DIR/bert_model.ckpt \

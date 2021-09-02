@@ -8,11 +8,11 @@ export RESULT_DIR=/mnt/12T/data/NLP/anti-rogue/result_base_sent
 export NVIDIA_VISIBLE_DEVICES=0 # set to none to use CPU only
 export CUDA_VISIBLE_DEVICES=0  # set to none to use CPU only
  
-human_eval_dataset=realsumm #or tac or newsroom 
+human_eval_dataset=newsroom #or tac or newsroom 
 
-for dataset in cnn_dailymail # billsum scientific_papers big_patent
+for dataset in cnn_dailymail scientific_papers billsum big_patent
 do 
-  for method in sent_replace # cross delete replace add mix 
+  for method in sent_delete sent_replace # cross delete replace add mix 
   do 
 
     # cat $DATA_DIR/$dataset/$method/train_*.tsv > $DATA_DIR/$dataset/$method/train.tsv
@@ -20,8 +20,8 @@ do
 
     python3 run_classifier.py -W ignore \
       --task_name=basic \
-      --do_train=False \
-      --do_eval=False \
+      --do_train=false \
+      --do_eval=false \
       --do_lower_case=true \
       --do_predict=True \
       --data_dir=$DATA_DIR/$dataset/$method/ \
@@ -38,5 +38,3 @@ do
       --human_eval_dataset=$human_eval_dataset
   done
 done 
-
-#      --init_checkpoint=$BERT_BASE_DIR/bert_model.ckpt \

@@ -152,7 +152,9 @@ class BasicProcessor(DataProcessor):
     if human_eval_dataset.lower() == "tac":
       self.f_test = "TAC2010_all.json" # make predictions on TAC2010 document Sets A
     elif human_eval_dataset.lower() == "realsumm":
-      self.f_test = "realsumm_100.tsv" # make predictions on TAC2010 document Sets A
+      self.f_test = "realsumm_100.tsv" 
+    elif human_eval_dataset.lower() == "newsroom":
+      self.f_test = "newsroom_60.tsv" 
 
     self.keep_1s_ratio = keep_1s_ratio
 
@@ -170,7 +172,7 @@ class BasicProcessor(DataProcessor):
     """See base class."""
     if self.human_eval_dataset.lower() == "tac":
       test_example_load_method = self._pop_tac_samples
-    elif self.human_eval_dataset.lower() == "realsumm":
+    elif self.human_eval_dataset.lower() in ["realsumm", "newsroom"]:
       test_example_load_method = self._pop_compact_test_samples
     return test_example_load_method(
       self._read_tsv(os.path.join(data_dir, self.f_test)), "test")

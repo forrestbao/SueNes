@@ -7,12 +7,20 @@
 import csv 
 import scipy.stats
 import os
+import numpy 
 
 def mean(a_list):
-    return sum(a_list)/len(a_list)
+    # # print (a_list)
+    # print (type(a_list))
+    # print (type(a_list[0]))
+    # print (sum(a_list))
+    # return sum(a_list)/len(a_list)
+    return numpy.mean(a_list)
 
 def median(a_list):
     a_list.sort()
+    # if len(a_list)!=3:
+    #     print (a_list)
     return a_list[len(a_list)//2]
 
 def load_newsroom_and_ours(newsroom_csv, prediction_tsv):
@@ -75,7 +83,7 @@ def load_newsroom_and_ours(newsroom_csv, prediction_tsv):
 # scores = load_newsroom_and_ours("./newsroom-human-eval.csv", "/mnt/12T/data/NLP/anti-rogue/result_base_sent/billsum/cross_sent_delete/test_results_newsroom.tsv")
 
 # %% 
-def summary_judge(scores, metrics_newsroom, metrics_other, consensus):
+def summary_judge(scores, metrics_newsroom, metrics_other, consensus, correlation_types):
     """Summary-level evaluation between newsroom metrics and metrics from another group 
 
     metric_newsroom: ["Coherence", "Informativeness", "Fluency", "Relevance"]
@@ -116,36 +124,22 @@ def summary_judge(scores, metrics_newsroom, metrics_other, consensus):
                 #     score_newsroom = mean(score_newsroom) # type change 
 
                 vector_newsroom.append(score_newsroom)
-                vector_other   .append(score_other)
+                vector_other   .append(score_other[0])
             elif consensus == "all":
                 vector_newsroom += score_newsroom
                 vector_other    += score_other*len(score_newsroom) # just duplicate 
 
+        # print (vector_newsroom)
+        # print ("asdfasdf")
+        # print (vector_other)
+
         return  eval(f"scipy.stats.{correlation_type}(vector_newsroom, vector_other)")[0]
+        # FIXME: This is a weird bug. It works only when manually convert from numpy.float64 to float. 
         # [0] to get the correlation. [1] is for pvalue. 
 
     # now begins the summary-level judge 
     correlations  = {}
-    # for correlation_type in ["kendalltau", "spearmanr", "pearsonr"]:
-    # FIXME error when calculating pearsonr's. Error below. 
-    """
-    ~/.local/lib/python3.8/site-packages/scipy/stats/stats.py in pearsonr(x, y)
-   3517         return dtype(np.sign(x[1] - x[0])*np.sign(y[1] - y[0])), 1.0
-   3518 
-    -> 3519     xmean = x.mean(dtype=dtype)
-   3520     ymean = y.mean(dtype=dtype)
-   3521 
-
-    ~/.local/lib/python3.8/site-packages/numpy/core/_methods.py in _mean(a, axis, dtype, out, keepdims)
-    158             is_float16_result = True
-    159 
-    --> 160     ret = umr_sum(arr, axis, dtype, out, keepdims)
-    161     if isinstance(ret, mu.ndarray):
-    162         ret = um.true_divide(
-
-    TypeError: No loop matching the specified signature and casting was found for ufunc add
-    """
-    for correlation_type in ["kendalltau", "spearmanr"]:
+    for correlation_type in correlation_types:
         # print (correlation_type)
         correlations[correlation_type] = {}
         for metric_newsroom in metrics_newsroom: # one metric from newsroom
@@ -162,13 +156,11 @@ def summary_judge(scores, metrics_newsroom, metrics_other, consensus):
 # Test 
 # correlations = summary_judge(scores, ["Coherence", "Informativeness", "Fluency", "Relevance"], ["Ours"], "mean")
 
-def print_beautiful(correlation):
+def print_beautiful(correlation, correlation_types, metrics_newsroom):
     """
     correlation looks like this:
     {'kendalltau': {('Coherence', 'Ours'): 0.49600166520307726, ('Informativeness', 'Ours'): 0.5808293864832368, ('Fluency', 'Ours'): 0.45790855761575266, ('Relevance', 'Ours'): 0.4740934359726846}, 'spearmanr': {('Coherence', 'Ours'): 0.5906983676040027, ('Informativeness', 'Ours'): 0.6694288674637746, ('Fluency', 'Ours'): 0.5434449050990235, ('Relevance', 'Ours'): 0.5830224096341955}}
     """
-    correlation_types = ["spearmanr", "kendalltau"]
-    metrics_newsroom = ["Coherence", "Informativeness", "Fluency", "Relevance"]
     for correlation_type in correlation_types:
         for metric_newsroom in metrics_newsroom: 
             for metric_other in ["Ours"]:
@@ -179,29 +171,50 @@ def print_beautiful(correlation):
 #%%
 def main():
 
+    # Configurations 
+    concensus_based_on="median" # "median", "max", "min"
     metrics_newsroom = ["Coherence", "Informativeness", "Fluency", "Relevance"]
-    short_correlation_types = ["s", "k"]
+    short_correlation_types = ["p", "s", "k"]
+    correlation_types = ["pearsonr", "kendalltau", "spearmanr"]
+
+    # header to print 
     short_metrics_newsroom = [x[:3] for x in metrics_newsroom]
     cross_header = ["_".join([x,y]) for x in short_correlation_types for y in short_metrics_newsroom]
+    print ("\t".join(["{:<17}".format("training_set"), " neg_sample"]+cross_header))
 
-    print ("\t".join(["training_set ", " neg_sample"]+cross_header))
-
-    concensus_based_on="mean" # "median", "max", "min"
+    
     data_root = "/mnt/12T/data/NLP/anti-rogue/result_base_sent"
     for training_set in ["billsum", "scientific_papers", "big_patent", "cnn_dailymail"]:
         for method in ["sent_delete", "sent_replace"]:
-            print (training_set, method, end="\t")
+            print (f'{training_set:<17}\t', method, end="\t")
             prediction_tsv = os.path.join(data_root, training_set, method, "test_results_newsroom.tsv")
             scores = load_newsroom_and_ours("./newsroom-human-eval.csv", prediction_tsv)
             correlations = summary_judge(
                 scores, 
-                ["Coherence", "Informativeness", "Fluency", "Relevance"], 
+                metrics_newsroom, 
                 ["Ours"], 
-                concensus_based_on
+                concensus_based_on, 
+                correlation_types
                 )
-            print_beautiful(correlations)
+            print_beautiful(correlations, correlation_types, metrics_newsroom)
 
 main()
+
+def debug_for_hebi():
+    # Configurations 
+    concensus_based_on="median" # "median" or "median"
+    metrics_newsroom = ["Coherence", "Informativeness", "Fluency", "Relevance"]
+    correlation_types = ["pearsonr", "kendalltau", "spearmanr"]
+    
+    scores = load_newsroom_and_ours("./newsroom-human-eval.csv", "./prediction_billsum_sent_delete.tsv")
+    correlations = summary_judge(
+        scores, 
+        metrics_newsroom, 
+        ["Ours"], 
+        concensus_based_on, 
+        correlation_types
+        )
+    print_beautiful(correlations, correlation_types, metrics_newsroom)
 
 # %%
 
@@ -212,6 +225,6 @@ def pooled_judge():
     pass
 
 
-# if __name__ == "__main__":
-
+if __name__ == "__main__":
+    debug_for_hebi()
 # %%

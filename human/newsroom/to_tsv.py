@@ -19,7 +19,6 @@ with open('newsroom-human-eval.csv', ) as csvfile:
             pairs.append([_doc, _sum])
         counter += 1
     
-
 print (len(pairs))
 
 with open('newsroom_60.tsv', 'w') as csvfile: 

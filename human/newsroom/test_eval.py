@@ -14,8 +14,8 @@ def mean(a_list):
     # print (type(a_list))
     # print (type(a_list[0]))
     # print (sum(a_list))
-    # return sum(a_list)/len(a_list)
-    return numpy.mean(a_list)
+    return sum(a_list)/len(a_list)
+    # return numpy.mean(a_list)
 
 def median(a_list):
     a_list.sort()
@@ -83,12 +83,12 @@ def load_newsroom_and_ours(newsroom_csv, prediction_tsv):
 # scores = load_newsroom_and_ours("./newsroom-human-eval.csv", "/mnt/12T/data/NLP/anti-rogue/result_base_sent/billsum/cross_sent_delete/test_results_newsroom.tsv")
 
 # %% 
-def summary_judge(scores, metrics_newsroom, metrics_other, consensus, correlation_types):
+def summary_judge(scores, metrics_newsroom, metrics_other, concensus, correlation_types):
     """Summary-level evaluation between newsroom metrics and metrics from another group 
 
-    metric_newsroom: ["Coherence", "Informativeness", "Fluency", "Relevance"]
-    metric_other: ["Ours"]    # only ours for now. we can add others, e.g., ours from different training sets and/or negative sampling methods 
-
+    metrics_newsroom: e.g., ["Coherence", "Informativeness", "Fluency", "Relevance"]
+    metrics_other: e.g., ["Ours"]    # only ours for now. we can add others, e.g., ours from different training sets and/or negative sampling methods 
+    correlation_type: str, "pearsonr", "spearmanr", or "kendalltau"
     concensus: string, "median", "mean", or "all" 
 
     """
@@ -125,7 +125,7 @@ def summary_judge(scores, metrics_newsroom, metrics_other, consensus, correlatio
 
                 vector_newsroom.append(score_newsroom)
                 vector_other   .append(score_other[0])
-            elif consensus == "all":
+            elif concensus == "all":
                 vector_newsroom += score_newsroom
                 vector_other    += score_other*len(score_newsroom) # just duplicate 
 
@@ -134,8 +134,6 @@ def summary_judge(scores, metrics_newsroom, metrics_other, consensus, correlatio
         # print (vector_other)
 
         return  eval(f"scipy.stats.{correlation_type}(vector_newsroom, vector_other)")[0]
-        # FIXME: This is a weird bug. It works only when manually convert from numpy.float64 to float. 
-        # [0] to get the correlation. [1] is for pvalue. 
 
     # now begins the summary-level judge 
     correlations  = {}
@@ -144,7 +142,7 @@ def summary_judge(scores, metrics_newsroom, metrics_other, consensus, correlatio
         correlations[correlation_type] = {}
         for metric_newsroom in metrics_newsroom: # one metric from newsroom
             for metric_other in metrics_other:  # one metric to evaluate against newsroom 
-                correlation_across_documents = [get_correlation_per_doc_given_metrics(scores_of_one_document, metric_newsroom, metric_other, consensus, correlation_type) for scores_of_one_document in scores.values()]
+                correlation_across_documents = [get_correlation_per_doc_given_metrics(scores_of_one_document, metric_newsroom, metric_other, concensus, correlation_type) for scores_of_one_document in scores.values()]
                 # a list of floats
 
                 correlations[correlation_type]\
@@ -164,24 +162,106 @@ def print_beautiful(correlation, correlation_types, metrics_newsroom):
     for correlation_type in correlation_types:
         for metric_newsroom in metrics_newsroom: 
             for metric_other in ["Ours"]:
-                print ("{:1.4}".format(correlation[correlation_type][(metric_newsroom, metric_other)]), end="\t")
+                print ("{:>1.4}".format(correlation[correlation_type][(metric_newsroom, metric_other)]), end="\t")
 
     print ("")
+
+def system_judge(scores, metrics_newsroom, metrics_other, concensus, correlation_types):
+    """Compute the correlation between two (groups of) metrics at system-level 
+
+    This function is highly similar to summary_judge
+
+    """
+    all_system_names = list(scores[list(scores.keys())[0]].keys()) 
+    # a safe approach to prevent system name mismatching. 
+
+    def get_correlation_two_metrics(scores, metric_newsroom, metric_other, concensus, correlation_type):
+
+        mean_score_vector_newsroom = []
+        mean_score_vector_other = []
+        
+        for system in all_system_names:
+            vector_newsroom = [] # scores from a newsroom metric 
+            vector_other = []    # scores from a non-newsroom metric 
+            for docID in scores.keys():
+                score_local = scores[docID][system]
+                score_newsroom = score_local[metric_newsroom] # list of 3 floats
+                score_other = score_local[metric_other] # list of ONE Float
+                if concensus in ["median", "mean", "max", "min"]:
+                    score_newsroom = eval(f"{concensus}(score_newsroom)")
+                    vector_newsroom.append(score_newsroom)
+                    vector_other   .append(score_other[0])
+                elif concensus == "all":
+                    vector_newsroom += score_newsroom
+                    vector_other    += score_other*len(score_newsroom) # just duplicate
+
+            mean_score_vector_newsroom.append(mean(vector_newsroom))
+            mean_score_vector_other   .append(mean(vector_other))
+        return  eval(f"scipy.stats.{correlation_type}(vector_newsroom, vector_other)")[0]
+
+    # now begins the system-level judge 
+    correlations  = {}
+    for correlation_type in correlation_types:
+        # print (correlation_type)
+        correlations[correlation_type] = {}
+        for metric_newsroom in metrics_newsroom: # one metric from newsroom
+            for metric_other in metrics_other:  # one metric to evaluate against newsroom 
+                correlations[correlation_type]\
+                            [(metric_newsroom, metric_other)] = \
+                            get_correlation_two_metrics(scores, metric_newsroom, metric_other, concensus, correlation_type)
+    
+    return correlations
+
+def pooled_judge(scores, metrics_newsroom, metrics_other, concensus, correlation_types):
+    """Judge metrics purely based on how they correlation over a pair of document and summary
+    """
+    def get_correlation_given_two_metrics(scores, metric_newsroom, metric_other, concensus, correlation_type):
+        vector_newsroom = [] # scores from a newsroom metric 
+        vector_other = []    # scores from a non-newsroom metric 
+        for docID in scores.keys():
+            for system in scores[docID].keys():
+                score_newsroom = scores[docID][system][metric_newsroom] # list of 3 floats
+                score_other = scores[docID][system][metric_other] # list of ONE Float
+                if concensus in ["median", "mean", "max", "min"]:
+                    score_newsroom = eval(f"{concensus}(score_newsroom)")
+                    vector_newsroom.append(score_newsroom)
+                    vector_other   .append(score_other[0])
+                elif concensus == "all":
+                    vector_newsroom += score_newsroom
+                    vector_other    += score_other*len(score_newsroom) # just duplicate
+        return  eval(f"scipy.stats.{correlation_type}(vector_newsroom, vector_other)")[0]
+
+    # now begins the pooled- judge 
+    correlations  = {}
+    for correlation_type in correlation_types:
+        # print (correlation_type)
+        correlations[correlation_type] = {}
+        for metric_newsroom in metrics_newsroom: # one metric from newsroom
+            for metric_other in metrics_other:  # one metric to evaluate against newsroom 
+                correlations[correlation_type]\
+                            [(metric_newsroom, metric_other)] = \
+                            get_correlation_given_two_metrics(scores, metric_newsroom, metric_other, concensus, correlation_type)
+    
+    return correlations
+
 
 #%%
 def main():
 
     # Configurations 
-    concensus_based_on="median" # "median", "max", "min"
+    concensus_based_on="mean" # "median", "max", "min"
+    level = "pooled" # "system", "summary", or "pooled"
+
     metrics_newsroom = ["Coherence", "Informativeness", "Fluency", "Relevance"]
     short_correlation_types = ["p", "s", "k"]
     correlation_types = ["pearsonr", "kendalltau", "spearmanr"]
+    
+    judge_function = {"summary":summary_judge, "system":system_judge, "pooled":pooled_judge}.get(level)
 
     # header to print 
     short_metrics_newsroom = [x[:3] for x in metrics_newsroom]
     cross_header = ["_".join([x,y]) for x in short_correlation_types for y in short_metrics_newsroom]
     print ("\t".join(["{:<17}".format("training_set"), " neg_sample"]+cross_header))
-
     
     data_root = "/mnt/12T/data/NLP/anti-rogue/result_base_sent"
     for training_set in ["billsum", "scientific_papers", "big_patent", "cnn_dailymail"]:
@@ -189,7 +269,8 @@ def main():
             print (f'{training_set:<17}\t', method, end="\t")
             prediction_tsv = os.path.join(data_root, training_set, method, "test_results_newsroom.tsv")
             scores = load_newsroom_and_ours("./newsroom-human-eval.csv", prediction_tsv)
-            correlations = summary_judge(
+
+            correlations = judge_function(
                 scores, 
                 metrics_newsroom, 
                 ["Ours"], 
@@ -198,7 +279,7 @@ def main():
                 )
             print_beautiful(correlations, correlation_types, metrics_newsroom)
 
-main()
+
 
 def debug_for_hebi():
     # Configurations 
@@ -218,13 +299,7 @@ def debug_for_hebi():
 
 # %%
 
-def system_judge(scores):
-    pass
-
-def pooled_judge():
-    pass
-
-
 if __name__ == "__main__":
+    main()
     debug_for_hebi()
 # %%

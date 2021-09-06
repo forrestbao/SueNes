@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.stats.stats import pearsonr, spearmanr
+from scipy.stats.stats import pearsonr, spearmanr, kendalltau
 import os, json, csv
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -133,23 +133,40 @@ def load_tac_json(task_json, summarizer_type):
 
     return tac_scores 
 
-def calc_cc(tac_results, tac_scores):
+def calc_cc(tac_results, tac_scores, method=pearsonr, level="pool"):
     """Compute the correlation coefficients between BERT results on TAC test set and human evaluated scores on TAC test set
 
     tac_results: 1-D list of floats, 46(docset)x47(summarizers) elements
     tac_scores: 2-D list of floats, 46(docset)x47(summarizers) rows, and 3 columns
     """
     tac_scores = np.array(tac_scores)
+    docs = 46
+    summarizers = int(tac_scores.shape[0] / docs)
+    
+    corr = None
+    if level == "pool":
+        corr = [method(tac_results, tac_scores[:, i])[0] for i in range(3)]
+    elif level == "summary":
+        tac_scores = tac_scores.reshape(docs, summarizers, 3)
+        tac_results = np.array(tac_results).reshape(docs, summarizers)
+        corr = np.zeros((3, ), dtype=np.float32)
+        for doc in range(docs):
+            corr += np.array([method(tac_results[doc, :], tac_scores[doc, :, i])[0] for i in range(3)])
+        corr /= doc
+    elif level == 'system':
+        tac_scores = tac_scores.reshape(docs, summarizers, 3)
+        tac_results = np.array(tac_results).reshape(docs, summarizers)
+        tac_scores_system = np.mean(tac_scores, axis=0)
+        tac_results_system = np.mean(tac_results, axis=0)
+        corr = [method(tac_results_system, tac_scores_system[:, i])[0] for i in range(3)]
+    else:
+        print("???")
+        assert(False)
 
-    corr_pearsons = [pearsonr(tac_results, tac_scores[:, i])[0] for i in range(3)]
-    corr_spearmans = [spearmanr(tac_results, tac_scores[:, i])[0] for i in range(3)]
-
-    line = corr_pearsons + corr_spearmans
-    line = ["%.5f"%i for i in line]
+    line = ["%.5f"%i for i in corr]
     line = "\t".join(line)
 
     print (line)
-
     # for i in range(3):
     #     corr_pearson = pearsonr(tac_results, tac_scores[:, i])
     #     corr_spearman = spearmanr(tac_results, tac_scores[:, i])
@@ -159,10 +176,10 @@ def calc_cc(tac_results, tac_scores):
 
 
 def cc_all(plot = True):
-    datasets = ['billsum', 'scientific_papers', 'cnn_dailymail', 'big_patent']
-    BERT_result_prefix = "../bert/result_base/"
-    tac_json_file = "../bert/TAC2010_all.json"
-    human_only=False
+    datasets = ['cnn_dailymail', 'billsum', 'scientific_papers', 'big_patent']
+    BERT_result_prefix = "../../bert/result_base_sent/"
+    tac_json_file = "../../bert/TAC2010_all.json"
+    human_only="machine"
 
     tac_scores = load_tac_json(tac_json_file, human_only)
     result_dict = {}
@@ -172,7 +189,7 @@ def cc_all(plot = True):
             BERT_result_file = os.path.join(BERT_result_prefix, dataset, method, "test_results.tsv")
             tac_results = read_tac_test_result(BERT_result_file, tac_json_file, human_only)
             result_dict[dataset] = tac_results
-            calc_cc(tac_results, tac_scores)
+            calc_cc(tac_results, tac_scores, method=kendalltau, level="pool")
         
     def plot_results():
         for dataset in datasets:

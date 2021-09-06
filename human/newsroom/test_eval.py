@@ -7,21 +7,16 @@
 import csv 
 import scipy.stats
 import os
-import numpy 
+# import numpy 
 
 def mean(a_list):
-    # # print (a_list)
-    # print (type(a_list))
-    # print (type(a_list[0]))
-    # print (sum(a_list))
     return sum(a_list)/len(a_list)
     # return numpy.mean(a_list)
 
 def median(a_list):
     a_list.sort()
-    # if len(a_list)!=3:
-    #     print (a_list)
     return a_list[len(a_list)//2]
+    # return numpy.median(a_list)
 
 def load_newsroom_and_ours(newsroom_csv, prediction_tsv):
     """Load newsroom's human evaluation CSV file and run_classifier.py's prediction using our models. 
@@ -129,10 +124,9 @@ def summary_judge(scores, metrics_newsroom, metrics_other, concensus, correlatio
                 vector_newsroom += score_newsroom
                 vector_other    += score_other*len(score_newsroom) # just duplicate 
 
-        # print (vector_newsroom)
-        # print ("asdfasdf")
-        # print (vector_other)
-
+        if (max(vector_newsroom) == min(vector_newsroom)):
+            # A workaround to avoid constant vector issue for pearsonr
+            vector_newsroom[0] += 0.001 
         return  eval(f"scipy.stats.{correlation_type}(vector_newsroom, vector_other)")[0]
 
     # now begins the summary-level judge 
@@ -247,10 +241,20 @@ def pooled_judge(scores, metrics_newsroom, metrics_other, concensus, correlation
 
 #%%
 def main():
+    """
+
+    Assumptions on files and paths: 
+    * Results are organized into folders as $DATA_ROOT/training_set/negative_sampling_method/.
+    * Newsroom human evaluation groundtruth is ./newsroom-human-eval.csv
+    * Prediction from BERT's 
+
+    """
+
 
     # Configurations 
+    data_root = "/mnt/12T/data/NLP/anti-rogue/result_base_sent"
     concensus_based_on="mean" # "median", "max", "min"
-    level = "pooled" # "system", "summary", or "pooled"
+    level = "summary" # "system", "summary", or "pooled"
 
     metrics_newsroom = ["Coherence", "Informativeness", "Fluency", "Relevance"]
     short_correlation_types = ["p", "s", "k"]
@@ -263,7 +267,6 @@ def main():
     cross_header = ["_".join([x,y]) for x in short_correlation_types for y in short_metrics_newsroom]
     print ("\t".join(["{:<17}".format("training_set"), " neg_sample"]+cross_header))
     
-    data_root = "/mnt/12T/data/NLP/anti-rogue/result_base_sent"
     for training_set in ["billsum", "scientific_papers", "big_patent", "cnn_dailymail"]:
         for method in ["sent_delete", "sent_replace"]:
             print (f'{training_set:<17}\t', method, end="\t")
@@ -280,26 +283,7 @@ def main():
             print_beautiful(correlations, correlation_types, metrics_newsroom)
 
 
-
-def debug_for_hebi():
-    # Configurations 
-    concensus_based_on="median" # "median" or "median"
-    metrics_newsroom = ["Coherence", "Informativeness", "Fluency", "Relevance"]
-    correlation_types = ["pearsonr", "kendalltau", "spearmanr"]
-    
-    scores = load_newsroom_and_ours("./newsroom-human-eval.csv", "./prediction_billsum_sent_delete.tsv")
-    correlations = summary_judge(
-        scores, 
-        metrics_newsroom, 
-        ["Ours"], 
-        concensus_based_on, 
-        correlation_types
-        )
-    print_beautiful(correlations, correlation_types, metrics_newsroom)
-
 # %%
 
 if __name__ == "__main__":
     main()
-    debug_for_hebi()
-# %%

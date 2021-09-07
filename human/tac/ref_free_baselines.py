@@ -29,14 +29,13 @@ def main():
         article = re.sub(" +", " ", article)
 
         for sum_id, content in tac[doc_id]["summaries"].items():
-            if sum_id.isnumeric():
-                summary = " ".join(content["sentences"])
-                summary = summary.replace("\t", " ")
-                summary = summary.replace("\n", " ")
-                summary = re.sub(" +", " ", summary)
-                
-                sums.append(summary)
-                docs.append(article)
+            summary = " ".join(content["sentences"])
+            summary = summary.replace("\t", " ")
+            summary = summary.replace("\n", " ")
+            summary = re.sub(" +", " ", summary)
+            
+            sums.append(summary)
+            docs.append(article)
 
     results = {}
     
@@ -44,7 +43,7 @@ def main():
         scores = scorer.evaluate_batch(sums, docs, aggregate=False)
         cid = 0
         for doc_id in tac:
-            for sum_id in tac[doc_id]:
+            for sum_id in tac[doc_id]["summaries"]:
                 results.setdefault(".".join([doc_id, sum_id]), {}).update(scores[cid])
                 cid += 1
     

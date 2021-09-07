@@ -11,7 +11,7 @@ def calc_one(hyp, refs, scorers):
 
 def main():
     # Fix SummaQA summa_qa_utils.py:20 code from huggingface see https://huggingface.co/transformers/model_doc/bert.html#bertforquestionanswering
-    scorers = [SummaQAMetric()]
+    scorers = [SupertMetric(), SummaQAMetric(), BlancMetric(inference_batch_size=32)]
 
     in_file = 'test.tsv'
 
@@ -21,7 +21,7 @@ def main():
         for line in f:
             texts = line.strip().split('\t')
             article = texts[0]
-            summaries = texts[:-1]
+            summaries = texts[1:]
             
             docs.extend([article] * len(summaries))
             sums.extend(summaries)

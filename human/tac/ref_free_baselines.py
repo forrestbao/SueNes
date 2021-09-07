@@ -33,7 +33,7 @@ def main():
                 summary = " ".join(content["sentences"])
                 summary = summary.replace("\t", " ")
                 summary = summary.replace("\n", " ")
-                summary = re.sub(" +", " ", article)
+                summary = re.sub(" +", " ", summary)
                 
                 sums.append(summary)
                 docs.append(article)

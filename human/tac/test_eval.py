@@ -156,8 +156,10 @@ def calc_cc(tac_results, tac_scores, method=pearsonr, level="pool"):
     elif level == 'system':
         tac_scores = tac_scores.reshape(docs, summarizers, 3)
         tac_results = np.array(tac_results).reshape(docs, summarizers)
+        
         tac_scores_system = np.mean(tac_scores, axis=0)
         tac_results_system = np.mean(tac_results, axis=0)
+        # print(tac_scores.shape, tac_scores_system.shape)
         corr = [method(tac_results_system, tac_scores_system[:, i])[0] for i in range(3)]
     else:
         print("???")
@@ -166,7 +168,7 @@ def calc_cc(tac_results, tac_scores, method=pearsonr, level="pool"):
     line = ["%.5f"%i for i in corr]
     line = "\t".join(line)
 
-    print (line)
+    print (line, end = ' ')
     # for i in range(3):
     #     corr_pearson = pearsonr(tac_results, tac_scores[:, i])
     #     corr_spearman = spearmanr(tac_results, tac_scores[:, i])
@@ -189,7 +191,9 @@ def cc_all(plot = True):
             BERT_result_file = os.path.join(BERT_result_prefix, dataset, method, "test_results.tsv")
             tac_results = read_tac_test_result(BERT_result_file, tac_json_file, human_only)
             result_dict[dataset] = tac_results
-            calc_cc(tac_results, tac_scores, method=kendalltau, level="pool")
+            for corr_method in [pearsonr, spearmanr, kendalltau]:
+                calc_cc(tac_results, tac_scores, method=corr_method, level="summary")
+            print("")
         
     def plot_results():
         for dataset in datasets:

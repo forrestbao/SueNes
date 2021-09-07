@@ -28,10 +28,11 @@ def main():
     
     for scorer in scorers:
         scores = scorer.evaluate_batch(sums, docs, aggregate=False)
-        scorer_name = list(scores[0].keys())[0]
-        with open(os.path.join("predictions", "metric_"+scorer_name+".tsv"), "w", encoding="utf-8") as f:
-            for score in scores:
-                f.write(str(score[scorer_name])+"\n")
+        scorer_names = list(scores[0].keys())
+        for scorer_name in scorer_names:
+            with open(os.path.join("predictions", "metric_"+scorer_name+".tsv"), "w", encoding="utf-8") as f:
+                for score in scores:
+                    f.write(str(score[scorer_name])+"\n")
             
 if __name__ == '__main__':
     main()

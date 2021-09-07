@@ -10,7 +10,8 @@ def calc_one(hyp, refs, scorers):
     return score
 
 def main():
-    scorers = [BlancMetric()]
+    # Fix SummaQA summa_qa_utils.py:20 code from huggingface see https://huggingface.co/transformers/model_doc/bert.html#bertforquestionanswering
+    scorers = [SummaQAMetric()]
 
     in_file = 'test.tsv'
 

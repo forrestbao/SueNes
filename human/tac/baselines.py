@@ -4,6 +4,7 @@ from summ_eval.cider_metric import CiderMetric
 from summ_eval.s3_metric import S3Metric    # Use sklearn 0.21.X
 from summ_eval.meteor_metric import MeteorMetric, enc
 from summ_eval.bert_score_metric import BertScoreMetric
+from summ_eval.mover_score_metric import MoverScoreMetric
 # from summ_eval.rouge_metric import RougeMetric
 # rouge = RougeMetric(rouge_args="-n 4 -w 1.2 -m  -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -a")
 # rouge = RougeMetric(rouge_args="-c 95 -2 -1 -U -r 1000 -n 4 -w 1.2 -a")
@@ -23,9 +24,9 @@ def main():
     # Fix multi reference for BertScoreMetric & S3Metric
     # Fix model repeatly loading for BertScoreMetric
     WORKERS = 6
-    scorers = [CiderMetric(), BleuMetric(n_workers=WORKERS), S3Metric(n_workers=WORKERS), MeteorMetric(), BertScoreMetric()]
+    scorers = [CiderMetric(), BleuMetric(n_workers=WORKERS), S3Metric(n_workers=WORKERS), MeteorMetric(), BertScoreMetric(), MoverScoreMetric()]
 
-    eval_path = '/home/nkwbtb/Downloads/TAC2010/GuidedSumm2010_eval/ROUGE/'
+    eval_path = '/home/gluo/Dataset/TAC2010/GuidedSumm2010_eval/ROUGE/'
     in_file = 'rouge_A.in'
 
     xml = ''
@@ -72,7 +73,7 @@ def main():
             for peer in PEERS:
                 peer_file = peer["#text"]
                 results.setdefault(peer_file, {}).update(scores[cid])
-                print(scores[cid])
+                # print(scores[cid])
                 cid += 1
     
     with open('baselines.json', 'w', encoding='utf-8') as f:

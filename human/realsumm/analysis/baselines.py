@@ -25,8 +25,8 @@ def main():
     # Fix multi reference for BertScoreMetric & S3Metric
     # Fix model repeatly loading for BertScoreMetric
     WORKERS = 6
-    scorers = [CiderMetric(), BleuMetric(n_workers=WORKERS), S3Metric(n_workers=WORKERS), MeteorMetric(), BertScoreMetric()]
-
+    scorers = [CiderMetric(), BleuMetric(n_workers=WORKERS), S3Metric(n_workers=WORKERS), MeteorMetric(), BertScoreMetric(), MoverScoreMetric()]
+    
     sd_abs_path = "../scores_dicts/abs.pkl"
     sd_ext_path = "../scores_dicts/ext.pkl"
     sd_abs = utils.get_pickle(sd_abs_path)

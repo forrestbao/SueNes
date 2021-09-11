@@ -1,3 +1,4 @@
+import math
 from tac import *
 import numpy as np
 from scipy.stats.stats import pearsonr, spearmanr, kendalltau
@@ -58,7 +59,7 @@ def calc_corr(metric_score, scores, rscore_type, hscore_type, method=pearsonr, l
     return corr
 
 def main():
-    TAC_result_root = "/home/nkwbtb/Downloads/TAC2010"
+    TAC_result_root = "/home/gluo/Dataset/TAC2010"
     score_path = TAC_result_root + "/GuidedSumm2010_eval/manual"
     rouge_score_path = TAC_result_root + "/GuidedSumm2010_eval/ROUGE/rouge_A.m.out"
 
@@ -84,7 +85,7 @@ def main():
             f.write(strline)
 
     # Correlation for other baselines
-    baselines_score_path = "baselines.json"
+    baselines_score_path = "baselines.json" # or "baselines_ref_free.json"
     baselines_score = {}
     with open(baselines_score_path, "r", encoding="utf-8") as f:
         baselines_score = json.load(f)
@@ -97,7 +98,10 @@ def main():
     for doc_file in baselines_score:
         score_list = []
         for score in score_type:
-            score_list.append(baselines_score[doc_file][score])
+            v = baselines_score[doc_file][score]
+            if v is None or math.isinf(v) or math.isnan(v):
+                v = 0.0
+            score_list.append(v)
 
         doc_string = doc_file.split('.')
         doc = doc_string[0]

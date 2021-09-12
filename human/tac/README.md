@@ -11,6 +11,8 @@ The score for a summary is the average of scores between it and all 10 document 
 
 # Files
 * tac.py: converts document-summary pairs and scores in TAC result files into JSON format. We have a customized data loader for it in [../bert/run_classifier.py](../bert/run_classifier.py)
-* rouge_corr.py: computes the correlation between human evaluation and ROUGE-based scores. This is what we try to beat. 
-* test_eval.py: computes the correlation between scroe from our BERT model and human evaluation scores in TAC2010.
+* baselines.py: computes the reference-based upper bounds. 
+* ref-free-baselines.py: computes the reference-free baselines.
+* baselines_corr.py: computes the correlation between human evaluation and baselines scores. 
+* test_eval.py: computes the correlation between scores from our BERT model and human evaluation scores in TAC2010.
 * predict_generation.py: obselete now. kept for reference. 

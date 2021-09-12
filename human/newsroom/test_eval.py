@@ -282,6 +282,23 @@ def main():
                 )
             print_beautiful(correlations, correlation_types, metrics_newsroom)
 
+    tsvs = os.listdir('.')
+    tsvs = [tsv for tsv in tsvs if tsv.startswith("metric")]
+    for tsv in tsvs:
+        print (tsv)
+        prediction_tsv = tsv
+
+        scores = load_newsroom_and_ours("./newsroom-human-eval.csv", prediction_tsv)
+
+        correlations = judge_function(
+            scores, 
+            metrics_newsroom, 
+            ["Ours"], 
+            concensus_based_on, 
+            correlation_types
+            )
+        print_beautiful(correlations, correlation_types, metrics_newsroom)
+
 
 # %%
 

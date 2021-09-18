@@ -1,0 +1,9 @@
+#tensorflow
+tensorflow-datasets
+tensorflow_hub
+torch
+joblib
+numpy
+nltk
+matplotlib
+bs4

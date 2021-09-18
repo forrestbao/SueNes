@@ -53,9 +53,15 @@ EMBEDDING_DIM = 100
 
 # VALIDATION_SPLIT = 0.2
 
-DATA_DIR = "F:\\Dataset\\nyt_corpus"
-# CNN_DIR = os.path.join(DATA_DIR, 'cnn/stroies')
-# DM_DIR = os.path.join(DATA_DIR, 'dailymail/stories')
+# CAUTION this folder is important, all raw data is expected to put here, and
+# all generated preprocessed data will be put here as well
+
+# DATA_DIR = "F:\\Dataset\\nyt_corpus"
+DATA_DIR = os.path.expanduser("~/data")
+CORENLP_JAR = os.path.join(DATA_DIR, 'stanford-corenlp-3.9.2.jar')
+
+CNN_DIR = os.path.join(DATA_DIR, 'cnn/stories')
+DM_DIR = os.path.join(DATA_DIR, 'dailymail/stories')
 CNN_TOKENIZED_DIR = os.path.join(DATA_DIR, 'tokenized_stories')
 # CNN_TOKENIZED_DIR = os.path.join(DATA_DIR, 'cnn_tokenized_stories')
 # DM_TOKENIZED_DIR = os.path.join(DATA_DIR, 'dailymail_tokenized_stories')
@@ -75,17 +81,13 @@ SERIAL_DIR = os.path.join(DATA_DIR, 'serial')
 CNN_SERIAL_DIR = os.path.join(DATA_DIR, 'serial_cnn')
 DM_SERIAL_DIR = os.path.join(DATA_DIR, 'serial_dm')
 
-NEG_SIZE = 5
+# probably just use 1 so that the positive and negative samples are balanced
+NEG_SIZE = 1
 
 USE_DAN_DIR = os.path.join(DATA_DIR, 'USE-DAN')
 USE_TRANSFORMER_DIR = os.path.join(DATA_DIR, 'USE-Transformer')
 
 INFERSENT_DIR = os.path.join(DATA_DIR, 'InferSent')
-
-INFERSENT_MODEL_PATH = os.path.join('/home/hebi/github/reading/InferSent/',
-                                    'encoder/infersent2.pkl')
-INFERSENT_W2V_PATH = os.path.join('/home/hebi/github/reading/InferSent/',
-                                  'dataset/fastText/crawl-300d-2M.vec')
 
 USE_BATCH_SIZE = 4096
 USE_LARGE_BATCH_SIZE = 8

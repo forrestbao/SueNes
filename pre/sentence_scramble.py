@@ -6,6 +6,7 @@ import joblib, multiprocessing
 import copy
 import functools
 import random
+import errno 
 
 import numpy
 import stanza
@@ -45,10 +46,10 @@ def split_pairs(pairs, tokenizer_name="spacy", spacy_batch_size=2**10, n_jobs= 4
         combined_summary = " Forrest loves Ames. ".join([_sum  for (_doc, _sum) in pairs])
 
         try: 
-            nlp = stanza.Pipeline(lang='en', processors='tokenize', tokenize_batch_size=tokenize_batch_size, verbose=False)
+            nlp = stanza.Pipeline(lang='en', processors='tokenize', verbose=False)
         except Exception:
             stanza.download('en')
-            nlp = stanza.Pipeline(lang='en', processors='tokenize', tokenize_batch_size=tokenize_batch_size, verbose=False)
+            nlp = stanza.Pipeline(lang='en', processors='tokenize', verbose=False)
 
         # This cannot be too long. otherwise, efficienty is very low. 
 
@@ -163,7 +164,8 @@ def mutate(pairs, method, dumpfile, neg_pos_ratio, mode='len',debug=False):
     # 2-D array, each row is the 0<ratio<1 of summary sentences to keep
 
     keep_numbers = numpy.einsum("ij, i->ij", keep_ratios, lengths_summaries)
-    keep_numbers = keep_numbers.astype(int) 
+    keep_numbers = keep_numbers.astype(int)  # round to integers
+    # TODO: can we inject noise here? 
     # how many sentences to keep in each neg-sampled summary, integers
 
     lines = [] # compact form [_doc, _sum_1, label_1, _sum_2, _label_2, ....]
@@ -192,10 +194,9 @@ def mutate(pairs, method, dumpfile, neg_pos_ratio, mode='len',debug=False):
             
             new_sum = " ".join(new_sum)
             label = 0
-            if mode == 'same':
+            if mode == 'sent':
                 label = keep_number/len(_sum)
-            elif mode == 'len':
-                # support delete only
+            elif mode == 'char': 
                 label = len(new_sum) / float(full_summary_length) 
             # label = keep_ratios[sample_id][i] # NOTE alternative, introducing noise            
             line += [new_sum, label]
@@ -213,7 +214,7 @@ def mutate(pairs, method, dumpfile, neg_pos_ratio, mode='len',debug=False):
 
     return lines
 
-def generate_one(dataset_name, split, features, methods, neg_pos_ratio, load_start, load_end, special_chars, data_root, tokenizer_name, n_jobs, spacy_batch_size, batch_id, mode='len'): 
+def generate_one(dataset_name, split, features, methods, neg_pos_ratio, load_start, load_end, special_chars, data_root, tokenizer_name, n_jobs, spacy_batch_size, batch_id, mode): 
     """Generate one batch of data for one split (test or train) on one dataset, 
     given the start and end indexes of samples in the dataset
     """
@@ -234,7 +235,7 @@ def generate_one(dataset_name, split, features, methods, neg_pos_ratio, load_sta
 
     for method in methods:
         # 3. Mutate and write results to file 
-        dumpfile = os.path.join(data_root, dataset_name, method, "{}_{}.tsv".format(split, batch_id))
+        dumpfile = os.path.join(data_root, dataset_name, method + "_" + mode, "{}_{}.tsv".format(split, batch_id))
         if not os.path.exists(os.path.dirname(dumpfile)):
             try:
                 os.makedirs(os.path.dirname(dumpfile))
@@ -243,6 +244,32 @@ def generate_one(dataset_name, split, features, methods, neg_pos_ratio, load_sta
                     raise
 
         mutate(pairs, method, dumpfile, neg_pos_ratio, mode)
+
+def combine_shuffle(methods, data_root, dataset_name, split, mode):
+    """Combine dumped sample files into one file and shuffle
+
+    cat train_*.tsv > train.tsv
+    rm  train_*.tsv 
+    cat test_*.tsv > test.tsv
+    rm test_*.tsv 
+    shuf train.tsv  > train_shuffled.tsv
+    shuf test.tsv  > test_shuffled.tsv
+    head train_shuffled.tsv -n 120722 > train_shuffled_10_percent.tsv
+    head test_shuffled.tsv -n 6707 > test_shuffled_10_percent.tsv
+
+
+    """
+    for method in methods:
+        dump_root = os.path.join(data_root, dataset_name, method + "_" +  mode)
+        print ("Combining and shuffling at ", dump_root)
+        chops = os.path.join(dump_root, F"{split}_*.tsv")
+        concrete = os.path.join(dump_root, F"{split}.tsv")
+        tmp = os.path.join(dump_root, "tmp.tsv")
+
+        os.system(F"cat {chops} > {concrete}")
+        os.system(F"rm {chops}")
+        os.system(F"shuf {concrete} > {tmp}")
+        os.system(F"mv {tmp} {concrete}")
 
 def sample_generation(conf):
     """main function to generate samples 
@@ -263,12 +290,14 @@ def sample_generation(conf):
             boundaries = list(zip(boundaries[:-1], boundaries[1:]))
 
             for batch_id, (load_start, load_end) in enumerate(boundaries):
-                print ("\t batch {0}/{1}".format(batch_id+1, len(boundaries)), end="...")
+                print ("\t batch {0}/{1}".format(batch_id+1, len(boundaries)), end="...", flush=True)
                 start_time = time.time()
                 generate_one(dataset_name, split, features, cfg.methods, cfg.neg_pos_ratio, load_start, load_end, cfg.special_characters_to_clean, cfg.data_root, cfg.tokenizer_name, cfg.n_jobs, cfg.spacy_batch_size, batch_id, cfg.mode)
 
                 elapse = time.time() - start_time
                 print ("  Took {:.3f} seconds".format(elapse))
+
+            combine_shuffle(cfg.methods, cfg.data_root, dataset_name, split, cfg.mode)
 
 
 if __name__ == "__main__":

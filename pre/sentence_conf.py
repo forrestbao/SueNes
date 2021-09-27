@@ -17,7 +17,7 @@ dataset_sizes = {"billsum":23455, "scientific_papers":215913, "newsroom":1212740
 dataset_sizes_w_split = {# new for sentence-level mutation
     "billsum":{'train':18949, 'test':3269},   
     "cnn_dailymail":{'train':287113, 'test':11490},
-    "big_patent":{'train':1207222, 'test':67702},
+    "big_patent":{'train':1207222, 'test':67072},
     "scientific_papers":{'train':203037, 'test':6440},
 }
 
@@ -25,14 +25,14 @@ dataset_sizes_w_split = {# new for sentence-level mutation
 
 # Must match their names in TFDS 
 # dataset_name = "dryrun" 
-dataset_names = ["scientific_papers", "cnn_dailymail", "billsum"] #, "scientific_papers"] #, "big_patent"]
+dataset_names = ["billsum", "scientific_papers", "cnn_dailymail", "big_patent"] 
 
-splits = ['train', 'test']
+splits = ['train', 'test'] # We only need the train split. We skip validation and test.
 # note that billsum has no validation set
 
 #========= data output/dumping parameters 
 
-data_root = "../data/"  # new for sentence-level mutation
+data_root = "../exp/data"  # new for sentence-level mutation
 
 n_jobs = 35
 
@@ -58,7 +58,7 @@ special_characters_to_clean = ['\n', '\t'] # replace such strings in raw data
 sent_end = [".", "!", "?"]  # symbols that represent the end of a sentence 
 sent_end = string.punctuation
 
-tokenizer_name = 'spacy' # or "stanza", "nltk" (to come)
+tokenizer_name = 'spacy' # or "stanza", "nltk" 
 spacy_batch_size = 8000 # doesn't seem to have much effect though
 
 #========= negative sampling parameters 
@@ -68,5 +68,5 @@ spacy_batch_size = 8000 # doesn't seem to have much effect though
 neg_pos_ratio = 5
 
 # methods used to generate negative samples 
-methods = ["sent_delete"] # "sent_replace" 
-mode = 'len' # or 'same'
+methods = ["sent_delete"] 
+mode = 'char' # or 'sent'  # measure how many sentences or characters are altered. # TODO: add token one

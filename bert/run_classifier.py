@@ -171,10 +171,10 @@ class BasicProcessor(DataProcessor):
   def get_test_examples(self, data_dir):
     """See base class."""
     if self.human_eval_dataset.lower() == "tac":
-      return self._pop_tac_samples(os.path.join(data_dir, self.f_test), "test")
+      return self._pop_tac_samples(os.path.join("./", self.f_test), "test")
     elif self.human_eval_dataset.lower() in ["realsumm", "newsroom"]:
       return self._pop_compact_test_samples(
-      self._read_tsv(os.path.join(data_dir, self.f_test)), "test")
+      self._read_tsv(os.path.join("./", self.f_test)), "test")
       
 
   def get_labels(self):

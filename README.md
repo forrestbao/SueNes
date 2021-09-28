@@ -15,6 +15,13 @@ First, create folders under the directory of this project:
 
 ```bash
 mkdir exp exp/data exp/result
+mkdir human human/newsroom human/tac human/realsumm
+```
+
+Then download test set files
+
+```bash
+wget https://github.com/lil-lab/newsroom/blob/master/humaneval/newsroom-human-eval.csv -P human/newsroom
 ```
 
 ### 1. Negative sampling
@@ -30,6 +37,7 @@ Configrations corresponding to the two Python scripts above are in  `sentence_co
 ### 2. Model training and test 
 
 Code for model training and test is in the `bert` folder. 
+This part of the code requires TF1.x. We used nVidia's TF1.15 fork.
 
 Suppose now you are still in `pre` folder. 
 ```bash
@@ -39,11 +47,19 @@ bash run_classifier.sh
 
 It will call our modified BERT's `run_classifier.py` script to train negative samples just generated above and to test on Newsroom, RealSumm, and TAC2010. Variable names in our `run_classifier.sh` bash script are made very self-explaintory for you to conveniently change the settings, such as the training set, test set, etc. 
 
-Our `run_classifier.py` script hard-codes paths for the three test sets as: `./newsroom_60.tsv`, `./realsumm_100.tsv`, and `./TAC2010_all`. The files `newsroom_60.tsv` and `realsumm_100.tsv` are in this repo for convenience. TAC2010 is not because its access requires approval from NIST. All three files can be generated from raw data using scripts under `human` folder. Please refer to the README file under `human/{newsroom, realsumm, tac}` for information. 
+Our `run_classifier.py` script hard-codes paths for the three test sets as: `newsroom-human-eval.csv`, `realsumm_100.tsv`, and `TAC2010_all`. `newsroom-human-eval.csv` is wget'ed above and saved under `human/newsroom` folder. `realsumm_100.tsv` is in this repo for convenience. TAC2010 is not because its access requires approval from NIST. All three files can be generated from raw data using scripts under `human` folder. Please refer to the README file under `human/{newsroom, realsumm, tac}` for information. 
 
 ### 3. Aligning with human evaluations 
 
 Code for computing the correlation between our models' predictions and human ratings from the three datasets is in the `human` folder. 
+
+Suppose now you are still in `bert` folder
+```bash
+# For newsroom
+cd ../human/newsroom
+python3 ref_free_baselines.py
+python3 test_eval.py
+```
 
 ## MISC 
 Additional code are kept for reference, e.g., used in early stage of the development of our appproach:   

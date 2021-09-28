@@ -22,7 +22,7 @@ from __future__ import print_function
 import itertools, multiprocessing, functools
 import collections
 import os
-import json, csv
+import json, csv, html
 import random
 
 # scipy/numpy/tf
@@ -154,7 +154,7 @@ class BasicProcessor(DataProcessor):
     elif human_eval_dataset.lower() == "realsumm":
       self.f_test = "realsumm_100.tsv" 
     elif human_eval_dataset.lower() == "newsroom":
-      self.f_test = "newsroom_60.tsv" 
+      self.f_test = "newsroom-human-eval.csv"
 
     self.keep_1s_ratio = keep_1s_ratio
 
@@ -172,9 +172,11 @@ class BasicProcessor(DataProcessor):
     """See base class."""
     if self.human_eval_dataset.lower() == "tac":
       return self._pop_tac_samples(os.path.join("./", self.f_test), "test")
-    elif self.human_eval_dataset.lower() in ["realsumm", "newsroom"]:
+    elif self.human_eval_dataset.lower() == "newsroom":
+      return self._pop_newsroom_samples(self.f_test, "test")
+    elif self.human_eval_dataset.lower() == "realsumm":
       return self._pop_compact_test_samples(
-      self._read_tsv(os.path.join("./", self.f_test)), "test")
+      self._read_tsv(self.f_test), "test")
       
 
   def get_labels(self):
@@ -213,11 +215,7 @@ class BasicProcessor(DataProcessor):
     return examples
 
   def _pop_tac_samples(self, json_file, set_type):
-    """Creates examples for json files for tac results 
-    Compact format samples: 
-        document \t 1st_summary \t 1st_label \t 2nd_summary \t 2nd_label ...
-    """
-
+    label = 0 # just a place holder, constant
     examples = []
     i = 0 
     tac = json.load(open(json_file, 'r'))
@@ -239,7 +237,6 @@ class BasicProcessor(DataProcessor):
               summary = " ."
 
           _sum = ' '.join(summary.split()[0:200])
-          label = 0 # just a place holder 
 
           guid = "%s-%s" % (set_type, i)
           text_a = tokenization.convert_to_unicode(_doc)
@@ -251,6 +248,31 @@ class BasicProcessor(DataProcessor):
           i += 1 # increase i for every sample 
     return examples
   
+  def _pop_newsroom_samples(self, newsroom_tsv, set_type):
+    examples = []
+    label = 0 # just a place holder, constant
+    i = 0 
+    with open(newsroom_tsv, 'r') as csvfile: 
+      reader = csv.reader(csvfile, delimiter=",", quotechar="\"") 
+      for row in reader: 
+        if i > 0: # skip header 
+          [_doc, _sum] = row[2:4]
+          _doc = _doc.replace("</p><p>", "")
+          _sum = _sum.replace("</p><p>", "")
+          _doc=html.unescape(_doc) 
+          _sum=html.unescape(_sum) 
+          _doc = ' '.join(_doc.split()[0:400])
+          _sum = ' '.join(_sum.split()[0:200])
+
+          guid = "%s-%s" % (set_type, i)
+          text_a = tokenization.convert_to_unicode(_doc)
+          text_b = tokenization.convert_to_unicode(_sum)
+          
+          examples.append(
+              InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))        
+        i += 1  # increase i for every sample 
+    return examples
+
   def _pop_compact_test_samples(self, lines, set_type):
     """Creates examples for the test set from compact format.
     
@@ -259,7 +281,7 @@ class BasicProcessor(DataProcessor):
     Compact format samples: 
         document \t 1st_summary \t 2nd_summary \t ...
     """
-
+    label = 0 # just a place holder, constant
     examples = []
     i = 0 
     for line in lines: # line is already tab-separated 
@@ -268,7 +290,6 @@ class BasicProcessor(DataProcessor):
       _doc = ' '.join(line[0].split()[0:400])
       for j in range(1, len(line)) :
         _sum = ' '.join(line[j].split()[0:200])
-        label = 0 # just a place holder 
 
         guid = "%s-%s" % (set_type, i)
         text_a = tokenization.convert_to_unicode(_doc)

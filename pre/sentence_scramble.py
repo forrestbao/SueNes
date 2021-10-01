@@ -9,8 +9,6 @@ import random
 import errno 
 
 import numpy
-import stanza
-import spacy
 import tensorflow_datasets as tfds
 
 import time
@@ -41,6 +39,7 @@ def split_pairs(pairs, tokenizer_name="spacy", spacy_batch_size=2**10, n_jobs= 4
     print ("Splitting summaries...", end= " ")
 
     if tokenizer_name == "stanza":
+        import stanza
         # Tokenization with delimiters.    
         list_summaries = []
         combined_summary = " Forrest loves Ames. ".join([_sum  for (_doc, _sum) in pairs])
@@ -72,6 +71,7 @@ def split_pairs(pairs, tokenizer_name="spacy", spacy_batch_size=2**10, n_jobs= 4
         list_summaries.append(summary_temp) # last one 
 
     elif tokenizer_name == 'spacy':
+            import spacy
             nlp=spacy.load("en_core_web_sm", exclude=["tok2vec",'tagger','parser','ner', 'attribute_ruler', 'lemmatizer'])
             nlp.add_pipe("sentencizer")
             nlp.max_length = 2000000 # default is 1,000,000
@@ -90,7 +90,7 @@ def split_pairs(pairs, tokenizer_name="spacy", spacy_batch_size=2**10, n_jobs= 4
                 ))
     return new_pairs
 
-def mutate(pairs, method, dumpfile, neg_pos_ratio, mode='len',debug=False):
+def mutate(pairs, method, dumpfile, neg_pos_ratio, mode, debug=False):
     """Central method for delete and replace
 
     The mutation step is much faster than sentence segmentation.
@@ -178,7 +178,7 @@ def mutate(pairs, method, dumpfile, neg_pos_ratio, mode='len',debug=False):
                 continue
 
             indexes_of_sentences_to_keep = random.sample(range(len(_sum)), k = keep_number)
-
+            keep_sum = [_sum[i] for i in range(len(_sum)) if i in indexes_of_sentences_to_keep]
             if method == "sent_replace":
                 new_sum = copy.deepcopy(_sum)
                 for sentence_id in range(len(_sum)):
@@ -189,15 +189,15 @@ def mutate(pairs, method, dumpfile, neg_pos_ratio, mode='len',debug=False):
                             pair_id = random.randint(0, len(pairs)-1)
                         new_sum [sentence_id] = random.choice(pairs[pair_id][1])
             elif method == "sent_delete":
-                new_sum = [_sum[i] for i in range(len(_sum)) if i in indexes_of_sentences_to_keep]
+                new_sum = keep_sum
 
-            
+
             new_sum = " ".join(new_sum)
             label = 0
             if mode == 'sent':
                 label = keep_number/len(_sum)
             elif mode == 'char': 
-                label = len(new_sum) / float(full_summary_length) 
+                label = len(" ".join(keep_sum)) / float(full_summary_length)
             # label = keep_ratios[sample_id][i] # NOTE alternative, introducing noise            
             line += [new_sum, label]
 

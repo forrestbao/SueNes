@@ -68,5 +68,5 @@ spacy_batch_size = 8000 # doesn't seem to have much effect though
 neg_pos_ratio = 5
 
 # methods used to generate negative samples 
-methods = ["sent_delete"] 
+methods = ["sent_delete", "sent-replace"] 
 mode = 'char' # or 'sent'  # measure how many sentences or characters are altered. # TODO: add token one

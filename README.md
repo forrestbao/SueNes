@@ -6,6 +6,7 @@ A supervised approach to summary quality assessment by negatively sampling on re
 * The negative sampling code requires TF 2.x and [`tensorflow_datasets`](https://www.tensorflow.org/datasets). 
 * The `bert` code requires TF 1.15. We run our experiments using [nVidia's TF fork](https://github.com/NVIDIA/tensorflow). 
 * SpaCy is needed for segmentation. 
+* [SummEval](https://github.com/Yale-LILY/SummEval) is needed to run baselines.
 * System: Ubuntu 20.04, 64GB RAM, RTX 3090
 
 

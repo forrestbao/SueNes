@@ -179,6 +179,7 @@ def mutate(pairs, method, dumpfile, neg_pos_ratio, mode, debug=False):
 
             indexes_of_sentences_to_keep = random.sample(range(len(_sum)), k = keep_number)
             keep_sum = [_sum[i] for i in range(len(_sum)) if i in indexes_of_sentences_to_keep]
+            new_sum = ""
             if method == "sent_replace":
                 new_sum = copy.deepcopy(_sum)
                 for sentence_id in range(len(_sum)):

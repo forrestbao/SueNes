@@ -13,6 +13,9 @@ import joblib, multiprocessing
 import copy
 import functools
 import gc
+import tensorflow as tf
+# Enable eager execution for tf1
+tf.compat.v1.enable_eager_execution()
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2" 
 

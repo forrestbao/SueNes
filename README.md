@@ -22,7 +22,7 @@ mkdir human human/newsroom human/tac human/realsumm
 Then download test set files
 
 ```bash
-wget https://github.com/lil-lab/newsroom/blob/master/humaneval/newsroom-human-eval.csv -P human/newsroom
+wget https://github.com/lil-lab/newsroom/blob/master/humaneval/newsroom-human-eval.csv?raw=true -O human/newsroom/newsroom-human-eval.csv
 ```
 
 ### 1. Negative sampling

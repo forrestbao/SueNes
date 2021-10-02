@@ -27,8 +27,8 @@ do
     --task_name=basic \
     --do_lower_case=true \
     --do_train=True \
-    --do_eval=False \
-    --do_predict=False \
+    --do_eval=True \
+    --do_predict=True \
     --data_dir=$EXP_DIR/data/$dataset/$method/ \
     --output_dir=$EXP_DIR/result\_$BERT_MODEL/$dataset/$method/ \
     --vocab_file=$BERT_DIR/vocab.txt \
@@ -37,7 +37,7 @@ do
     --max_seq_length=512 \
     --train_batch_size=14 \
     --learning_rate=1e-5 \
-    --num_train_epochs=3.0 \
+    --num_train_epochs=1.0 \
     --convert_batch=1000000 \
     --do_tfrecord=True \
     --human_eval_dataset=$human_eval_dataset
@@ -56,7 +56,7 @@ do
       --do_lower_case=true \
       --do_train=False \
       --do_eval=False \
-      --do_predict=False \
+      --do_predict=True \
       --data_dir=$EXP_DIR/data/$dataset/$method/ \
       --output_dir=$EXP_DIR/result\_$BERT_MODEL/$dataset/$method/ \
       --vocab_file=$BERT_DIR/vocab.txt \
@@ -65,7 +65,7 @@ do
       --max_seq_length=512 \
       --train_batch_size=14 \
       --learning_rate=1e-5 \
-      --num_train_epochs=3.0 \
+      --num_train_epochs=1.0 \
       --convert_batch=1000000 \
       --do_tfrecord=True \
       --human_eval_dataset=$human_eval_dataset

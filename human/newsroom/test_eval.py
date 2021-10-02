@@ -251,10 +251,11 @@ def main():
     """
 
     # Configurations 
-    result_root = "../../exp/result"
+    result_root = "../../exp/result_bert_base_uncased"
 
-    training_sets = ["billsum", "scientific_papers", "big_patent", "cnn_dailymail"]
-    methods = ["sent_delete", "sent_replace"]
+    # training_sets = ["billsum"] #, "scientific_papers", "big_patent", "cnn_dailymail"]
+    training_sets = os.listdir(result_root)
+    # methods = ["sent_delete", "sent_replace"]
 
     concensus_based_on="mean" # "median", "max", "min"
     level = "summary" # "system", "summary", or "pooled"
@@ -273,6 +274,7 @@ def main():
     print ("\t".join(["{:<17}".format("training_set"), " neg_sample"]+cross_header))
     
     for training_set in training_sets:
+        methods = os.listdir(os.path.join(result_root, training_set))
         for method in methods:
             print (f'{training_set:<17}\t', method, end="\t")
             prediction_tsv = os.path.join(result_root, training_set, method, "test_results_newsroom.tsv")

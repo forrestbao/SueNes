@@ -15,15 +15,8 @@ wget -O ext.pkl "https://github.com/neulab/REALSumm/blob/master/scores_dicts/ext
 
 4. Run ``ref_free_baselines.py`` to evaluate reference-free baselines.
 
-## For our metric
-1. See ``selected_docs_for_human_eval/selected_documents.md`` to download the dataset.
-2. Run ``analysis/generate_test.py`` to generate test file (``test.tsv``) for our metric.
+5. Run ``test_eval.py`` to compute the correlation between human evaluation scores and those from our model and baselines. Scores from our model are by default under `exp/result*/`. Scores from baselines are produced in Step 3, 4 above. 
 
-## For baselines
-- Run ``analysis/baselines.py`` to evaluate reference-based upperbounds.
-- Run ``analysis/ref_free_baselines.py`` to evaluate reference-free baselines.
-
-## Analysis with human evaluation
-1. Put all test results in ``predictions`` folder.
-3. Run ``analysis/write_back.py`` to write the results to pkl file.
-4. Run ``analysis/analysis.ipynb`` to do analysis.
+# Deprecated
+- `analysis.ipynb` from the ``RealSumm`` is not used but kept for future reference 
+- `write_back.py`

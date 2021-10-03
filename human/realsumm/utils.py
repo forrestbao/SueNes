@@ -5,7 +5,6 @@ import logging
 from scipy.stats import pearsonr, spearmanr, kendalltau
 from joblib import Parallel, delayed
 from joblib import parallel_backend
-from tabulate import tabulate
 from collections import defaultdict as ddict
 
 
@@ -46,6 +45,7 @@ def get_pickle(file_path):
 
 
 def print_score_ranges(sd):
+    from tabulate import tabulate
     metrics_list = get_metrics_list(sd)
     print_list = []
     headers = ["min", "25-perc", "median", "75-perc", "max", "mean"]

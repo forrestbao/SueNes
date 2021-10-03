@@ -278,6 +278,8 @@ def main():
         for method in methods:
             print (f'{training_set:<17}\t', method, end="\t")
             prediction_tsv = os.path.join(result_root, training_set, method, "test_results_newsroom.tsv")
+            if not os.path.exists(prediction_tsv):
+                continue
             scores = load_newsroom_and_ours("./newsroom-human-eval.csv", prediction_tsv)
 
             correlations = judge_function(

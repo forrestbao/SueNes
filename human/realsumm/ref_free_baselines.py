@@ -7,7 +7,7 @@ def main():
     # Fix SummaQA summa_qa_utils.py:20 code from huggingface see https://huggingface.co/transformers/model_doc/bert.html#bertforquestionanswering
     scorers = [SupertMetric(), SummaQAMetric(), BlancMetric(inference_batch_size=32)]
 
-    in_file = 'test.tsv'
+    in_file = 'realsumm_100.tsv'
 
     docs = []
     sums = []

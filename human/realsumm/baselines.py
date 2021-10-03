@@ -18,8 +18,8 @@ def main():
     WORKERS = 6
     scorers = [CiderMetric(), BleuMetric(n_workers=WORKERS), S3Metric(n_workers=WORKERS), MeteorMetric(), BertScoreMetric(), MoverScoreMetric(version=2)]
     
-    sd_abs_path = "../scores_dicts/abs.pkl"
-    sd_ext_path = "../scores_dicts/ext.pkl"
+    sd_abs_path = "abs.pkl"
+    sd_ext_path = "ext.pkl"
     sd_abs = utils.get_pickle(sd_abs_path)
     sd_ext = utils.get_pickle(sd_ext_path)
     sd = copy.deepcopy(sd_abs)

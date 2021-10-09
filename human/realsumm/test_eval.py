@@ -5,7 +5,7 @@ import copy
 import os
 from scipy.stats.stats import pearsonr, spearmanr, kendalltau
 
-def merge_results(result_root, training_sets):
+def merge_results(result_root, training_sets, include_old=True):
     """
     Merge the results of baselines and ours into the same dictionary
     """
@@ -38,12 +38,13 @@ def merge_results(result_root, training_sets):
                         assert(False)
     
     # Merge results in the predictions folder
-    pred_path = 'predictions'
-    preds = os.listdir(pred_path)
-    preds = [tsvfile for tsvfile in preds if tsvfile.endswith('.tsv')]
-    for tsvfile in preds:
-        metric_name = "A_" + tsvfile.split('.')[0] if not tsvfile.startswith("metric") else tsvfile.split('.')[0]
-        merge_one(os.path.join(pred_path, tsvfile), metric_name)
+    if include_old:
+        pred_path = 'predictions'
+        preds = os.listdir(pred_path)
+        preds = [tsvfile for tsvfile in preds if tsvfile.endswith('.tsv')]
+        for tsvfile in preds:
+            metric_name = "A_" + tsvfile.split('.')[0] if not tsvfile.startswith("metric") else tsvfile.split('.')[0]
+            merge_one(os.path.join(pred_path, tsvfile), metric_name)
     
     # Merge results in the exp folder
     for training_set in training_sets:
@@ -87,7 +88,7 @@ def main():
     training_sets = os.listdir(result_root)
     level="system"
 
-    sd_abs, sd_ext = merge_results(result_root, training_sets)
+    sd_abs, sd_ext = merge_results(result_root, training_sets, False)
 
     for dataset, name in [(sd_abs, "abs"), (sd_ext, "ext")]:
         sd = dataset

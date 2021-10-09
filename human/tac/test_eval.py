@@ -1,8 +1,6 @@
 import numpy as np
 from scipy.stats.stats import pearsonr, spearmanr, kendalltau
 import os, json, csv
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 np.set_printoptions(precision=4)
 
@@ -177,29 +175,35 @@ def calc_cc(tac_results, tac_scores, method=pearsonr, level="pool"):
     # print("---------------------------")
 
 
-def cc_all(plot = True):
-    datasets = ['cnn_dailymail', 'billsum', 'scientific_papers', 'big_patent']
-    BERT_result_prefix = "../../bert/result_base_sent/"
+def cc_all(plot = False):
+    BERT_result_prefix = "../../exp/result_bert_base_uncased/"
+    datasets = os.listdir(BERT_result_prefix)
     tac_json_file = "../../bert/TAC2010_all.json"
     human_only="machine"
+    level = "system"
 
     tac_scores = load_tac_json(tac_json_file, human_only)
     result_dict = {}
-    for method in ["sent_delete"]:
-        for dataset in datasets:
-            print (dataset, method)
-            BERT_result_file = os.path.join(BERT_result_prefix, dataset, method, "test_results.tsv")
+    for dataset in datasets:
+        methods = os.listdir(os.path.join(BERT_result_prefix, dataset))
+        for method in methods:
+            BERT_result_file = os.path.join(BERT_result_prefix, dataset, method, "test_results_tac.tsv")
+            if not os.path.exists(BERT_result_file):
+                continue
+            print (dataset, method, end='\t')
             tac_results = read_tac_test_result(BERT_result_file, tac_json_file, human_only)
             result_dict[dataset] = tac_results
             for corr_method in [pearsonr, spearmanr, kendalltau]:
-                calc_cc(tac_results, tac_scores, method=corr_method, level="summary")
+                calc_cc(tac_results, tac_scores, method=corr_method, level=level)
             print("")
-        
-    def plot_results():
-        for dataset in datasets:
-            sns.kdeplot(result_dict[dataset], label=dataset)
 
     if plot:
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        def plot_results():
+            for dataset in datasets:
+                sns.kdeplot(result_dict[dataset], label=dataset)
+        
         tac_scores = np.array(tac_scores)
         plt.figure(figsize=(12, 3))
         ax = plt.subplot(1, 3, 1)

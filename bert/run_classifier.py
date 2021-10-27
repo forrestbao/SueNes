@@ -155,6 +155,8 @@ class BasicProcessor(DataProcessor):
       self.f_test = "realsumm_100.tsv" 
     elif human_eval_dataset.lower() == "newsroom":
       self.f_test = "newsroom-human-eval.csv"
+    elif human_eval_dataset.lower() == "summeval":
+      self.f_test = "summeval_100.tsv"
 
     self.keep_1s_ratio = keep_1s_ratio
 
@@ -174,7 +176,7 @@ class BasicProcessor(DataProcessor):
       return self._pop_tac_samples(os.path.join("./", self.f_test), "test")
     elif self.human_eval_dataset.lower() == "newsroom":
       return self._pop_newsroom_samples(self.f_test, "test")
-    elif self.human_eval_dataset.lower() == "realsumm":
+    elif self.human_eval_dataset.lower() == "realsumm" or self.human_eval_dataset.lower() == "summeval":
       return self._pop_compact_test_samples(
       self._read_tsv(self.f_test), "test")
       

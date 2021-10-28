@@ -51,36 +51,20 @@ def calc_corr(level, method, metric_scores, dataset, dataset_aspect):
 def main():
     # Configurations 
     result_root = "../../exp/result_bert_base_uncased"
+    # result_root = "/data/data/NLP/anti-rogue/result_base_sent"
     training_sets = os.listdir(result_root)
-    level="summary"
+    level="system"
 
     dataset_aspect = ["coherence", "consistency", "fluency", "relevance"]
     dataset = []
     with open("model_annotations.aligned.scored.jsonl", "r", encoding="utf-8") as fd:
         dataset = [json.loads(line) for line in fd]
-    
-    for training_set in training_sets:
-        methods = os.listdir(os.path.join(result_root, training_set))
-        for method in methods:
-            prediction_tsv = os.path.join(result_root, training_set, method, "test_results_summeval.tsv")
-            if not os.path.exists(prediction_tsv):
-                continue
-            print (f'{training_set}-{method}', end="\t")
-
-            with open(prediction_tsv, "r") as f:
-                metric_scores = [float(line) for line in f]
-
-        for method in [pearsonr, spearmanr, kendalltau]:
-            calc_corr(level, method, metric_scores, dataset, dataset_aspect)
-
-        print("")
-
 
     # Baselines
-    sorted_keys = ['rouge_1_f_score', 'rouge_2_f_score', 'rouge_l_f_score', 
+    sorted_keys = ['summaqa_avg_fscore', 'blanc', 'supert',
+        'rouge_1_f_score', 'rouge_2_f_score', 'rouge_l_f_score', 
         's3_pyr', 's3_resp', 'bert_score_precision', 'bert_score_recall', 
-        'bert_score_f1', 'mover_score', 'summaqa_avg_fscore', 
-        'blanc', 'supert', 'bleu', 'cider', 'meteor']
+        'bert_score_f1', 'mover_score', 'bleu', 'cider', 'meteor']
     
     for metric in sorted_keys:
         '''
@@ -105,6 +89,22 @@ def main():
             calc_corr(level, method, metric_scores, dataset, dataset_aspect)
             
         print("")
+    
+    for training_set in training_sets:
+        methods = os.listdir(os.path.join(result_root, training_set))
+        for method in methods:
+            prediction_tsv = os.path.join(result_root, training_set, method, "test_results_summeval.tsv")
+            if not os.path.exists(prediction_tsv):
+                continue
+            print (f'{training_set}-{method}', end="\t")
+
+            with open(prediction_tsv, "r") as f:
+                metric_scores = [float(line) for line in f]
+
+            for corr in [pearsonr, spearmanr, kendalltau]:
+                calc_corr(level, corr, metric_scores, dataset, dataset_aspect)
+
+            print("")
 
 
 

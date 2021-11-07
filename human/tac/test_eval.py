@@ -1,8 +1,6 @@
 import numpy as np
 from scipy.stats.stats import pearsonr, spearmanr, kendalltau
 import os, json, csv
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 np.set_printoptions(precision=4)
 
@@ -177,39 +175,44 @@ def calc_cc(tac_results, tac_scores, method=pearsonr, level="pool"):
     # print("---------------------------")
 
 
-def cc_all(plot = True):
+def cc_all(plot = False):
     human_only = "machine" # str: machine, human, or both
     level = "summary" # str: system, summary, pool
-    datasets = ['cnn_dailymail', 'billsum', 'scientific_papers', 'big_patent']
-    # datasets = ['billsum']
     mutation_methods = ["sent_delete_char"]
     corr_methods = [pearsonr, spearmanr, kendalltau]
     bert_test_result_filename = "test_results_tac.tsv"   
 
-    # Roger cofg    
+    # Roger confg    
     # BERT_result_prefix = "../../bert/result_base_sent/"
     # tac_json_file = "../../bert/TAC2010_all.json"
     # Bao confg
     BERT_result_prefix = "/home/forrest/anti-rouge/exp/result_bert_base_uncased/"
     tac_json_file = "./TAC2010_all.json"
 
+    # datasets = ['cnn_dailymail', 'billsum', 'scientific_papers', 'big_patent']
+    datasets = os.listdir(BERT_result_prefix)
+
     tac_scores = load_tac_json(tac_json_file, human_only)
     result_dict = {}
-    for method in mutation_methods:
-        for dataset in datasets:
-            print (dataset, method)
+    for dataset in datasets:
+        for method in os.listdir(os.path.join(BERT_result_prefix, dataset)):
             BERT_result_file = os.path.join(BERT_result_prefix, dataset, method, bert_test_result_filename)
+            if not os.path.exists(BERT_result_file):
+                continue
+            print (dataset, method, end='\n')
             tac_results = read_tac_test_result(BERT_result_file, tac_json_file, human_only)
             result_dict[dataset] = tac_results
             for corr_method in corr_methods:
                 calc_cc(tac_results, tac_scores, method=corr_method, level=level)
             print("")
-        
-    def plot_results():
-        for dataset in datasets:
-            sns.kdeplot(result_dict[dataset], label=dataset)
 
     if plot:
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        def plot_results():
+            for dataset in datasets:
+                sns.kdeplot(result_dict[dataset], label=dataset)
+        
         tac_scores = np.array(tac_scores)
         plt.figure(figsize=(12, 3))
         ax = plt.subplot(1, 3, 1)
@@ -227,4 +230,4 @@ def cc_all(plot = True):
         plt.show()
         
 if __name__ == "__main__":
-    cc_all(plot=False)
+    cc_all()

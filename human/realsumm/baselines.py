@@ -1,5 +1,5 @@
 import json, os, copy, re
-import utils
+import pickle
 from summ_eval.bleu_metric import BleuMetric
 from summ_eval.cider_metric import CiderMetric
 from summ_eval.s3_metric import S3Metric    # Use sklearn 0.21.X
@@ -18,10 +18,10 @@ def main():
     WORKERS = 6
     scorers = [CiderMetric(), BleuMetric(n_workers=WORKERS), S3Metric(n_workers=WORKERS), MeteorMetric(), BertScoreMetric(), MoverScoreMetric(version=2)]
     
-    sd_abs_path = "../scores_dicts/abs.pkl"
-    sd_ext_path = "../scores_dicts/ext.pkl"
-    sd_abs = utils.get_pickle(sd_abs_path)
-    sd_ext = utils.get_pickle(sd_ext_path)
+    sd_abs_path = "abs.pkl"
+    sd_ext_path = "ext.pkl"
+    sd_abs = pickle.load(open(sd_abs_path, "rb"))
+    sd_ext = pickle.load(open(sd_ext_path, "rb"))
     sd = copy.deepcopy(sd_abs)
     for doc_id in sd:
         isd_sota_ext = sd_ext[doc_id]

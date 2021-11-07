@@ -6,6 +6,8 @@ __pycache__
 
 *.png
 *.tar.gz
+*.tgz
+*.jsonl
 datasets
 
 *.h5
@@ -19,3 +21,4 @@ checkpoint
 *-checkpoint.ipynb
 
 exp
+human/summeval/cnndm

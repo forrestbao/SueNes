@@ -1,14 +1,13 @@
 import pickle
-import utils
 import copy
 import re
 import os
 
 def main():    
-    sd_abs_path = "../scores_dicts/abs.pkl"
-    sd_ext_path = "../scores_dicts/ext.pkl"
-    sd_abs = utils.get_pickle(sd_abs_path)
-    sd_ext = utils.get_pickle(sd_ext_path)
+    sd_abs_path = "abs.pkl"
+    sd_ext_path = "ext.pkl"
+    sd_abs = pickle.load(open(sd_abs_path, "rb"))
+    sd_ext = pickle.load(open(sd_ext_path, "rb"))
     sd = copy.deepcopy(sd_abs)
     abs_systems = sd_abs[1]['system_summaries'].keys()
     ext_systems = sd_ext[1]['system_summaries'].keys()

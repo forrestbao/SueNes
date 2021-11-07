@@ -168,7 +168,7 @@ def calc_cc(tac_results, tac_scores, method=pearsonr, level="pool"):
     line = ["%.5f"%i for i in corr]
     line = "\t".join(line)
 
-    print (line, end = ' ')
+    print (line, end = '\t')
     # for i in range(3):
     #     corr_pearson = pearsonr(tac_results, tac_scores[:, i])
     #     corr_spearman = spearmanr(tac_results, tac_scores[:, i])
@@ -178,21 +178,31 @@ def calc_cc(tac_results, tac_scores, method=pearsonr, level="pool"):
 
 
 def cc_all(plot = True):
+    human_only = "machine" # str: machine, human, or both
+    level = "summary" # str: system, summary, pool
     datasets = ['cnn_dailymail', 'billsum', 'scientific_papers', 'big_patent']
-    BERT_result_prefix = "../../bert/result_base_sent/"
-    tac_json_file = "../../bert/TAC2010_all.json"
-    human_only="machine"
+    # datasets = ['billsum']
+    mutation_methods = ["sent_delete_char"]
+    corr_methods = [pearsonr, spearmanr, kendalltau]
+    bert_test_result_filename = "test_results_tac.tsv"   
+
+    # Roger cofg    
+    # BERT_result_prefix = "../../bert/result_base_sent/"
+    # tac_json_file = "../../bert/TAC2010_all.json"
+    # Bao confg
+    BERT_result_prefix = "/home/forrest/anti-rouge/exp/result_bert_base_uncased/"
+    tac_json_file = "./TAC2010_all.json"
 
     tac_scores = load_tac_json(tac_json_file, human_only)
     result_dict = {}
-    for method in ["sent_delete"]:
+    for method in mutation_methods:
         for dataset in datasets:
             print (dataset, method)
-            BERT_result_file = os.path.join(BERT_result_prefix, dataset, method, "test_results.tsv")
+            BERT_result_file = os.path.join(BERT_result_prefix, dataset, method, bert_test_result_filename)
             tac_results = read_tac_test_result(BERT_result_file, tac_json_file, human_only)
             result_dict[dataset] = tac_results
-            for corr_method in [pearsonr, spearmanr, kendalltau]:
-                calc_cc(tac_results, tac_scores, method=corr_method, level="summary")
+            for corr_method in corr_methods:
+                calc_cc(tac_results, tac_scores, method=corr_method, level=level)
             print("")
         
     def plot_results():
@@ -217,4 +227,4 @@ def cc_all(plot = True):
         plt.show()
         
 if __name__ == "__main__":
-    cc_all()
+    cc_all(plot=False)

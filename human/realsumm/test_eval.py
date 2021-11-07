@@ -84,9 +84,13 @@ def calc_corr(level, method, pair, sd, systems):
 
 def main():
     # Configurations 
-    result_root = "../../exp/result_bert_base_uncased"
+    # Roger's 
+    # result_root = "../../exp/result_bert_base_uncased"
+    # Bao's
+    result_root = "/home/forrest/anti-rouge/exp/result_bert_base_uncased/"
+
     training_sets = os.listdir(result_root)
-    level="system"
+    level="summary"
 
     sd_abs, sd_ext = merge_results(result_root, training_sets, False)
 
@@ -100,7 +104,7 @@ def main():
         for pair in all_pairs:
             for method in [pearsonr, spearmanr, kendalltau]:
                 corr = calc_corr(level, method, pair, sd, systems)
-                print("%.4f" % corr, end=" ")
+                print("%.4f" % corr, end="\t")
             
             print("")
 

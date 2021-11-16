@@ -57,6 +57,12 @@ def merge_results(result_root, training_sets, include_old=True):
     
     return sd_abs, sd_ext
 
+def workaround(l:list)->list:
+    # A workaround to avoid constant vector issue for pearsonr
+    if (max(l) == min(l)):
+            l[0] += 0.001 
+    return l
+
 def calc_corr(level, method, pair, sd, systems):
     
     corr = 0
@@ -66,17 +72,20 @@ def calc_corr(level, method, pair, sd, systems):
         for doc_id in sd:
             for sys_name, sys in sd[doc_id]["system_summaries"].items():
                 x.append(sys["scores"][pair[0]])
-                y.append(sys["scores"][pair[1]])
+                y.append(sys["scores"][pair[1]]) 
+        x, y = workaround(x), workaround(y)
         corr = method(x, y)[0]
     elif level == "summary":
         for doc_id in sd:
             x = [sys["scores"][pair[0]] for sys_name, sys in sd[doc_id]["system_summaries"].items()]
             y = [sys["scores"][pair[1]] for sys_name, sys in sd[doc_id]["system_summaries"].items()]
+            x, y = workaround(x), workaround(y)
             corr += method(x, y)[0]
         corr /= len(sd)
     elif level == 'system':
         x = [scores[pair[0]] for sys_name, scores in systems.items()]
         y = [scores[pair[1]] for sys_name, scores in systems.items()]
+        x, y = workaround(x), workaround(y)
         corr = method(x, y)[0]
     else:
         print("???")
@@ -86,10 +95,14 @@ def main():
     # Configurations 
     # Roger's 
     # result_root = "../../exp/result_bert_base_uncased"
+    # training_sets = os.listdir(result_root)
     # Bao's
-    result_root = "/home/forrest/anti-rouge/exp/result_bert_base_uncased/"
-
+    # result_root = "/home/forrest/anti-rouge/exp/result_bert_base_uncased/"
+    result_root = "/home/forrest/anti-rouge/exp/result_base_word"
     training_sets = os.listdir(result_root)
+    training_sets = ["billsum_word", "cnn_dailymail_word", "scientific_papers_word", "big_patent_word"]
+    
+
     level="summary"
 
     sd_abs, sd_ext = merge_results(result_root, training_sets, False)

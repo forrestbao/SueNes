@@ -127,6 +127,9 @@ def summary_judge(scores, metrics_newsroom, metrics_other, concensus, correlatio
         if (max(vector_newsroom) == min(vector_newsroom)):
             # A workaround to avoid constant vector issue for pearsonr
             vector_newsroom[0] += 0.001 
+        if (max(vector_other) == min(vector_other)):
+            # A workaround to avoid constant vector issue for pearsonr
+            vector_other[0] += 0.001 
         return  eval(f"scipy.stats.{correlation_type}(vector_newsroom, vector_other)")[0]
 
     # now begins the summary-level judge 
@@ -189,9 +192,11 @@ def system_judge(scores, metrics_newsroom, metrics_other, concensus, correlation
                     vector_newsroom += score_newsroom
                     vector_other    += score_other*len(score_newsroom) # just duplicate
 
+            # print (len(vector_newsroom))
             mean_score_vector_newsroom.append(mean(vector_newsroom))
             mean_score_vector_other   .append(mean(vector_other))
-        return  eval(f"scipy.stats.{correlation_type}(vector_newsroom, vector_other)")[0]
+        # return  eval(f"scipy.stats.{correlation_type}(vector_newsroom, vector_other)")[0]
+        return  eval(f"scipy.stats.{correlation_type}(mean_score_vector_newsroom, mean_score_vector_other)")[0]
 
     # now begins the system-level judge 
     correlations  = {}
@@ -251,14 +256,20 @@ def main():
     """
 
     # Configurations 
-    result_root = "../../exp/result_bert_base_uncased"
 
-    # training_sets = ["billsum"] #, "scientific_papers", "big_patent", "cnn_dailymail"]
-    training_sets = os.listdir(result_root)
-    # methods = ["sent_delete", "sent_replace"]
+    # Roger's 
+    # result_root = "../../exp/result_bert_base_uncased"
+    # training_sets =  os.listdir(result_root)
+    # Bao's
+    result_root = "/home/forrest/anti-rouge/exp/result_bert_base_uncased/"
+    result_root = "/home/forrest/anti-rouge/exp/result_base_sent/"
+    training_sets =  os.listdir(result_root)
+
+    # result_root = "/home/forrest/anti-rouge/exp/result_base_word"
+    # training_sets = ["billsum_word", "cnn_dailymail_word", "scientific_papers_word", "big_patent_word"]
 
     concensus_based_on="mean" # "median", "max", "min"
-    level = "summary" # "system", "summary", or "pooled"
+    level = "system" # "system", "summary", or "pooled"
 
     metrics_newsroom = ["Coherence", "Informativeness", "Fluency", "Relevance"]
     correlation_types = ["pearsonr", "spearmanr", "kendalltau"]
@@ -276,7 +287,7 @@ def main():
     for training_set in training_sets:
         methods = os.listdir(os.path.join(result_root, training_set))
         for method in methods:
-            print (f'{training_set:<17}\t', method, end="\t")
+            print (f'{training_set:<17}\t', method, end="\n")
             prediction_tsv = os.path.join(result_root, training_set, method, "test_results_newsroom.tsv")
             if not os.path.exists(prediction_tsv):
                 continue

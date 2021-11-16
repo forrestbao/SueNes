@@ -149,6 +149,14 @@ def calc_cc(tac_results, tac_scores, method=pearsonr, level="pool"):
         tac_results = np.array(tac_results).reshape(docs, summarizers)
         corr = np.zeros((3, ), dtype=np.float32)
         for doc in range(docs):
+            # workaround to avoid scipy.stat.pearsonr NaN issue 
+            for i in range(3):
+                if np.max(tac_scores[doc, :, i]) == np.min(tac_scores[doc, :, i]):
+                    # A workaround to avoid constant vector issue when calculating correlation
+                    tac_scores[doc, 0, i] += 0.001
+            if np.max(tac_results[doc, :]) == np.min(tac_results[doc, :]):
+                tac_results[doc, 0] += 0.001
+
             corr += np.array([method(tac_results[doc, :], tac_scores[doc, :, i])[0] for i in range(3)])
         corr /= doc
     elif level == 'system':
@@ -178,19 +186,19 @@ def calc_cc(tac_results, tac_scores, method=pearsonr, level="pool"):
 def cc_all(plot = False):
     human_only = "machine" # str: machine, human, or both
     level = "summary" # str: system, summary, pool
-    mutation_methods = ["sent_delete_char"]
     corr_methods = [pearsonr, spearmanr, kendalltau]
     bert_test_result_filename = "test_results_tac.tsv"   
 
     # Roger confg    
     # BERT_result_prefix = "../../bert/result_base_sent/"
     # tac_json_file = "../../bert/TAC2010_all.json"
+    # datasets = os.listdir(BERT_result_prefix)
     # Bao confg
-    BERT_result_prefix = "/home/forrest/anti-rouge/exp/result_bert_base_uncased/"
+    BERT_result_prefix = "/home/forrest/anti-rouge/exp/result_base_word"
     tac_json_file = "./TAC2010_all.json"
-
-    # datasets = ['cnn_dailymail', 'billsum', 'scientific_papers', 'big_patent']
     datasets = os.listdir(BERT_result_prefix)
+    datasets = ['cnn_dailymail_word', 'billsum_word', 'scientific_papers_word', 'big_patent_word']
+    
 
     tac_scores = load_tac_json(tac_json_file, human_only)
     result_dict = {}

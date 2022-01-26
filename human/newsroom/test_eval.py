@@ -128,8 +128,7 @@ def summary_judge(scores, metrics_newsroom, metrics_other, concensus, correlatio
             # A workaround to avoid constant vector issue for pearsonr
             vector_newsroom[0] += 0.001 
         if (max(vector_other) == min(vector_other)):
-            # A workaround to avoid constant vector issue for pearsonr
-            vector_other[0] += 0.001 
+            vector_other[0] += 0.001
         return  eval(f"scipy.stats.{correlation_type}(vector_newsroom, vector_other)")[0]
 
     # now begins the summary-level judge 
@@ -192,7 +191,6 @@ def system_judge(scores, metrics_newsroom, metrics_other, concensus, correlation
                     vector_newsroom += score_newsroom
                     vector_other    += score_other*len(score_newsroom) # just duplicate
 
-            # print (len(vector_newsroom))
             mean_score_vector_newsroom.append(mean(vector_newsroom))
             mean_score_vector_other   .append(mean(vector_other))
         # return  eval(f"scipy.stats.{correlation_type}(vector_newsroom, vector_other)")[0]
@@ -269,7 +267,7 @@ def main():
     # training_sets = ["billsum_word", "cnn_dailymail_word", "scientific_papers_word", "big_patent_word"]
 
     concensus_based_on="mean" # "median", "max", "min"
-    level = "system" # "system", "summary", or "pooled"
+    level = "summary" # "system", "summary", or "pooled"
 
     metrics_newsroom = ["Coherence", "Informativeness", "Fluency", "Relevance"]
     correlation_types = ["pearsonr", "spearmanr", "kendalltau"]
@@ -287,7 +285,7 @@ def main():
     for training_set in training_sets:
         methods = os.listdir(os.path.join(result_root, training_set))
         for method in methods:
-            print (f'{training_set:<17}\t', method, end="\n")
+            print (f'{training_set:<17}\t', method, end="\t")
             prediction_tsv = os.path.join(result_root, training_set, method, "test_results_newsroom.tsv")
             if not os.path.exists(prediction_tsv):
                 continue
@@ -303,11 +301,11 @@ def main():
             print_beautiful(correlations, correlation_types, metrics_newsroom)
 
     # Load scores from baselines
-    tsvs = os.listdir('.') 
+    tsvs = os.listdir('predictions') 
     tsvs = [tsv for tsv in tsvs if tsv.startswith("metric")]
     for tsv in tsvs:
         print (tsv)
-        prediction_tsv = tsv
+        prediction_tsv = os.path.join('predictions', tsv)
 
         scores = load_newsroom_and_ours("./newsroom-human-eval.csv", prediction_tsv)
 

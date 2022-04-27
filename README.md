@@ -49,3 +49,13 @@ Code for computing the correlation between our models' predictions and human rat
 Additional code are kept for reference, e.g., used in early stage of the development of our appproach:   
 * `embed`: Scripts for sentence-level embedding. Kept for reference.
 * `old`: Sentence-level models. Kept for reference. 
+
+## Baselines and upperbounds
+
+### Baselines: without using human-written reference summaries
+* SUPERT: using heuristics to generate psedo-summaries
+* BLANC: converting summary quality assessment into a question anwersing problem
+* SummaQA: converting summary quality assessment into a question anwersing problem
+* SUM-QE and WS_Score: problematic work 
+
+### Upperbounds: using human-written reference summaries

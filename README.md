@@ -1,4 +1,4 @@
-# Anti-ROGUE
+# WSSEAR: Weakly Supervised Summarization Evaluation via Augmenting References
 
 A supervised approach to summary quality assessment by negatively sampling on reference summaries 
 

@@ -1,6 +1,6 @@
-# WSSEAR: Weakly Supervised Summarization Evaluation via Augmenting References
+# WSSEMR: Weakly Supervised Summarization Evaluation by Mutating References
 
-A supervised approach to summary quality assessment by negatively sampling on reference summaries 
+A NAACL 2020 paper. 
 
 ## Dependencies and environment
 * The negative sampling code requires TF 2.x and [`tensorflow_datasets`](https://www.tensorflow.org/datasets). 

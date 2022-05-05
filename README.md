@@ -1,4 +1,4 @@
-# WSSEMR: Weakly Supervised Summarization Evaluation by Mutating References
+# SueNes: A Weakly Supervised Approach to Evaluating Single-Document Summarization via Negative Sampling
 
 A NAACL 2020 paper. 
 

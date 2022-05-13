@@ -1,7 +1,7 @@
 import string
 
 # ==== constants about datasets 
-dataset_features = {"cnn_dailymail": ['article', 'highlights'],
+dataset_features = {"cnn_dailymail/plain_text:3.0.0": ['article', 'highlights'],
     "big_patent": ['description', 'abstract'],
     "newsroom": ['text', 'summary'],
     "scientific_papers": ['article', 'abstract'],
@@ -24,20 +24,20 @@ save_tsv = False
 
 # should we scramble the data
 # only effective when load_from is tfds 
-# No need to scramble if load_percent is 100 and num_shards is 1
-scramble = False 
+scramble = True 
 
 # Must match their names in TFDS 
 # dataset_name = "dryrun" 
-dataset_name = "cnn_dailymail"
+dataset_name = "cnn_dailymail/plain_text:3.0.0"
 
 features = dataset_features[dataset_name]
 
 splits = ['test', 'validation', 'train']
+# splits = [ 'train']
 # note that billsum has no validation set
 
 # Percentage of data to load from orignal size 
-load_percent =  10  # int from 0 to 100; 100 means all;0 means none. 
+load_percent =  100  # int from 0 to 100; 100 means all;0 means none. 
 
 # Amoung loaded, usually after scambling, use only 1/num_shards of this dataset.
 # Not to confuse with load_percent.
@@ -52,14 +52,14 @@ num_shards = 1
 # filename nomenclature to save dumped data with labels 
 # e.g., ./cnn_dailymail/cross/{train,validate,test}.tsv
 # Set as "None" (a str, not Nonetype) if you do not wanna dump but use in memory 
-dump_to="'../data/'+dataset_name + '/' + method + '/'+split+'.tsv'" 
+dump_to="'../data/'+dataset_name.split('/')[0] + '/' + method + '/'+split+'.tsv'" 
 # dump_to = "None"
 
 # whether to save samples as variables in the memory 
 # default: false 
 in_memory=False
 
-n_jobs = 35
+n_jobs = 15
 
 # compact or plain 
 # plain is 3-column, doc, summary, target
@@ -85,5 +85,5 @@ sent_end = string.punctuation
 neg_pos_ratio = 5 
 
 # methods used to generate negative samples 
-methods = ["cross", "add", "delete", "replace"] 
-# methods = ["delete", "replace"] 
+methods = ["cross", "word_add", "word_delete", "word_replace"] 
+# methods = ["word_add", "word_delete", "word_replace"] 

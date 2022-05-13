@@ -87,7 +87,7 @@ def load_pairs(dataset_name, split, load_percent, num_shards,
         import tensorflow_datasets as tfds 
         print ("Loading data. If the data not available locally, download first.")
 
-        dataset = tfds.load(name=dataset_name, download=False, split=
+        dataset = tfds.load(name=dataset_name, download=True, split=
                 split+ '[{}%:{}%]'.format(0, load_percent)
                 )
 
@@ -380,19 +380,22 @@ def mutate_switch(pair, vocab, method, neg_pos_ratio, sent_end):
     # split the words and then feed to mutator 
 #    print (_sum)
     splitted_summary = _sum.split()
-    mutated = [] 
 
     ratios = [random.uniform(0, 1) for _ in range(neg_pos_ratio)]
+    ratios.sort() # This is the percentage of mutation. But scores will be 1-ratios. 
+    # Hence acending order of ratio is Descending order of quality 
+    # do NOT use reverse=True here
 
+    mutated = [(_sum, 0.0)]  # 0.0 is the ratio. Later at 1-ratio, it flips to 1, meaning best quality
     for ratio in ratios: 
         # print (splitted_summary, end=" ")
         # print ("->", end=" ")
 
-        if method == "add":
+        if method == "word_add":
             mutated_tmp = mutate_add(splitted_summary, vocab, ratio, sent_end)
-        elif  method == "delete":
+        elif  method == "word_delete":
             mutated_tmp = mutate_delete(splitted_summary, ratio, sent_end)
-        elif  method == "replace":
+        elif  method == "word_replace":
             mutated_tmp = mutate_replace(splitted_summary, vocab, ratio, sent_end)
         else: 
             mutated_tmp = None 
@@ -412,7 +415,7 @@ def mutate(data_pairs, neg_pos_ratio, method, sent_end, dump_to, n_jobs, dump_fo
         neg_pos_ratio: int, ratio of negative sampels vs positive samples 
                 should be >= 1  
 
-        method: str, one of ["add", "delete", "replace"]
+        method: str, one of ["word_add", "word_delete", "word_replace"]
 
         sent_end: list of strings, the end of a sentence, e.g., [".", "?", "!"]
 
@@ -432,7 +435,7 @@ def mutate(data_pairs, neg_pos_ratio, method, sent_end, dump_to, n_jobs, dump_fo
             # Since we do not fix random state, the result may vary. 
     """
 
-    if method == "delete":
+    if method == "word_delete":
         vocab= []
     else:
         vocab = build_vocab(data_pairs, sent_end, n_jobs)
@@ -502,6 +505,7 @@ def sample_generation(conf):
     samples = []
     cfg = __import__(conf)
     dataset_name = cfg.dataset_name 
+    print (f'Generating from {dataset_name}')
 
     for split in cfg.splits:
         pairs = load_pairs(cfg.dataset_name, split, cfg.load_percent,\
@@ -521,7 +525,7 @@ def sample_generation(conf):
 
             print ("generating samples using {} from dataset {}'s {} set"\
                       .format(method, dataset_name, split))
-            if method in ["add", "delete", "replace"]:
+            if method in ["word_add", "word_delete", "word_replace"]:
                 # NOTE: vocabulary generation is repeated here
                 samples = mutate(pairs, cfg.neg_pos_ratio, method, cfg.sent_end, 
                         filename, cfg.n_jobs, cfg.dump_format)

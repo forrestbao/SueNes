@@ -7,7 +7,7 @@ echo "alias gputop='nvidia-smi --query-gpu=pstate,temperature.gpu,power.draw,uti
 # first allow sync of data to start 
 apt update
 apt install vim rsync git  -y
-git clone https://github.com/forrestbao/anti-rouge
+git clone https://github.com/forrestbao/SueNes
 mkdir data/
 
 # then do the rest 

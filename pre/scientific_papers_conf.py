@@ -25,7 +25,7 @@ save_tsv = False
 # should we scramble the data
 # only effective when load_from is tfds 
 # No need to scramble if load_percent is 100 and num_shards is 1
-scramble = False 
+scramble = True 
 
 # Must match their names in TFDS 
 # dataset_name = "dryrun" 
@@ -33,8 +33,8 @@ dataset_name = "scientific_papers"
 
 features = dataset_features[dataset_name]
 
-# splits = ['test', 'validation', 'train']
-splits = ['test', 'train']
+splits = ['test', 'validation', 'train']
+# splits = ['train']
 # note that billsum has no validation set
 
 # Percentage of data to load from orignal size 
@@ -82,8 +82,8 @@ sent_end = string.punctuation
 
 # ratio between negative and positive samples
 # minimal: 1 
-neg_pos_ratio= 3
+neg_pos_ratio = 5
 
 # methods used to generate negative samples 
-methods = ["cross", "add", "delete", "replace"] 
-# methods = ["add"] 
+methods = ["cross", "word_add", "word_delete", "word_replace"] 
+# methods = ["word_add", "word_delete", "word_replace"] 

@@ -17,3 +17,6 @@ datasets
 *.ckpt.*
 checkpoint
 *-checkpoint.ipynb
+
+.venv
+exp

@@ -1,4 +1,4 @@
-#tensorflow
+tensorflow
 tensorflow-datasets
 tensorflow_hub
 torch
@@ -7,3 +7,5 @@ numpy
 nltk
 matplotlib
 bs4
+spacy
+stanza

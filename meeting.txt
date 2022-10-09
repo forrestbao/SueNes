@@ -33,3 +33,5 @@ Use 10% of CNNDM as the dataset and sentence-delete as the only mutation method.
 * Step 3: Train the model using code in Step 2 on data generated in Step 1. 
 You will need to build a loader yourself to feed training data.
 Try finish step1 and 2 done.
+
+https://spacy.io/models/en download this model

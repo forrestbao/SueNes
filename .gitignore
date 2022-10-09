@@ -19,5 +19,6 @@ checkpoint
 *-checkpoint.ipynb
 
 .venv
+.idea
 exp
 pre/~

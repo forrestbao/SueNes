@@ -1,0 +1,35 @@
+10/3/2022
+===========
+Task:
+Compare sys summa and doc with metric- no reference summary used.
+
+Error:
+-> ignore cuda
+- Bills issue:-> need to download the data dataset=tfds.load(download=True
+- Data storage needed 2TB
+- Input output error: install space, download that feature for spacy.
+- Raise issue in SueNes regarding Spacy download en_core_web_sm
+
+
+Once run the code: Bert, runclassifier.sh-> line 14,15 do not want to run. 
+Go run_classifier.py-> Two doc t1,t2 and sys summary s=t1 first token in summary,t2…
+Std in Bert, concat the token together and add special token [SEP] 
+and special token [CLS]- check hugging face library how they did it.
+Hugging face transformer course- multiple sequences handling- sequence1_ids 
+and 2 is the 2D array. 200 is the special token 
+Putting it all together, CLS and SEP- contcat together
+Sharing the model on hugging face Hub- so SueNes will update on HuggingFace as model. 
+PRE follow GitHub one and (BERT follow huggingface not scenes one).
+Where put SueNes-> redo and implement scenes using transformer library.
+
+Use pre folder - generate training data, and use hugging face transformer model to implement it.
+SueNes will generate the data and use in our transformer model. 
+Then train the generated data.
+Use 10% CNNDM as the dataset and use sentence-delete as the only native mutation method
+
+* Step 1: Use the code in pre folder under SueNes repo to generate training data. 
+Use 10% of CNNDM as the dataset and sentence-delete as the only mutation method.
+* Step 2: Follow the HuggingFace tutorial on transformer to build the SueNes network architecture.
+* Step 3: Train the model using code in Step 2 on data generated in Step 1. 
+You will need to build a loader yourself to feed training data.
+Try finish step1 and 2 done.

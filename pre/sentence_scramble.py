@@ -220,7 +220,7 @@ def generate_one(dataset_name, split, features, methods, neg_pos_ratio, load_sta
     """
 
     # 1. Load data 
-    dataset = tfds.load(name=dataset_name, download=False, 
+    dataset = tfds.load(name=dataset_name, download=True, 
                         split=split+ '[{}:{}]'.format(load_start, load_end)
                        )
 

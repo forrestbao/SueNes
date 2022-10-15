@@ -35,3 +35,7 @@ You will need to build a loader yourself to feed training data.
 Try finish step1 and 2 done.
 
 https://spacy.io/models/en download this model
+
+Use only training data from SueNes
+Train prajjwal/bert-tiny using the training data
+ prajjwal/bert-tine is already trained. train again with our data - fine tuning

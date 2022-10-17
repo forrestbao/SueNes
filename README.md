@@ -1,6 +1,6 @@
 # SueNes: A Weakly Supervised Approach to Evaluating Single-Document Summarization via Negative Sampling
 
-[Here is NAACL 2020 paper](https://openreview.net/forum?id=rfGxaxhWr-5)
+[Here is NAACL 2022 paper](https://aclanthology.org/2022.naacl-main.175/)
 
 ## Dependencies and environment
 * The negative sampling code requires TF 2.x and [`tensorflow_datasets`](https://www.tensorflow.org/datasets). 
